@@ -925,7 +925,12 @@ function wireNav(ctx){
     if(st) st.onclick = () => openCreatorSettings();
   } else {
     const q = document.getElementById('navQuit');
-    if(q) q.onclick = () => { viewerName = null; setMode('select'); };
+    if(q) q.onclick = async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if(session) await supabaseClient.auth.signOut();
+      viewerName = null;
+      setMode('select');
+    };
     const pt = document.getElementById('navProfileTag');
     if(pt) pt.onclick = () => openMyProfileModal();
   }
@@ -970,11 +975,13 @@ function renderSelect(){
       </div>
     </div>
   `;
-  document.getElementById('pickCreator').onclick = () => {
-    if(creatorSettings.creatorCode){
-      openCreatorGate();
-    } else {
+  document.getElementById('pickCreator').onclick = async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const isCreatorSession = session && session.user.app_metadata && session.user.app_metadata.provider !== 'twitch';
+    if(isCreatorSession){
       setMode('creator');
+    } else {
+      openCreatorGate();
     }
   };
   document.getElementById('pickViewer').onclick = () => setMode('viewer-login');
@@ -986,31 +993,45 @@ function openCreatorGate(){
     <div class="overlay" id="overlay">
       <div class="modal">
         <h3>🔒 Espace créateur</h3>
-        <label>Code d'accès</label>
-        <input type="password" id="gateCode" placeholder="••••">
+        <label>Email</label>
+        <input type="text" id="gateEmail" placeholder="ton@email.com" autocomplete="username">
+        <label>Mot de passe</label>
+        <input type="password" id="gatePass" placeholder="••••••••" autocomplete="current-password">
         <div class="hint" id="gateError" style="color:var(--rate-red);min-height:16px;"></div>
         <div class="modalbtns">
           <button class="btn ghost" id="cancelBtn">Annuler</button>
-          <button class="btn primary" id="enterBtn">Entrer</button>
+          <button class="btn primary" id="enterBtn">Se connecter</button>
         </div>
       </div>
     </div>
   `;
   document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
   document.getElementById('cancelBtn').onclick = closeModal;
-  const input = document.getElementById('gateCode');
-  const tryEnter = () => {
-    if(input.value === creatorSettings.creatorCode){
+  const emailInput = document.getElementById('gateEmail');
+  const passInput = document.getElementById('gatePass');
+  const errorEl = document.getElementById('gateError');
+  const enterBtn = document.getElementById('enterBtn');
+  const tryEnter = async () => {
+    errorEl.textContent = '';
+    enterBtn.disabled = true;
+    enterBtn.textContent = 'Connexion...';
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: emailInput.value.trim(),
+      password: passInput.value
+    });
+    enterBtn.disabled = false;
+    enterBtn.textContent = 'Se connecter';
+    if(error){
+      errorEl.textContent = 'Email ou mot de passe incorrect.';
+      passInput.value = '';
+    } else {
       closeModal();
       setMode('creator');
-    } else {
-      document.getElementById('gateError').textContent = 'Code incorrect.';
-      input.value = '';
     }
   };
-  document.getElementById('enterBtn').onclick = tryEnter;
-  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryEnter(); });
-  input.focus();
+  enterBtn.onclick = tryEnter;
+  passInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryEnter(); });
+  emailInput.focus();
 }
 
 function renderViewerLogin(){
@@ -1026,9 +1047,12 @@ function renderViewerLogin(){
           <span>📺</span> Se connecter avec Twitch
         </button>
         <div class="hint" style="margin-bottom:16px;">
-          Une vraie connexion Twitch demanderait un serveur, donc pas de OAuth ici. Le bouton ouvre juste Twitch — entre ton pseudo en dessous pour qu'on te reconnaisse.
+          Connexion en un clic avec ton compte Twitch — ton pseudo et ta photo de profil seront récupérés automatiquement.
         </div>
-        <label>Ton pseudo Twitch</label>
+        <div class="hint" style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+          <span style="flex:1;height:1px;background:var(--border);"></span>ou<span style="flex:1;height:1px;background:var(--border);"></span>
+        </div>
+        <label>Ton pseudo</label>
         <input type="text" id="pseudo" placeholder="ex : monPseudo">
         <label>Photo de profil (optionnel)</label>
         <div class="avatarRow">
@@ -1040,12 +1064,17 @@ function renderViewerLogin(){
         </div>
         <label>Ta bio (optionnel)</label>
         <textarea id="bioInput" placeholder="Quelques mots sur toi..."></textarea>
-        <button class="btn primary" id="go" style="width:100%;">Continuer</button>
+        <button class="btn primary" id="go" style="width:100%;">Continuer sans Twitch</button>
       </div>
     </div>
   `;
   document.getElementById('back').onclick = () => setMode('select');
-  document.getElementById('twitchBtn').onclick = () => window.open('https://www.twitch.tv', '_blank');
+  document.getElementById('twitchBtn').onclick = async () => {
+    await supabaseClient.auth.signInWithOAuth({
+      provider: 'twitch',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+  };
   pendingAvatar = '';
 
   document.getElementById('avatarFile').onchange = (e) => {
@@ -2120,24 +2149,23 @@ function openCreatorSettings(){
         <div class="hint" style="text-align:left;margin-bottom:16px;">
           C'est le nom de chaîne utilisé pour afficher ton stream en direct dans l'onglet « Stream » du site.
         </div>
-        <label>Code d'accès à l'espace créateur (optionnel)</label>
-        <input type="text" id="sCode" value="${escapeHtml(creatorSettings.creatorCode||'')}" placeholder="ex : 1234">
-        <div class="hint" style="text-align:left;margin-bottom:16px;">
-          Si rempli, ce code sera demandé pour entrer dans l'espace créateur. Laisse vide pour ne rien demander.
-          ⚠️ C'est une protection légère (côté navigateur), pas un vrai système de sécurité — ça évite que tes viewers touchent au catalogue par erreur, pas une attaque volontaire.
-        </div>
         <div class="modalbtns">
           <button class="btn ghost" id="cancelBtn">Annuler</button>
           <button class="btn primary" id="saveBtn">Enregistrer</button>
         </div>
+        <button class="btn ghost" id="logoutBtn" style="width:100%;margin-top:14px;color:var(--rate-red);border-color:rgba(200,30,58,0.3);">🚪 Déconnexion</button>
       </div>
     </div>
   `;
   document.getElementById('cancelBtn').onclick = closeModal;
   document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('logoutBtn').onclick = async () => {
+    await supabaseClient.auth.signOut();
+    closeModal();
+    setMode('select');
+  };
   document.getElementById('saveBtn').onclick = async () => {
     creatorSettings.twitchChannel = document.getElementById('sChannel').value.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i,'');
-    creatorSettings.creatorCode = document.getElementById('sCode').value.trim();
     await saveSettings();
     closeModal();
     if(mode === 'stream-view') render();
@@ -2671,6 +2699,24 @@ function badgesRowHtml(key){
   await loadScores();
   await loadWheel();
   await loadWheelState();
+
+  // Retour d'une connexion Twitch (ou session créateur déjà active) ?
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(session && session.user.app_metadata && session.user.app_metadata.provider === 'twitch'){
+    const meta = session.user.user_metadata || {};
+    const display = meta.nickname || meta.preferred_username || meta.full_name || meta.name || 'Viewer';
+    viewerName = display;
+    const key = display.toLowerCase();
+    const existing = viewerProfiles[key] || {};
+    viewerProfiles[key] = {
+      display,
+      avatar: meta.avatar_url || existing.avatar || '',
+      bio: existing.bio || ''
+    };
+    await saveProfiles();
+    mode = 'viewer';
+  }
+
   render();
 })();
 </script>
