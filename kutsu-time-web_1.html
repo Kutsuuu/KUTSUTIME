@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kutsu Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik+One&family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#071a17; --panel:#0e2622; --panel-2:#123832; --panel-3:#184a41;
+    --gold:#ff8a5c; --gold-dim:#c25f38; --red:#c81e3a;
+    --twitch:#9146ff; --twitch-dim:#5c2ea6;
+    --rate-red:#e5484d; --rate-orange:#f5a524; --rate-blue:#3b82f6; --rate-green:#22c55e;
+    --text:#f5f0e8; --text-dim:#a79fb0; --border:rgba(255,138,92,0.22);
+    --shadow-sm:0 2px 10px rgba(0,0,0,0.25);
+    --shadow-md:0 16px 34px -14px rgba(0,0,0,0.55);
+    --shadow-lg:0 30px 60px -20px rgba(0,0,0,0.7);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 20% -10%, rgba(255,138,92,0.12), transparent 60%),
+      radial-gradient(ellipse 900px 600px at 100% 0%, rgba(45,212,167,0.07), transparent 55%),
+      radial-gradient(ellipse at top, #0a2b24 0%, var(--bg) 55%), var(--bg);
+    color:var(--text); font-family:'Sora',sans-serif; min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(255,138,92,0.38);}
+  .wrap{max-width:1800px;margin:0 auto;padding:0 clamp(20px,4vw,64px) 90px;}
+  .wrap.narrow{max-width:440px;padding-top:60px;}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .page{animation:fadeIn .3s cubic-bezier(.2,.8,.2,1);}
+
+  /* ---------- navbar ---------- */
+  .navbar{
+    position:sticky;top:0;z-index:30;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    padding:16px 0;margin-bottom:26px;
+    background:linear-gradient(180deg, rgba(7,26,23,0.95) 70%, rgba(7,26,23,0));
+    backdrop-filter:blur(8px);
+  }
+  .navbrand{cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;}
+  .navlogo{
+    font-family:'Rubik One',sans-serif;font-weight:400;font-size:20px;letter-spacing:1px;
+    background:linear-gradient(180deg,#ffe8d6, var(--gold) 55%, var(--gold-dim));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .navlinks{
+    display:flex;gap:3px;background:rgba(15,12,23,0.8);border:1px solid var(--border);
+    border-radius:12px;padding:4px;
+  }
+  .navlink{
+    padding:9px 15px;border-radius:9px;border:none;background:none;color:var(--text-dim);
+    font-family:'Sora',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;
+    display:flex;align-items:center;gap:7px;transition:.15s;
+  }
+  .navlink.active{background:var(--panel-3);color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold-dim);}
+  .navlink:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.03);}
+  .navright{display:flex;align-items:center;gap:8px;}
+
+  .navMore{position:relative;}
+  .navMore .chev{font-size:9px;opacity:0.7;}
+  .navMorePanel{
+    display:none;position:absolute;top:calc(100% + 8px);left:0;
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));border:1px solid var(--border);
+    border-radius:12px;padding:6px;min-width:180px;box-shadow:var(--shadow-lg);z-index:40;
+    flex-direction:column;gap:2px;
+  }
+  .navMorePanel.open{display:flex;}
+  .navMorePanel .navlink{width:100%;justify-content:flex-start;padding:10px 12px;}
+  .navMorePanel .navlink .lbl{display:inline;}
+
+  .iconBtn{
+    width:38px;height:38px;border-radius:10px;background:rgba(23,19,32,0.8);
+    border:1px solid var(--border);color:var(--text-dim);font-size:15px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.15s;
+  }
+  .iconBtn:hover{color:var(--gold);border-color:var(--gold-dim);background:var(--panel-2);}
+
+  .logo h1{
+    font-family:'Rubik One',sans-serif;font-weight:400;font-size:clamp(30px,7vw,44px);
+    letter-spacing:1.5px;margin:0;
+    background:linear-gradient(180deg,#ffe8d6, var(--gold) 55%, var(--gold-dim));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .logo .tag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.5px;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
+  .logo.center{text-align:center;}
+
+  .hero{text-align:center;padding:38px 0 34px;}
+
+  .addbtn{
+    background:linear-gradient(180deg,#ffb38a, var(--gold));color:#2a1608;border:none;border-radius:10px;
+    padding:12px 20px;font-family:'Sora',sans-serif;font-weight:700;font-size:14px;
+    cursor:pointer;white-space:nowrap;transition:filter .15s, transform .12s;box-shadow:var(--shadow-sm);
+  }
+  .addbtn:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .addbtn:active{transform:translateY(0);}
+
+  .pill{
+    background:rgba(23,19,32,0.8);border:1px solid var(--border);border-radius:9px;
+    padding:9px 14px;font-family:'Sora',sans-serif;font-weight:600;font-size:12.5px;color:var(--text-dim);
+    cursor:pointer;white-space:nowrap;transition:.15s;display:inline-flex;align-items:center;gap:6px;
+  }
+  .pill:hover{color:var(--gold);border-color:var(--gold-dim);background:var(--panel-2);}
+  .pill.active{color:var(--gold);border-color:var(--gold-dim);background:var(--panel-3);}
+
+  .controls{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+  .search{
+    flex:1;min-width:200px;
+    display:flex;align-items:center;gap:10px;
+    background:#082019;border:1px solid var(--border);border-radius:11px;padding:12px 16px;
+    transition:border-color .15s;
+  }
+  .search:focus-within{border-color:var(--gold-dim);}
+  .search input{
+    flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Sora',sans-serif;font-size:14px;
+  }
+  .search .ic{color:var(--text-dim);}
+
+  .tabs{display:flex;gap:5px;background:#082019;border:1px solid var(--border);border-radius:11px;padding:4px;}
+  .tab{
+    padding:9px 17px;border-radius:8px;border:none;background:none;color:var(--text-dim);
+    font-family:'Sora',sans-serif;font-weight:600;font-size:12.5px;
+    cursor:pointer;transition:.15s;
+  }
+  .tab.active{background:var(--panel-3);color:var(--gold);}
+  .tab:hover:not(.active){color:var(--text);}
+
+  .selectBox{
+    background:#0f0c17;border:1px solid var(--border);border-radius:11px;
+    padding:11px 14px;color:var(--text-dim);font-family:'Sora',sans-serif;font-weight:600;font-size:12.5px;
+    cursor:pointer;outline:none;transition:border-color .15s;
+  }
+  .selectBox:focus, .selectBox:hover{border-color:var(--gold-dim);color:var(--text);}
+  .selectBox option{background:#0e2622;color:var(--text);}
+
+  .sectionLabel{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--text-dim);margin:26px 0 12px;display:flex;align-items:center;gap:10px;
+  }
+  .sectionLabel::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:22px;
+  }
+  .card{
+    cursor:pointer;
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+    transition:transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, border-color .18s ease;
+    display:flex;flex-direction:column;box-shadow:var(--shadow-sm);
+  }
+  .card:hover{transform:translateY(-6px);border-color:var(--gold-dim);box-shadow:var(--shadow-md);}
+  .card .poster{
+    width:100%;aspect-ratio:2/3;background:#082019 center/cover no-repeat;
+    display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:30px;
+    position:relative;
+  }
+  .card .poster::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.35));
+    pointer-events:none;
+  }
+  .card .badge{
+    position:absolute;top:8px;left:8px;z-index:1;
+    background:rgba(11,10,18,0.85);border:1px solid var(--border);
+    color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;
+    padding:3px 7px;border-radius:6px;text-transform:uppercase;
+  }
+  button.badge{cursor:default;}
+  .card .badge.rediff{
+    left:auto;right:8px;
+    color:var(--red);border-color:rgba(200,30,58,0.4);
+    cursor:pointer;transition:.15s;
+  }
+  .card .badge.rediff:hover{background:rgba(200,30,58,0.25);transform:scale(1.05);}
+  .favBtn{
+    position:absolute;bottom:8px;right:8px;z-index:1;
+    width:28px;height:28px;border-radius:50%;
+    background:rgba(11,10,18,0.85);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-size:13px;
+    cursor:pointer;transition:.15s;
+  }
+  .favBtn:hover{transform:scale(1.1);border-color:var(--gold-dim);}
+  .favBtn.active{color:#ff6b8b;border-color:rgba(255,107,139,0.5);background:rgba(255,107,139,0.15);}
+  .card .info{padding:11px 13px 13px;}
+  .card .title{font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;line-height:1.3;margin-bottom:6px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .card .year{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-bottom:8px;}
+  .ratingsRow{display:flex;gap:5px;flex-wrap:wrap;}
+  .rchip{
+    display:inline-flex;align-items:center;gap:3px;background:#082019;border:1px solid var(--border);
+    border-radius:6px;padding:3px 6px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  }
+
+  .empty{
+    text-align:center;padding:64px 22px;color:var(--text-dim);
+    border:1px dashed var(--border);border-radius:16px;
+    background:radial-gradient(circle at 50% 0%, rgba(255,138,92,0.09), transparent 65%);
+  }
+  .empty .ic{
+    width:54px;height:54px;border-radius:50%;background:var(--panel-2);
+    display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px;
+  }
+  .empty .btn2{
+    margin-top:18px;background:var(--gold);color:#2a1608;border:none;border-radius:9px;
+    padding:11px 22px;font-weight:700;font-size:13px;cursor:pointer;transition:.15s;
+  }
+  .empty .btn2:hover{filter:brightness(1.08);transform:translateY(-1px);}
+
+  /* modal */
+  @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .overlay{
+    position:fixed;inset:0;background:rgba(5,4,9,0.78);backdrop-filter:blur(4px);
+    display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;
+  }
+  .modal{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);border-radius:16px;padding:28px;max-width:460px;width:100%;
+    box-shadow:var(--shadow-lg);animation:modalIn .2s cubic-bezier(.2,.8,.2,1);
+  }
+  .modal h3{font-family:'Rubik One',sans-serif;font-weight:400;font-size:23px;color:var(--gold);margin:0 0 20px;letter-spacing:0.5px;}
+  label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:7px;}
+  input[type=text], textarea{
+    width:100%;background:#082019;border:1px solid var(--border);border-radius:9px;
+    padding:11px 13px;color:var(--text);font-family:'Sora',sans-serif;font-size:14px;margin-bottom:15px;outline:none;
+    transition:border-color .15s;
+  }
+  input[type=text]:focus, textarea:focus{border-color:var(--gold);}
+  textarea{resize:vertical;min-height:60px;}
+  .typetoggle{display:flex;gap:8px;margin-bottom:15px;}
+  .typebtn{
+    flex:1;padding:11px;border-radius:9px;border:1px solid var(--border);background:#082019;
+    color:var(--text-dim);font-family:'Sora',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:.15s;
+  }
+  .typebtn.active{background:var(--panel-3);color:var(--gold);border-color:var(--gold-dim);}
+  .posterrow{display:flex;gap:14px;margin-bottom:15px;align-items:flex-start;}
+  .posterpreview{
+    width:80px;height:120px;border-radius:8px;background:#082019 center/cover no-repeat;
+    border:1px solid var(--border);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:22px;
+  }
+  .posterfields{flex:1;}
+  .filebtn{
+    display:inline-block;background:#082019;border:1px solid var(--border);border-radius:8px;
+    padding:9px 13px;font-family:'Sora',sans-serif;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:8px;transition:.15s;
+  }
+  .filebtn:hover{color:var(--gold);border-color:var(--gold-dim);}
+  input[type=file]{display:none;}
+  .row2{display:flex;gap:10px;}
+  .row2 input{flex:1;}
+  .modalbtns{display:flex;gap:10px;margin-top:8px;}
+  .btn{flex:1;padding:12px;border-radius:9px;border:none;font-weight:700;font-size:13px;cursor:pointer;transition:.15s;}
+  .btn.primary{background:linear-gradient(180deg,#ffb38a, var(--gold));color:#2a1608;}
+  .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text-dim);}
+  .btn.ghost:hover{color:var(--text);border-color:var(--gold-dim);}
+  .btn.danger{background:transparent;border:1px solid rgba(200,30,58,0.4);color:var(--red);}
+  .btn.danger:hover{background:rgba(200,30,58,0.1);}
+  .btn.twitch{background:var(--twitch);color:#fff;}
+  .btn.twitch:hover{background:var(--twitch-dim);}
+
+  /* detail */
+  .detailhead{display:flex;gap:18px;margin-bottom:18px;}
+  .detailposter{width:120px;height:180px;border-radius:10px;background:#082019 center/cover no-repeat;border:1px solid var(--border);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--text-dim);box-shadow:var(--shadow-sm);}
+  .detailinfo h3{font-family:'Rubik One',sans-serif;font-weight:400;font-size:24px;color:var(--text);margin:0 0 6px;}
+  .detailinfo .metaline{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:12px;}
+  .ratebox{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .ratebox input{
+    width:80px;background:#082019;border:1px solid var(--border);border-radius:9px;
+    padding:9px 10px;color:var(--gold);font-family:'Rubik One',sans-serif;font-size:20px;text-align:center;
+    outline:none;margin-bottom:0;
+  }
+  .ratebox input:focus{border-color:var(--gold);}
+  .ratebox .outof{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .ratebox.viewer input{color:var(--twitch);}
+  .synopsis{font-size:13px;color:var(--text-dim);line-height:1.65;margin-bottom:18px;}
+  .rediffLink{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(200,30,58,0.12);border:1px solid rgba(200,30,58,0.4);
+    color:var(--red);text-decoration:none;font-weight:700;font-size:13px;
+    padding:9px 14px;border-radius:9px;margin-bottom:18px;transition:.15s;
+  }
+  .rediffLink:hover{background:rgba(200,30,58,0.2);}
+  .pubbox{
+    background:#082019;border:1px solid var(--border);border-radius:11px;
+    padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .pubbox .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
+  .pubbox .v{font-family:'Rubik One',sans-serif;font-size:22px;color:var(--twitch);}
+  .pubbox + .pubbox{margin-top:-4px;}
+  .pubbox:last-of-type{margin-bottom:18px;}
+
+  /* role select */
+  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:640px;margin:0 auto;}
+  @media (max-width:520px){ .role-grid{grid-template-columns:1fr;} }
+  .role-card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);border-radius:16px;
+    padding:30px 24px;text-align:left;cursor:pointer;color:var(--text);
+    transition:transform .18s cubic-bezier(.2,.8,.2,1), border-color .18s ease, box-shadow .18s ease;
+    box-shadow:var(--shadow-sm);
+  }
+  .role-card:hover{transform:translateY(-5px);border-color:var(--gold-dim);box-shadow:var(--shadow-md);}
+  .role-card .icon{
+    width:48px;height:48px;border-radius:12px;background:var(--panel-3);
+    display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;
+  }
+  .role-card .title{font-family:'Rubik One',sans-serif;font-size:19px;letter-spacing:1px;color:var(--gold);}
+  .role-card .desc{font-size:13px;color:var(--text-dim);margin-top:8px;line-height:1.55;}
+
+  .twitchbox{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));border:1px solid var(--border);border-radius:16px;padding:28px;
+    box-shadow:var(--shadow-sm);
+  }
+  .hint{font-size:12px;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.6;}
+  .back{
+    background:none;border:none;color:var(--text-dim);
+    font-family:'Sora',sans-serif;font-weight:600;font-size:12px;
+    cursor:pointer;margin-bottom:18px;display:flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .back:hover{color:var(--gold);}
+  .viewerTag{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--twitch);
+    background:rgba(145,70,255,0.12);border:1px solid rgba(145,70,255,0.35);
+    padding:7px 13px;border-radius:20px;
+  }
+
+  .vrow{
+    display:flex;align-items:center;gap:14px;
+    background:var(--panel);border:1px solid var(--border);border-radius:13px;
+    padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s;
+  }
+  .vrow:hover{border-color:var(--twitch);background:var(--panel-2);transform:translateX(3px);}
+  .vavatar{
+    width:42px;height:42px;border-radius:50%;flex:0 0 auto;
+    background:linear-gradient(135deg, var(--twitch), var(--twitch-dim));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Rubik One',sans-serif;font-size:16px;color:#fff;
+  }
+  .vinfo{flex:1;min-width:0;}
+  .vinfo .vname{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:var(--text);}
+  .vinfo .vsub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:2px;}
+  .vavg{font-family:'Rubik One',sans-serif;font-size:20px;flex:0 0 auto;}
+
+  .mrow{
+    display:flex;align-items:center;gap:12px;
+    background:var(--panel);border:1px solid var(--border);border-radius:11px;
+    padding:10px 14px;margin-bottom:8px;
+  }
+  .mrow .mposter{
+    width:38px;height:54px;border-radius:6px;background:#082019 center/cover no-repeat;
+    flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-dim);
+  }
+  .mrow .mtitle{flex:1;font-family:'Sora',sans-serif;font-weight:600;font-size:13px;color:var(--text);}
+  .mrow .mscore{font-family:'Rubik One',sans-serif;font-size:18px;flex:0 0 auto;}
+
+  .comment{
+    background:#082019;border:1px solid var(--border);border-radius:11px;
+    padding:12px 14px;margin-bottom:8px;
+  }
+  .comment .who{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--twitch);
+  }
+  .comment .txt{font-size:13px;color:var(--text-dim);line-height:1.5;}
+  .commentsTitle{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--text-dim);margin:18px 0 10px;
+  }
+
+  .schbtn{
+    background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);
+    padding:5px 8px;font-size:11px;cursor:pointer;transition:.15s;
+  }
+  .schbtn:hover{color:var(--gold);border-color:var(--gold-dim);}
+  .schbtn.del:hover{color:var(--red);border-color:rgba(200,30,58,0.4);}
+  .todaytag{
+    background:rgba(255,138,92,0.2);color:var(--gold);font-family:'JetBrains Mono',monospace;
+    font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:6px;margin-left:8px;text-transform:uppercase;
+  }
+
+  .weekNav{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    margin-bottom:20px;flex-wrap:wrap;
+  }
+  .weekLabel{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:1px;color:var(--text);
+    background:#082019;border:1px solid var(--border);border-radius:9px;padding:9px 16px;
+  }
+  .weekGrid{
+    display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:12px;
+    overflow-x:auto;padding-bottom:8px;
+  }
+  .dayCol{
+    background:var(--panel);border:1px solid var(--border);border-radius:13px;
+    padding:12px;min-height:200px;display:flex;flex-direction:column;transition:.15s;
+  }
+  .dayCol.today{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+  .dayColHead{
+    text-align:center;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border);
+  }
+  .dowName{
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;
+  }
+  .dowDate{font-family:'Rubik One',sans-serif;font-size:16px;color:var(--gold);margin-top:3px;}
+  .dayColBody{flex:1;display:flex;flex-direction:column;gap:8px;}
+  .dayEmpty{
+    flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-dim);
+    font-family:'JetBrains Mono',monospace;font-size:12px;opacity:0.5;
+  }
+  .evCard{
+    background:#082019;border:1px solid var(--border);border-radius:9px;padding:9px 10px;position:relative;
+  }
+  .evTime{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:0.5px;margin-bottom:3px;
+  }
+  .evTitle{font-family:'Sora',sans-serif;font-weight:700;font-size:12.5px;color:var(--text);line-height:1.3;}
+  .evNote{font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.4;}
+  .evActions{display:flex;gap:5px;margin-top:7px;}
+  .addDayBtn{
+    background:none;border:1px dashed var(--border);border-radius:8px;color:var(--text-dim);
+    padding:8px;font-size:11px;cursor:pointer;font-family:'Sora',sans-serif;margin-top:auto;
+  }
+  .addDayBtn:hover{color:var(--gold);border-color:var(--gold-dim);}
+
+  @media(max-width:900px){
+    .weekGrid{grid-auto-flow:column;grid-template-columns:none;}
+    .dayCol{width:150px;flex:0 0 150px;}
+  }
+
+  .episodesBtn{
+    width:100%;background:var(--panel-3);border:1px solid var(--gold-dim);border-radius:9px;
+    color:var(--gold);font-family:'Sora',sans-serif;font-weight:700;font-size:13px;
+    padding:11px;cursor:pointer;margin-bottom:16px;transition:.15s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .episodesBtn:hover{filter:brightness(1.1);}
+  .seasonBlock{margin-bottom:16px;}
+  .seasonHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .seasonTitle{font-family:'Rubik One',sans-serif;font-size:14px;color:var(--gold);letter-spacing:0.5px;}
+  .seasonActions{display:flex;gap:6px;}
+  .epRow{
+    display:flex;align-items:center;gap:10px;
+    background:#082019;border:1px solid var(--border);border-radius:9px;
+    padding:8px 12px;margin-bottom:6px;
+  }
+  .epNum{
+    width:30px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:11px;flex:0 0 auto;
+  }
+  .epLabel{flex:1;font-family:'Sora',sans-serif;font-size:12.5px;color:var(--text-dim);}
+  .epInput{
+    width:52px;background:#131a30;border:1px solid var(--border);border-radius:7px;
+    padding:6px;color:var(--text);font-family:'Anton',sans-serif;text-align:center;font-size:13px;outline:none;flex:0 0 auto;
+  }
+  .epInput:focus{border-color:var(--gold);}
+  .epDel{
+    background:none;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);
+    padding:5px 8px;font-size:11px;cursor:pointer;flex:0 0 auto;
+  }
+  .epDel:hover{color:var(--red);border-color:rgba(200,30,58,0.4);}
+  .addEpBtn, .addSeasonBtn{
+    background:none;border:1px dashed var(--border);border-radius:8px;color:var(--text-dim);
+    padding:8px 12px;font-size:12px;cursor:pointer;width:100%;margin-top:4px;font-family:'Sora',sans-serif;
+  }
+  .addEpBtn:hover, .addSeasonBtn:hover{color:var(--gold);border-color:var(--gold-dim);}
+  .delSeasonBtn{
+    background:none;border:none;color:var(--text-dim);font-size:11px;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .delSeasonBtn:hover{color:var(--red);}
+
+  .avatarRow{display:flex;gap:14px;align-items:center;margin-bottom:15px;}
+  .avatarPreview{
+    width:64px;height:64px;border-radius:50%;flex:0 0 auto;
+    background:var(--panel-3) center/cover no-repeat;
+    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+    font-size:22px;color:var(--text-dim);overflow:hidden;
+  }
+  .avatarPreview img{width:100%;height:100%;object-fit:cover;}
+
+  .statsRow{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;}
+  .statBox{
+    flex:1;min-width:90px;background:#082019;border:1px solid var(--border);border-radius:11px;
+    padding:12px;text-align:center;
+  }
+  .statBox .n{font-family:'Rubik One',sans-serif;font-size:22px;color:var(--gold);}
+  .statBox .l{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-top:3px;}
+
+  .bioText{
+    font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;
+    background:#082019;border:1px solid var(--border);border-radius:11px;padding:12px 14px;
+  }
+
+  .twitchEmbedWrap{
+    position:relative;width:100%;border-radius:14px;overflow:hidden;
+    border:1px solid var(--border);box-shadow:var(--shadow-md);background:#000;
+    aspect-ratio:16/9;
+  }
+  .twitchEmbedWrap iframe{width:100%;height:100%;border:none;display:block;}
+  .streamOfflineCard{
+    text-align:center;padding:70px 24px;border:1px dashed var(--border);border-radius:16px;color:var(--text-dim);
+  }
+
+  .gamesGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:30px;}
+  .gameCard{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));border:1px solid var(--border);border-radius:15px;
+    padding:22px;cursor:pointer;transition:.18s;box-shadow:var(--shadow-sm);
+  }
+  .gameCard:hover{transform:translateY(-4px);border-color:var(--gold-dim);box-shadow:var(--shadow-md);}
+  .gameCard .gicon{font-size:30px;margin-bottom:10px;}
+  .gameCard .gtitle{font-family:'Rubik One',sans-serif;font-size:16px;color:var(--gold);margin-bottom:6px;}
+  .gameCard .gdesc{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+  .myPointsBox{
+    display:flex;align-items:center;gap:14px;background:var(--panel-3);border:1px solid var(--gold-dim);
+    border-radius:14px;padding:16px 20px;margin-bottom:26px;
+  }
+  .myPointsBox .n{font-family:'Rubik One',sans-serif;font-size:30px;color:var(--gold);}
+  .myPointsBox .l{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
+  .lbRow{
+    display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;padding:12px 16px;margin-bottom:8px;
+  }
+  .lbRow.me{border-color:var(--gold);}
+  .lbRank{width:26px;text-align:center;font-family:'Rubik One',sans-serif;font-size:14px;color:var(--text-dim);flex:0 0 auto;}
+  .lbRank.top1{color:#ffd700;} .lbRank.top2{color:#c0c0c0;} .lbRank.top3{color:#cd7f32;}
+  .lbName{flex:1;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;}
+  .lbPts{font-family:'Rubik One',sans-serif;color:var(--gold);font-size:15px;}
+
+  .gameStage{text-align:center;padding:10px 0;}
+  .clickTarget{
+    width:110px;height:110px;border-radius:50%;margin:20px auto;
+    background:radial-gradient(circle at 35% 30%, #ffb38a, var(--gold-dim));
+    border:none;cursor:pointer;font-family:'Rubik One',sans-serif;font-size:16px;color:#2a1608;
+    display:flex;align-items:center;justify-content:center;user-select:none;
+    box-shadow:var(--shadow-md);transition:transform .06s;
+  }
+  .clickTarget:active{transform:scale(0.92);}
+  .gameTimer{font-family:'Rubik One',sans-serif;font-size:26px;color:var(--gold);margin-bottom:6px;}
+  .gameCount{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .quizOptions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;}
+  .quizOpt{
+    flex:1;min-width:140px;background:#082019;border:1px solid var(--border);border-radius:11px;
+    padding:16px;cursor:pointer;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--text);
+    transition:.15s;
+  }
+  .quizOpt:hover{border-color:var(--gold-dim);background:var(--panel-3);}
+  .quizOpt.correct{border-color:var(--rate-green);background:rgba(34,197,94,0.15);}
+  .quizOpt.wrong{border-color:var(--rate-red);background:rgba(229,72,77,0.15);}
+
+  /* Wheel */
+  .wheelLayout{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;}
+  .wheelStageBox{flex:0 0 auto;text-align:center;}
+  .wheelWrap{position:relative;width:300px;height:300px;margin:0 auto;}
+  .wheelSpinner{width:100%;height:100%;border-radius:50%;box-shadow:var(--shadow-lg);border:4px solid var(--panel-3);overflow:hidden;}
+  .wheelPointer{
+    position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+    width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;
+    border-top:24px solid var(--gold);z-index:2;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+  .spinBtn{
+    margin-top:22px;background:linear-gradient(180deg,#ffcf9c, var(--gold));color:#2a1608;border:none;
+    border-radius:11px;padding:14px 32px;font-family:'Rubik One',sans-serif;font-size:16px;cursor:pointer;
+    box-shadow:var(--shadow-sm);transition:.15s;
+  }
+  .spinBtn:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .spinBtn:disabled{opacity:0.5;cursor:not-allowed;}
+  .wheelResult{
+    margin-top:16px;font-family:'Rubik One',sans-serif;font-size:20px;color:var(--gold);min-height:28px;
+  }
+  .wheelResultActions{display:flex;gap:8px;justify-content:center;margin-top:10px;}
+  .wheelResultActions .btn{flex:0 0 auto;padding:9px 16px;font-size:12px;}
+  .wheelManage{flex:1;min-width:260px;}
+  .wheelAddRow{display:flex;gap:8px;margin-bottom:16px;}
+  .wheelAddRow input{margin-bottom:0;flex:1;}
+  .wheelListItem{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:7px;
+  }
+  .wheelListItem .wlLabel{font-family:'Sora',sans-serif;font-weight:600;font-size:13px;}
+  .wheelListItem .wlDel{background:none;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);padding:5px 9px;cursor:pointer;font-size:11px;}
+  .wheelListItem .wlDel:hover{color:var(--red);border-color:rgba(200,30,58,0.4);}
+
+  /* Dashboard */
+  .dashGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px;}
+  .dashStat{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;
+  }
+  .dashStat .n{font-family:'Rubik One',sans-serif;font-size:28px;color:var(--gold);}
+  .dashStat .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
+  .dashHighlight{
+    display:flex;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--border);
+    border-radius:14px;padding:16px;margin-bottom:14px;
+  }
+  .dashHighlight .dposter{width:56px;height:80px;border-radius:8px;background:#082019 center/cover no-repeat;flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-dim);}
+  .dashHighlight .dinfo{flex:1;}
+  .dashHighlight .dlabel{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+  .dashHighlight .dtitle{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;}
+  .dashHighlight .dvalue{font-family:'Rubik One',sans-serif;font-size:18px;color:var(--gold);flex:0 0 auto;}
+
+  /* Badges */
+  .badgesRow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .badgeChip{
+    display:flex;align-items:center;gap:6px;background:#082019;border:1px solid var(--border);
+    border-radius:20px;padding:7px 12px 7px 8px;font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;
+    color:var(--text-dim);opacity:0.4;
+  }
+  .badgeChip.earned{opacity:1;border-color:var(--gold-dim);color:var(--text);background:var(--panel-3);}
+  .badgeChip .bicon{font-size:15px;}
+
+  @media(max-width:600px){
+    .navlink .lbl{display:none;}
+    .navlink{padding:10px 12px;}
+  }
+  @media(max-width:480px){
+    .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:13px;}
+  }
+
+  /* Barre latérale gauche en mode portrait / mobile */
+  @media(max-width:768px) and (orientation:portrait){
+    .wrap:has(.navbar){padding-left:78px;}
+    .navbar{
+      position:fixed;top:0;left:0;bottom:0;z-index:35;
+      flex-direction:column;justify-content:flex-start;
+      width:64px;padding:18px 0;margin-bottom:0;gap:18px;
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border-right:1px solid var(--border);backdrop-filter:none;
+    }
+    .navbrand{display:none;}
+    .navlinks{
+      flex-direction:column;background:none;border:none;padding:0;gap:8px;width:100%;align-items:center;
+    }
+    .navlink{padding:11px;justify-content:center;}
+    .navlink .lbl{display:none;}
+    .navMorePanel{top:0;left:calc(100% + 10px);min-width:190px;}
+    .navright{flex-direction:column;margin-top:auto;gap:8px;align-items:center;padding:0 6px;}
+    .viewerTag{flex-direction:column;padding:6px 4px;border-radius:12px;font-size:9px;line-height:1.2;text-align:center;gap:3px;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #navQuit{font-size:10px;padding:8px 6px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div id="app"></div>
+</div>
+<div id="modalRoot"></div>
+
+<!-- ============================================================ -->
+<!-- CONFIG SUPABASE — colle tes valeurs ici (Settings > API)      -->
+<!-- ============================================================ -->
+<script>
+  const SUPABASE_URL = 'kutsutime.fr';
+  const SUPABASE_ANON_KEY = 'xtcnovgytqldzekalqce';
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+<!-- ============================================================ -->
+
+<script>
+const CATALOG_KEY = 'catalog';
+const RATINGS_KEY = 'viewerRatings';
+const SCHEDULE_KEY = 'schedule';
+const PROFILES_KEY = 'viewerProfiles';
+const SETTINGS_KEY = 'creatorSettings';
+const SCORES_KEY = 'gameScores';
+const WHEEL_KEY = 'wheelItems';
+const WHEEL_STATE_KEY = 'wheelSpinState';
+
+let items = [];
+let viewerRatings = {}; // { movieId: [{who, score, comment, ts}] }
+let scheduleItems = []; // [{id, title, date, time, note, addedAt}]
+let viewerProfiles = {}; // { key(lowercase pseudo): {display, avatar} }
+let creatorSettings = {}; // { twitchChannel }
+let gameScores = {}; // { key(lowercase pseudo): points }
+let wheelItems = []; // [{id, label}]
+let wheelState = {}; // {lastWinner, lastSpinAt}
+let filter = 'all';
+let query = '';
+let genreFilter = 'all';
+let sortBy = 'recent';
+let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games
+let viewerName = null;
+let selectedViewerKey = null;
+let pendingAvatar = '';
+
+/* ---------- STOCKAGE (Supabase) ---------- */
+async function kvGet(key){
+  try{
+    const { data, error } = await supabaseClient
+      .from('app_data').select('value').eq('key', key).maybeSingle();
+    if(error){ console.error('kvGet', key, error); return null; }
+    return data ? data.value : null;
+  }catch(e){ console.error('kvGet failed', key, e); return null; }
+}
+async function kvSet(key, value){
+  try{
+    const { error } = await supabaseClient
+      .from('app_data').upsert({key, value, updated_at: new Date().toISOString()});
+    if(error) console.error('kvSet', key, error);
+  }catch(e){ console.error('kvSet failed', key, e); }
+}
+
+async function loadCatalog(){ items = (await kvGet(CATALOG_KEY)) || []; }
+async function saveCatalog(){ await kvSet(CATALOG_KEY, items); }
+async function loadRatings(){ viewerRatings = (await kvGet(RATINGS_KEY)) || {}; }
+async function saveRatings(){ await kvSet(RATINGS_KEY, viewerRatings); }
+async function loadSchedule(){ scheduleItems = (await kvGet(SCHEDULE_KEY)) || []; }
+async function saveSchedule(){ await kvSet(SCHEDULE_KEY, scheduleItems); }
+async function loadProfiles(){ viewerProfiles = (await kvGet(PROFILES_KEY)) || {}; }
+async function saveProfiles(){ await kvSet(PROFILES_KEY, viewerProfiles); }
+async function loadSettings(){ creatorSettings = (await kvGet(SETTINGS_KEY)) || {}; }
+async function saveSettings(){ await kvSet(SETTINGS_KEY, creatorSettings); }
+async function loadScores(){ gameScores = (await kvGet(SCORES_KEY)) || {}; }
+async function saveScores(){ await kvSet(SCORES_KEY, gameScores); }
+async function addPoints(key, amount){
+  gameScores[key] = (gameScores[key] || 0) + amount;
+  await saveScores();
+}
+async function loadWheel(){ wheelItems = (await kvGet(WHEEL_KEY)) || []; }
+async function saveWheel(){ await kvSet(WHEEL_KEY, wheelItems); }
+async function loadWheelState(){ wheelState = (await kvGet(WHEEL_STATE_KEY)) || {}; }
+async function saveWheelState(){ await kvSet(WHEEL_STATE_KEY, wheelState); }
+
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function ratingColor(v){
+  if(v === null || v === undefined || v === '' || isNaN(v) || v <= 0) return 'var(--text-dim)';
+  if(v < 3) return 'var(--rate-red)';
+  if(v < 5) return 'var(--rate-orange)';
+  if(v < 7.5) return 'var(--rate-blue)';
+  return 'var(--rate-green)';
+}
+
+function typeLabel(type){
+  if(type === 'anime') return 'Anime';
+  if(type === 'serie') return 'Série';
+  return 'Film';
+}
+function isEpisodic(type){ return type === 'serie' || type === 'anime'; }
+
+function publicStats(movieId){
+  const list = viewerRatings[movieId] || [];
+  if(list.length === 0) return {avg:0, count:0};
+  const sum = list.reduce((a,r) => a + r.score, 0);
+  return {avg: sum/list.length, count: list.length};
+}
+
+function getViewersSummary(){
+  const map = {};
+  Object.keys(viewerRatings).forEach(movieId => {
+    (viewerRatings[movieId] || []).forEach(r => {
+      const key = r.who.toLowerCase();
+      if(!map[key]) map[key] = {key, display: r.who, count: 0, sum: 0, lastTs: 0};
+      map[key].count++;
+      map[key].sum += r.score;
+      map[key].lastTs = Math.max(map[key].lastTs, r.ts || 0);
+    });
+  });
+  return Object.values(map)
+    .map(v => ({...v, avg: v.sum / v.count}))
+    .sort((a,b) => b.lastTs - a.lastTs);
+}
+
+function getViewerMovies(key){
+  const list = [];
+  items.forEach(it => {
+    const ratings = viewerRatings[it.id] || [];
+    const mine = ratings.find(r => r.who.toLowerCase() === key);
+    if(mine) list.push({movie: it, score: mine.score, comment: mine.comment || '', ts: mine.ts || 0});
+  });
+  return list.sort((a,b) => b.ts - a.ts);
+}
+
+/* ---------- EPISODES (saisons / épisodes pour séries & animes) ---------- */
+function episodeKey(itemId, season, ep){ return itemId + '::s' + season + 'e' + ep; }
+
+function seriesCreatorAvg(it){
+  const vals = [];
+  (it.seasons||[]).forEach(s => (s.episodes||[]).forEach(e => { if(e.rating) vals.push(e.rating); }));
+  if(vals.length === 0) return {avg:0, count:0};
+  return {avg: vals.reduce((a,b)=>a+b,0)/vals.length, count: vals.length};
+}
+function seriesPublicStats(it){
+  let sum=0, count=0;
+  (it.seasons||[]).forEach(s => (s.episodes||[]).forEach(e => {
+    const list = viewerRatings[episodeKey(it.id, s.number, e.number)] || [];
+    list.forEach(r => { sum += r.score; count++; });
+  }));
+  return {avg: count ? sum/count : 0, count};
+}
+function seriesViewerOwnAvg(it, name){
+  let sum=0, count=0;
+  (it.seasons||[]).forEach(s => (s.episodes||[]).forEach(e => {
+    const list = viewerRatings[episodeKey(it.id, s.number, e.number)] || [];
+    const mine = list.find(r => r.who.toLowerCase() === (name||'').toLowerCase());
+    if(mine){ sum += mine.score; count++; }
+  }));
+  return {avg: count ? sum/count : 0, count};
+}
+
+function getViewerStats(key){
+  let filmsRated = 0, showsRated = 0, episodesRated = 0;
+  items.forEach(it => {
+    if(it.type === 'film'){
+      const list = viewerRatings[it.id] || [];
+      if(list.some(r => r.who.toLowerCase() === key)) filmsRated++;
+    } else if(isEpisodic(it.type)){
+      let ratedThisShow = false;
+      (it.seasons||[]).forEach(s => (s.episodes||[]).forEach(e => {
+        const list = viewerRatings[episodeKey(it.id, s.number, e.number)] || [];
+        if(list.some(r => r.who.toLowerCase() === key)){ episodesRated++; ratedThisShow = true; }
+      }));
+      if(ratedThisShow) showsRated++;
+    }
+  });
+  return {filmsRated, showsRated, episodesRated};
+}
+
+/* ---------- ROUTER ---------- */
+const app = document.getElementById('app');
+const wrapEl = document.getElementById('wrap');
+
+function setMode(m){
+  mode = m;
+  wrapEl.className = m === 'viewer-login' ? 'wrap narrow' : 'wrap';
+  render();
+}
+
+function render(){
+  if(mode === 'select') return renderSelect();
+  if(mode === 'viewer-login') return renderViewerLogin();
+  if(mode === 'creator') return renderCreator();
+  if(mode === 'viewer') return renderViewer();
+  if(mode === 'viewers-list') return renderViewersList();
+  if(mode === 'viewer-profile') return renderViewerProfile();
+  if(mode === 'schedule') return renderSchedule('creator');
+  if(mode === 'schedule-view') return renderSchedule('viewer');
+  if(mode === 'stream-view') return renderStreamView();
+  if(mode === 'games') return renderGames();
+  if(mode === 'wheel') return renderWheel();
+  if(mode === 'dashboard') return renderDashboard();
+}
+
+/* ---------- shared navbar ---------- */
+function navHtml(activeKey, ctx){
+  if(ctx === 'creator'){
+    const moreActive = ['viewers','stream','games','wheel','dashboard'].includes(activeKey);
+    return `
+      <div class="navbar">
+        <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
+        <div class="navlinks">
+          <button class="navlink ${activeKey==='catalog'?'active':''}" data-go="creator">🎬 <span class="lbl">Catalogue</span></button>
+          <button class="navlink ${activeKey==='schedule'?'active':''}" data-go="schedule">📅 <span class="lbl">Calendrier</span></button>
+          <div class="navMore">
+            <button class="navlink ${moreActive?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
+            <div class="navMorePanel" id="navMorePanel">
+              <button class="navlink ${activeKey==='viewers'?'active':''}" data-go="viewers-list">👥 Viewers</button>
+              <button class="navlink ${activeKey==='dashboard'?'active':''}" data-go="dashboard">📊 Dashboard</button>
+              <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
+              <button class="navlink ${activeKey==='games'?'active':''}" data-go="games">🎮 Jeux</button>
+              <button class="navlink ${activeKey==='wheel'?'active':''}" data-go="wheel">🎡 Roue</button>
+            </div>
+          </div>
+        </div>
+        <div class="navright">
+          <button class="iconBtn" id="navSettings" title="Réglages">⚙️</button>
+          <button class="iconBtn" id="navSwitch" title="Voir en tant que viewer">🍿</button>
+        </div>
+      </div>
+    `;
+  }
+  const moreActiveV = ['stream','games'].includes(activeKey);
+  return `
+    <div class="navbar">
+      <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
+      <div class="navlinks">
+        <button class="navlink ${activeKey==='catalog'?'active':''}" data-go="viewer">🍿 <span class="lbl">Catalogue</span></button>
+        <button class="navlink ${activeKey==='schedule'?'active':''}" data-go="schedule-view">📅 <span class="lbl">Calendrier</span></button>
+        <div class="navMore">
+          <button class="navlink ${moreActiveV?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
+          <div class="navMorePanel" id="navMorePanel">
+            <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
+            <button class="navlink ${activeKey==='games'?'active':''}" data-go="games">🎮 Jeux</button>
+          </div>
+        </div>
+      </div>
+      <div class="navright">
+        <span class="viewerTag" id="navProfileTag" style="cursor:pointer;">${viewerAvatarHtml(viewerName, 18)} ${escapeHtml(viewerName||'')}</span>
+        <button class="pill" id="navQuit">Quitter</button>
+      </div>
+    </div>
+  `;
+}
+function wireNav(ctx){
+  document.querySelectorAll('.navlink').forEach(b => {
+    if(b.id === 'navMoreBtn') return;
+    b.onclick = () => {
+      if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
+      if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
+      if(b.dataset.go === 'wheel') wheelViewFromCreator = (ctx === 'creator');
+      setMode(b.dataset.go);
+    };
+  });
+  const brand = document.getElementById('navBrand');
+  if(brand) brand.onclick = () => setMode('select');
+  const moreBtn = document.getElementById('navMoreBtn');
+  const morePanel = document.getElementById('navMorePanel');
+  if(moreBtn && morePanel){
+    moreBtn.onclick = (e) => {
+      e.stopPropagation();
+      morePanel.classList.toggle('open');
+    };
+  }
+  if(ctx === 'creator'){
+    const sw = document.getElementById('navSwitch');
+    if(sw) sw.onclick = () => setMode('select');
+    const st = document.getElementById('navSettings');
+    if(st) st.onclick = () => openCreatorSettings();
+  } else {
+    const q = document.getElementById('navQuit');
+    if(q) q.onclick = () => { viewerName = null; setMode('select'); };
+    const pt = document.getElementById('navProfileTag');
+    if(pt) pt.onclick = () => openMyProfileModal();
+  }
+}
+document.addEventListener('click', (e) => {
+  const morePanel = document.getElementById('navMorePanel');
+  const moreBtn = document.getElementById('navMoreBtn');
+  if(morePanel && morePanel.classList.contains('open') && !morePanel.contains(e.target) && e.target !== moreBtn){
+    morePanel.classList.remove('open');
+  }
+});
+
+function viewerAvatarHtml(name, size){
+  const key = (name||'').toLowerCase();
+  const p = viewerProfiles[key];
+  if(p && p.avatar){
+    return `<span style="display:inline-flex;width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;vertical-align:middle;"><img src="${p.avatar}" style="width:100%;height:100%;object-fit:cover;"></span>`;
+  }
+  return '📺';
+}
+
+function renderSelect(){
+  app.innerHTML = `
+    <div class="page">
+      <div class="hero">
+        <div class="logo center">
+          <h1>KUTSU TIME</h1>
+          <div class="tag">ta collection, tes affiches, tes viewers</div>
+        </div>
+      </div>
+      <div class="role-grid">
+        <div class="role-card" id="pickCreator">
+          <div class="icon">🔒</div>
+          <div class="title">ESPACE CRÉATEUR</div>
+          <div class="desc">Ajoute tes films et séries, gère les affiches, les rediffs et le calendrier.</div>
+        </div>
+        <div class="role-card" id="pickViewer">
+          <div class="icon">🍿</div>
+          <div class="title">ESPACE VIEWER</div>
+          <div class="desc">Parcours la collection, note les films et découvre les prochaines rediffs.</div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('pickCreator').onclick = () => {
+    if(creatorSettings.creatorCode){
+      openCreatorGate();
+    } else {
+      setMode('creator');
+    }
+  };
+  document.getElementById('pickViewer').onclick = () => setMode('viewer-login');
+}
+
+function openCreatorGate(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>🔒 Espace créateur</h3>
+        <label>Code d'accès</label>
+        <input type="password" id="gateCode" placeholder="••••">
+        <div class="hint" id="gateError" style="color:var(--rate-red);min-height:16px;"></div>
+        <div class="modalbtns">
+          <button class="btn ghost" id="cancelBtn">Annuler</button>
+          <button class="btn primary" id="enterBtn">Entrer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('cancelBtn').onclick = closeModal;
+  const input = document.getElementById('gateCode');
+  const tryEnter = () => {
+    if(input.value === creatorSettings.creatorCode){
+      closeModal();
+      setMode('creator');
+    } else {
+      document.getElementById('gateError').textContent = 'Code incorrect.';
+      input.value = '';
+    }
+  };
+  document.getElementById('enterBtn').onclick = tryEnter;
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryEnter(); });
+  input.focus();
+}
+
+function renderViewerLogin(){
+  app.innerHTML = `
+    <div class="page">
+      <button class="back" id="back">← retour</button>
+      <div class="logo center" style="margin-bottom:24px;">
+        <h1 style="font-size:30px;">KUTSU TIME</h1>
+        <div class="tag">espace viewer</div>
+      </div>
+      <div class="twitchbox">
+        <button class="btn twitch" id="twitchBtn" style="width:100%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span>📺</span> Se connecter avec Twitch
+        </button>
+        <div class="hint" style="margin-bottom:16px;">
+          Une vraie connexion Twitch demanderait un serveur, donc pas de OAuth ici. Le bouton ouvre juste Twitch — entre ton pseudo en dessous pour qu'on te reconnaisse.
+        </div>
+        <label>Ton pseudo Twitch</label>
+        <input type="text" id="pseudo" placeholder="ex : monPseudo">
+        <label>Photo de profil (optionnel)</label>
+        <div class="avatarRow">
+          <div class="avatarPreview" id="avatarPreview">🍿</div>
+          <div>
+            <label class="filebtn" for="avatarFile" style="margin-bottom:0;">📁 Choisir une image</label>
+            <input type="file" id="avatarFile" accept="image/*">
+          </div>
+        </div>
+        <label>Ta bio (optionnel)</label>
+        <textarea id="bioInput" placeholder="Quelques mots sur toi..."></textarea>
+        <button class="btn primary" id="go" style="width:100%;">Continuer</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('back').onclick = () => setMode('select');
+  document.getElementById('twitchBtn').onclick = () => window.open('https://www.twitch.tv', '_blank');
+  pendingAvatar = '';
+
+  document.getElementById('avatarFile').onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      img.onload = () => {
+        const maxW = 160;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const c2 = canvas.getContext('2d');
+        c2.drawImage(img, 0, 0, canvas.width, canvas.height);
+        pendingAvatar = canvas.toDataURL('image/jpeg', 0.75);
+        document.getElementById('avatarPreview').innerHTML = `<img src="${pendingAvatar}">`;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  document.getElementById('pseudo').addEventListener('blur', () => {
+    const key = document.getElementById('pseudo').value.trim().toLowerCase();
+    const existing = viewerProfiles[key];
+    if(existing){
+      if(existing.avatar && !pendingAvatar){
+        pendingAvatar = existing.avatar;
+        document.getElementById('avatarPreview').innerHTML = `<img src="${existing.avatar}">`;
+      }
+      if(existing.bio) document.getElementById('bioInput').value = existing.bio;
+    }
+  });
+
+  const goFn = async () => {
+    const val = document.getElementById('pseudo').value.trim();
+    if(!val) return;
+    const bio = document.getElementById('bioInput').value.trim();
+    const key = val.toLowerCase();
+    viewerProfiles[key] = {display: val, avatar: pendingAvatar || (viewerProfiles[key]?.avatar || ''), bio};
+    await saveProfiles();
+    viewerName = val;
+    setMode('viewer');
+  };
+  document.getElementById('go').onclick = goFn;
+  document.getElementById('pseudo').addEventListener('keydown', (e) => { if(e.key==='Enter') goFn(); });
+}
+
+/* ---------- CREATOR ---------- */
+function renderCreator(){
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('catalog','creator')}
+      <div class="controls">
+        <div class="search"><span class="ic">🔍</span><input type="text" id="search" placeholder="Chercher un titre, un genre..." value="${escapeHtml(query)}"></div>
+        ${filterControlsHtml()}
+        <button class="addbtn" id="openAdd">+ Ajouter un titre</button>
+      </div>
+      <div class="tabs" id="tabs" style="margin-bottom:22px;">
+        <button class="tab ${filter==='all'?'active':''}" data-f="all">Tous</button>
+        <button class="tab ${filter==='film'?'active':''}" data-f="film">Films</button>
+        <button class="tab ${filter==='serie'?'active':''}" data-f="serie">Séries</button>
+        <button class="tab ${filter==='anime'?'active':''}" data-f="anime">Animes</button>
+        <button class="tab ${filter==='favorites'?'active':''}" data-f="favorites">♥ Favoris</button>
+      </div>
+      <div id="grid"></div>
+    </div>
+  `;
+  wireNav('creator');
+  wireFilterControls('creator');
+  document.getElementById('openAdd').onclick = () => openModal();
+  document.getElementById('search').addEventListener('input', (e) => { query = e.target.value; renderGrid('creator'); });
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if(!btn) return;
+    filter = btn.dataset.f;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t===btn));
+    renderGrid('creator');
+  });
+  renderGrid('creator');
+}
+
+/* ---------- VIEWER ---------- */
+function renderViewer(){
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('catalog','viewer')}
+      <div class="controls">
+        <div class="search"><span class="ic">🔍</span><input type="text" id="search" placeholder="Chercher un titre, un genre..." value="${escapeHtml(query)}"></div>
+        ${filterControlsHtml()}
+      </div>
+      <div class="tabs" id="tabs" style="margin-bottom:22px;">
+        <button class="tab ${filter==='all'?'active':''}" data-f="all">Tous</button>
+        <button class="tab ${filter==='film'?'active':''}" data-f="film">Films</button>
+        <button class="tab ${filter==='serie'?'active':''}" data-f="serie">Séries</button>
+        <button class="tab ${filter==='anime'?'active':''}" data-f="anime">Animes</button>
+        <button class="tab ${filter==='favorites'?'active':''}" data-f="favorites">♥ Favoris</button>
+      </div>
+      <div id="grid"></div>
+    </div>
+  `;
+  wireNav('viewer');
+  wireFilterControls('viewer');
+  document.getElementById('search').addEventListener('input', (e) => { query = e.target.value; renderGrid('viewer'); });
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if(!btn) return;
+    filter = btn.dataset.f;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t===btn));
+    renderGrid('viewer');
+  });
+  renderGrid('viewer');
+}
+
+/* ---------- CREATOR: viewers list ---------- */
+let viewerSearchQuery = '';
+
+function renderViewersList(){
+  const viewers = getViewersSummary();
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('viewers','creator')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">VIEWERS</h1>
+        <div class="tag">${viewers.length} viewer${viewers.length>1?'s':''} ${viewers.length ? 'ont voté' : ''}</div>
+      </div>
+      <div class="search" style="margin-bottom:20px;max-width:340px;">
+        <span class="ic">🔍</span><input type="text" id="vsearch" placeholder="Chercher un viewer..." value="${escapeHtml(viewerSearchQuery)}">
+      </div>
+      <div id="vlist"></div>
+    </div>
+  `;
+  wireNav('creator');
+  document.getElementById('vsearch').addEventListener('input', (e) => {
+    viewerSearchQuery = e.target.value;
+    drawViewersList(viewers);
+  });
+  if(viewers.length === 0){
+    document.getElementById('vlist').innerHTML = `<div class="empty"><div class="ic">👥</div><div>Aucun viewer n'a encore noté de film.</div></div>`;
+    return;
+  }
+  drawViewersList(viewers);
+}
+
+function drawViewersList(viewers){
+  const vlist = document.getElementById('vlist');
+  const q = viewerSearchQuery.trim().toLowerCase();
+  const filtered = q ? viewers.filter(v => v.display.toLowerCase().includes(q)) : viewers;
+  if(filtered.length === 0){
+    vlist.innerHTML = `<div class="empty"><div class="ic">🔍</div><div>Aucun viewer ne correspond à cette recherche.</div></div>`;
+    return;
+  }
+  vlist.innerHTML = filtered.map(v => `
+    <div class="vrow" data-key="${escapeHtml(v.key)}">
+      <div class="vavatar">${viewerProfiles[v.key] && viewerProfiles[v.key].avatar ? `<img src="${viewerProfiles[v.key].avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : escapeHtml(v.display.slice(0,2).toUpperCase())}</div>
+      <div class="vinfo">
+        <div class="vname">${escapeHtml(v.display)}</div>
+        <div class="vsub">${v.count} film${v.count>1?'s':''} noté${v.count>1?'s':''}</div>
+      </div>
+      <div class="vavg" style="color:${ratingColor(v.avg)}">${v.avg.toFixed(1)}</div>
+    </div>
+  `).join('');
+  vlist.querySelectorAll('.vrow').forEach(row => {
+    row.onclick = () => {
+      const found = viewers.find(v => v.key === row.dataset.key);
+      selectedViewerKey = found.key;
+      setMode('viewer-profile');
+    };
+  });
+}
+
+/* ---------- CREATOR: single viewer profile ---------- */
+function renderViewerProfile(){
+  const viewers = getViewersSummary();
+  const v = viewers.find(x => x.key === selectedViewerKey);
+
+  if(!v){
+    app.innerHTML = `
+      <div class="page">
+        ${navHtml('viewers','creator')}
+        <div class="empty"><div class="ic">👥</div><div>Ce viewer n'a plus de notes enregistrées.</div></div>
+        <button class="back" id="backV" style="margin-top:16px;">← retour aux viewers</button>
+      </div>
+    `;
+    wireNav('creator');
+    document.getElementById('backV').onclick = () => setMode('viewers-list');
+    return;
+  }
+  const movies = getViewerMovies(v.key);
+  const stats = getViewerStats(v.key);
+  const profile = viewerProfiles[v.key] || {};
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('viewers','creator')}
+      <button class="back" id="backV">← retour aux viewers</button>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div class="vavatar" style="width:52px;height:52px;font-size:20px;">${profile.avatar ? `<img src="${profile.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : escapeHtml(v.display.slice(0,2).toUpperCase())}</div>
+        <div>
+          <div class="logo"><h1 style="font-size:26px;">${escapeHtml(v.display)}</h1></div>
+          <div class="tag" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);">
+            moyenne globale <span style="color:${ratingColor(v.avg)}">${v.avg.toFixed(1)}/10</span>
+          </div>
+        </div>
+      </div>
+      ${profile.bio ? `<div class="bioText">${escapeHtml(profile.bio)}</div>` : ''}
+      <div class="statsRow">
+        <div class="statBox"><div class="n">${stats.filmsRated}</div><div class="l">Films notés</div></div>
+        <div class="statBox"><div class="n">${stats.showsRated}</div><div class="l">Séries/animes</div></div>
+        <div class="statBox"><div class="n">${stats.episodesRated}</div><div class="l">Épisodes notés</div></div>
+      </div>
+      <div class="sectionLabel" style="margin-top:0;">Badges</div>
+      ${badgesRowHtml(v.key)}
+      <div class="sectionLabel">Films notés</div>
+      <div id="vmovies"></div>
+    </div>
+  `;
+  wireNav('creator');
+  document.getElementById('backV').onclick = () => setMode('viewers-list');
+  const wrapM = document.getElementById('vmovies');
+  if(movies.length === 0){
+    wrapM.innerHTML = `<div class="empty" style="padding:30px 18px;"><div class="ic">🎬</div><div>Aucun film noté individuellement pour l'instant.</div></div>`;
+  } else {
+  wrapM.innerHTML = movies.map(m => `
+    <div class="mrow">
+      <div class="mposter" style="${m.movie.poster ? `background-image:url('${m.movie.poster}')` : ''}">${m.movie.poster ? '' : '🎬'}</div>
+      <div class="mtitle">
+        ${escapeHtml(m.movie.title)}
+        ${m.comment ? `<div style="font-family:'Sora',sans-serif;font-weight:400;font-size:12px;color:var(--text-dim);margin-top:3px;">${escapeHtml(m.comment)}</div>` : ''}
+      </div>
+      <div class="mscore" style="color:${ratingColor(m.score)}">${m.score % 1 === 0 ? m.score : m.score.toFixed(1)}/10</div>
+    </div>
+  `).join('');
+  }
+}
+
+/* ---------- SCHEDULE (calendrier hebdomadaire, mode paysage) ---------- */
+const MONTHS_FR = ['JAN','FÉV','MAR','AVR','MAI','JUIN','JUIL','AOÛT','SEPT','OCT','NOV','DÉC'];
+const DAYS_FR = ['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI','DIMANCHE'];
+let weekOffset = 0;
+
+function isoDateLocal(d){
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayISO(){ return isoDateLocal(new Date()); }
+function startOfWeek(date){
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function getWeekDates(offset){
+  const base = startOfWeek(new Date());
+  base.setDate(base.getDate() + offset*7);
+  const days = [];
+  for(let i=0;i<7;i++){
+    const dt = new Date(base);
+    dt.setDate(base.getDate()+i);
+    days.push(dt);
+  }
+  return days;
+}
+
+function renderSchedule(ctx){
+  const isCreator = ctx === 'creator';
+  const today = todayISO();
+  const days = getWeekDates(weekOffset);
+  const weekLabel = `${days[0].getDate()} ${MONTHS_FR[days[0].getMonth()]} — ${days[6].getDate()} ${MONTHS_FR[days[6].getMonth()]} ${days[6].getFullYear()}`;
+
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('schedule', isCreator ? 'creator' : 'viewer')}
+      <div class="controls" style="align-items:center;">
+        <div class="logo" style="flex:1;">
+          <h1 style="font-size:26px;">CALENDRIER</h1>
+          <div class="tag">${isCreator ? 'prochaines rediffs à annoncer' : 'ce que le créateur va react'}</div>
+        </div>
+        ${isCreator ? `<button class="addbtn" id="openAddSched">+ Programmer</button>` : ''}
+      </div>
+      <div class="weekNav">
+        <button class="pill" id="prevWeek">◀ Semaine préc.</button>
+        <div class="weekLabel">${weekLabel}</div>
+        <button class="pill" id="todayBtn">Aujourd'hui</button>
+        <button class="pill" id="nextWeek">Semaine suiv. ▶</button>
+      </div>
+      <div class="weekGrid" id="weekGrid"></div>
+    </div>
+  `;
+  wireNav(isCreator ? 'creator' : 'viewer');
+  const addBtn = document.getElementById('openAddSched');
+  if(addBtn) addBtn.onclick = () => openScheduleModal(null, todayISO());
+  document.getElementById('prevWeek').onclick = () => { weekOffset--; renderSchedule(ctx); };
+  document.getElementById('nextWeek').onclick = () => { weekOffset++; renderSchedule(ctx); };
+  document.getElementById('todayBtn').onclick = () => { weekOffset = 0; renderSchedule(ctx); };
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = days.map(d => {
+    const iso = isoDateLocal(d);
+    const isToday = iso === today;
+    const dayItems = scheduleItems.filter(s => s.date === iso).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+    return `
+      <div class="dayCol ${isToday ? 'today' : ''}">
+        <div class="dayColHead">
+          <div class="dowName">${DAYS_FR[d.getDay() === 0 ? 6 : d.getDay()-1]}</div>
+          <div class="dowDate">${d.getDate()} ${MONTHS_FR[d.getMonth()]}</div>
+        </div>
+        <div class="dayColBody">
+          ${dayItems.length === 0 ? `<div class="dayEmpty">—</div>` : dayItems.map(s => `
+            <div class="evCard" data-id="${s.id}">
+              ${s.time ? `<div class="evTime">🕒 ${escapeHtml(s.time)}</div>` : ''}
+              <div class="evTitle">${escapeHtml(s.title)}</div>
+              ${s.note ? `<div class="evNote">${escapeHtml(s.note)}</div>` : ''}
+              ${isCreator ? `
+                <div class="evActions">
+                  <button class="schbtn edit" data-id="${s.id}">✎</button>
+                  <button class="schbtn del" data-id="${s.id}">✕</button>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+          ${isCreator ? `<button class="addDayBtn" data-date="${iso}">+ Ajouter</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if(isCreator){
+    grid.querySelectorAll('.addDayBtn').forEach(b => {
+      b.onclick = () => openScheduleModal(null, b.dataset.date);
+    });
+    grid.querySelectorAll('.schbtn.edit').forEach(b => {
+      b.onclick = (e) => { e.stopPropagation(); openScheduleModal(scheduleItems.find(s => s.id === b.dataset.id)); };
+    });
+    grid.querySelectorAll('.schbtn.del').forEach(b => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        scheduleItems = scheduleItems.filter(s => s.id !== b.dataset.id);
+        await saveSchedule();
+        renderSchedule('creator');
+      };
+    });
+  }
+}
+
+function openScheduleModal(existing, prefillDate){
+  const isEdit = !!existing;
+  const s = existing || {title:'', date: prefillDate || todayISO(), time:'', note:''};
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>${isEdit ? 'Modifier la programmation' : 'Programmer un titre'}</h3>
+        <label>Titre du film / série</label>
+        <input type="text" id="sTitle" value="${escapeHtml(s.title)}" placeholder="ex : Old Boy">
+        <div class="row2">
+          <div style="flex:1;">
+            <label>Date</label>
+            <input type="text" id="sDate" value="${s.date}" placeholder="AAAA-MM-JJ">
+          </div>
+          <div style="flex:1;">
+            <label>Heure (optionnel)</label>
+            <input type="text" id="sTime" value="${escapeHtml(s.time||'')}" placeholder="20h30">
+          </div>
+        </div>
+        <label>Note (optionnel)</label>
+        <textarea id="sNote" placeholder="Un mot pour teaser">${escapeHtml(s.note||'')}</textarea>
+        <div class="modalbtns">
+          <button class="btn ghost" id="cancelBtn">Annuler</button>
+          <button class="btn primary" id="saveBtn">${isEdit ? 'Enregistrer' : 'Programmer'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('cancelBtn').onclick = closeModal;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  const dateInput = document.getElementById('sDate');
+  dateInput.type = 'date';
+
+  document.getElementById('saveBtn').onclick = async () => {
+    const title = document.getElementById('sTitle').value.trim();
+    const date = document.getElementById('sDate').value.trim();
+    if(!title || !date) return;
+    const time = document.getElementById('sTime').value.trim();
+    const note = document.getElementById('sNote').value.trim();
+
+    if(isEdit){
+      const idx = scheduleItems.findIndex(x => x.id === s.id);
+      scheduleItems[idx] = {...scheduleItems[idx], title, date, time, note};
+    } else {
+      scheduleItems.push({id: 's-' + Math.random().toString(36).slice(2,10), title, date, time, note, addedAt: Date.now()});
+    }
+    await saveSchedule();
+    closeModal();
+    renderSchedule('creator');
+  };
+}
+
+/* ---------- GRID (shared by creator/viewer) ---------- */
+function getGenres(){
+  const set = new Set();
+  items.forEach(it => { if(it.genre && it.genre.trim()) set.add(it.genre.trim()); });
+  return Array.from(set).sort((a,b) => a.localeCompare(b));
+}
+
+function filterControlsHtml(){
+  const genres = getGenres();
+  return `
+    <select class="selectBox" id="genreFilter">
+      <option value="all">Tous les genres</option>
+      ${genres.map(g => `<option value="${escapeHtml(g)}" ${genreFilter===g?'selected':''}>${escapeHtml(g)}</option>`).join('')}
+    </select>
+    <select class="selectBox" id="sortFilter">
+      <option value="recent" ${sortBy==='recent'?'selected':''}>Récemment ajoutés</option>
+      <option value="alpha" ${sortBy==='alpha'?'selected':''}>Alphabétique (A→Z)</option>
+      <option value="rating_desc" ${sortBy==='rating_desc'?'selected':''}>Note décroissante</option>
+      <option value="rating_asc" ${sortBy==='rating_asc'?'selected':''}>Note croissante</option>
+      <option value="year" ${sortBy==='year'?'selected':''}>Date (année)</option>
+    </select>
+  `;
+}
+function wireFilterControls(ctx){
+  const g = document.getElementById('genreFilter');
+  const s = document.getElementById('sortFilter');
+  g.value = genreFilter;
+  s.value = sortBy;
+  g.addEventListener('change', (e) => { genreFilter = e.target.value; renderGrid(ctx); });
+  s.addEventListener('change', (e) => { sortBy = e.target.value; renderGrid(ctx); });
+}
+
+function overallRating(it){
+  return isEpisodic(it.type) ? seriesCreatorAvg(it).avg : (it.rating || 0);
+}
+
+function isFavorite(it, ctx){
+  if(ctx === 'creator') return !!it.favorite;
+  const key = (viewerName||'').toLowerCase();
+  const p = viewerProfiles[key];
+  return !!(p && p.favorites && p.favorites.includes(it.id));
+}
+async function toggleFavorite(it, ctx){
+  if(ctx === 'creator'){
+    it.favorite = !it.favorite;
+    await saveCatalog();
+  } else {
+    const key = (viewerName||'').toLowerCase();
+    if(!viewerProfiles[key]) viewerProfiles[key] = {display: viewerName, avatar:'', bio:'', favorites: []};
+    if(!viewerProfiles[key].favorites) viewerProfiles[key].favorites = [];
+    const favs = viewerProfiles[key].favorites;
+    const idx = favs.indexOf(it.id);
+    if(idx >= 0) favs.splice(idx, 1); else favs.push(it.id);
+    await saveProfiles();
+  }
+}
+
+function renderGrid(ctx){
+  const grid = document.getElementById('grid');
+  let list = items.filter(it => filter==='all' || filter==='favorites' || it.type===filter);
+  if(filter === 'favorites'){
+    list = list.filter(it => isFavorite(it, ctx));
+  }
+  if(genreFilter !== 'all'){
+    list = list.filter(it => (it.genre||'').trim() === genreFilter);
+  }
+  if(query.trim()){
+    const q = query.trim().toLowerCase();
+    list = list.filter(it => (it.title||'').toLowerCase().includes(q) || (it.genre||'').toLowerCase().includes(q));
+  }
+  list = list.slice();
+  if(sortBy === 'alpha'){
+    list.sort((a,b) => (a.title||'').localeCompare(b.title||''));
+  } else if(sortBy === 'rating_desc'){
+    list.sort((a,b) => overallRating(b) - overallRating(a));
+  } else if(sortBy === 'rating_asc'){
+    list.sort((a,b) => overallRating(a) - overallRating(b));
+  } else if(sortBy === 'year'){
+    list.sort((a,b) => (parseInt(b.year,10)||0) - (parseInt(a.year,10)||0));
+  } else {
+    list.sort((a,b) => (b.addedAt||0) - (a.addedAt||0));
+  }
+
+  if(items.length === 0){
+    grid.innerHTML = ctx === 'creator'
+      ? `<div class="empty"><div class="ic">🎞️</div><div>Ta collection est vide pour l'instant.</div><button class="btn2" id="emptyAdd">Ajouter ton premier titre</button></div>`
+      : `<div class="empty"><div class="ic">🎞️</div><div>Le créateur n'a pas encore ajouté de titres.</div></div>`;
+    const btn = document.getElementById('emptyAdd');
+    if(btn) btn.onclick = () => openModal();
+    return;
+  }
+  if(list.length === 0){
+    grid.innerHTML = filter === 'favorites'
+      ? `<div class="empty"><div class="ic">♥</div><div>Aucun favori pour l'instant.</div></div>`
+      : `<div class="empty"><div class="ic">🔍</div><div>Aucun résultat pour cette recherche.</div></div>`;
+    return;
+  }
+  grid.innerHTML = `<div class="grid">${list.map(it => {
+    const episodic = isEpisodic(it.type);
+    const creatorStat = episodic ? seriesCreatorAvg(it) : {avg: it.rating||0, count: it.rating?1:0};
+    const pub = episodic ? seriesPublicStats(it) : publicStats(it.id);
+    const mineStat = ctx === 'viewer'
+      ? (episodic ? seriesViewerOwnAvg(it, viewerName) : {avg: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase())?.score || 0, count: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase()) ? 1 : 0})
+      : null;
+    const fav = isFavorite(it, ctx);
+    return `
+    <div class="card" data-id="${it.id}">
+      <div class="poster" style="${it.poster ? `background-image:url('${it.poster}')` : ''}">
+        ${it.poster ? '' : '🎬'}
+        <span class="badge">${typeLabel(it.type)}</span>
+        ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="badge rediff" title="Voir la rediff">▶ Rediff</a>` : ''}
+        <button class="favBtn ${fav ? 'active' : ''}" data-fav="${it.id}" title="Favori">${fav ? '♥' : '♡'}</button>
+      </div>
+      <div class="info">
+        <div class="title">${escapeHtml(it.title)}</div>
+        ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
+        <div class="ratingsRow">
+          <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\\.0$/,'') : '—'}</span>
+          ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">👤 ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\\.0$/,'') : '—'}</span>` : ''}
+          <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Moyenne des viewers${pub.count ? ' ('+pub.count+')' : ''}">📺 ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
+        </div>
+      </div>
+    </div>
+  `}).join('')}</div>`;
+
+  grid.querySelectorAll('.favBtn').forEach(b => {
+    b.onclick = async (e) => {
+      e.stopPropagation();
+      const it = items.find(x => x.id === b.dataset.fav);
+      await toggleFavorite(it, ctx);
+      renderGrid(ctx);
+    };
+  });
+
+  grid.querySelectorAll('.badge.rediff').forEach(b => {
+    b.onclick = (e) => { e.stopPropagation(); };
+  });
+
+  grid.querySelectorAll('.card').forEach(c => {
+    c.onclick = () => {
+      if(ctx === 'creator'){
+        openDetail(c.dataset.id);
+      } else {
+        openViewerRate(c.dataset.id);
+      }
+    };
+  });
+}
+
+/* ---------- CREATOR: add/edit modal ---------- */
+function openModal(existing){
+  const isEdit = !!existing;
+  const it = existing || {type:'film', title:'', year:'', genre:'', synopsis:'', poster:'', rating:0, rediff:''};
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>${isEdit ? 'Modifier le titre' : 'Ajouter un titre'}</h3>
+        <div class="typetoggle">
+          <button type="button" class="typebtn ${it.type==='film'?'active':''}" data-t="film">🎬 Film</button>
+          <button type="button" class="typebtn ${it.type==='serie'?'active':''}" data-t="serie">📺 Série</button>
+          <button type="button" class="typebtn ${it.type==='anime'?'active':''}" data-t="anime">🌸 Anime</button>
+        </div>
+        <label>Titre</label>
+        <input type="text" id="fTitle" value="${escapeHtml(it.title)}" placeholder="ex : Parasite">
+        <div class="row2">
+          <div style="flex:1;"><label>Année</label><input type="text" id="fYear" value="${escapeHtml(it.year)}" placeholder="2019"></div>
+          <div style="flex:1;"><label>Genre</label><input type="text" id="fGenre" value="${escapeHtml(it.genre)}" placeholder="Thriller"></div>
+        </div>
+        <label>Affiche</label>
+        <div class="posterrow">
+          <div class="posterpreview" id="posterPreview" style="${it.poster ? `background-image:url('${it.poster}')`:''}">${it.poster ? '' : '🖼️'}</div>
+          <div class="posterfields">
+            <label class="filebtn" for="fFile">📁 Importer une image</label>
+            <input type="file" id="fFile" accept="image/*">
+            <label style="margin-top:4px;">ou coller une URL</label>
+            <input type="text" id="fPosterUrl" value="${it.poster && it.poster.startsWith('http') ? escapeHtml(it.poster) : ''}" placeholder="https://...">
+          </div>
+        </div>
+        <label>Synopsis (optionnel)</label>
+        <textarea id="fSynopsis" placeholder="Une phrase pour se souvenir de quoi ça parle">${escapeHtml(it.synopsis)}</textarea>
+        <label>Lien de la rediff (optionnel)</label>
+        <input type="text" id="fRediff" value="${escapeHtml(it.rediff||'')}" placeholder="https://twitch.tv/videos/...">
+        <div class="modalbtns">
+          <button class="btn ghost" id="cancelBtn">Annuler</button>
+          <button class="btn primary" id="saveBtn">${isEdit ? 'Enregistrer' : 'Ajouter'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  let currentType = it.type;
+  let posterData = it.poster || '';
+
+  root.querySelectorAll('.typebtn').forEach(b => {
+    b.onclick = () => {
+      currentType = b.dataset.t;
+      root.querySelectorAll('.typebtn').forEach(x => x.classList.toggle('active', x===b));
+    };
+  });
+
+  document.getElementById('fFile').onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      img.onload = () => {
+        const maxW = 240;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx2 = canvas.getContext('2d');
+        ctx2.drawImage(img, 0, 0, canvas.width, canvas.height);
+        posterData = canvas.toDataURL('image/jpeg', 0.7);
+        document.getElementById('posterPreview').style.backgroundImage = `url('${posterData}')`;
+        document.getElementById('posterPreview').textContent = '';
+        document.getElementById('fPosterUrl').value = '';
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  document.getElementById('fPosterUrl').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    if(val){
+      posterData = val;
+      document.getElementById('posterPreview').style.backgroundImage = `url('${val}')`;
+      document.getElementById('posterPreview').textContent = '';
+    }
+  });
+
+  document.getElementById('cancelBtn').onclick = closeModal;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+
+  document.getElementById('saveBtn').onclick = async () => {
+    const title = document.getElementById('fTitle').value.trim();
+    if(!title) return;
+    const year = document.getElementById('fYear').value.trim();
+    const genre = document.getElementById('fGenre').value.trim();
+    const synopsis = document.getElementById('fSynopsis').value.trim();
+    const rediff = document.getElementById('fRediff').value.trim();
+    const urlVal = document.getElementById('fPosterUrl').value.trim();
+    if(urlVal) posterData = urlVal;
+
+    if(isEdit){
+      const idx = items.findIndex(x => x.id === it.id);
+      items[idx] = {...items[idx], title, year, genre, synopsis, rediff, poster: posterData, type: currentType};
+    } else {
+      items.push({
+        id: 'm-' + Math.random().toString(36).slice(2,10),
+        title, year, genre, synopsis, rediff, poster: posterData, type: currentType,
+        rating: 0, seasons: [], addedAt: Date.now()
+      });
+    }
+    await saveCatalog();
+    closeModal();
+    renderGrid('creator');
+  };
+}
+
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+
+/* ---------- CREATOR: detail view ---------- */
+function openDetail(id){
+  const it = items.find(x => x.id === id);
+  if(!it) return;
+  const pub = publicStats(id);
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="detailhead">
+          <div class="detailposter" style="${it.poster?`background-image:url('${it.poster}')`:''}">${it.poster?'':'🎬'}</div>
+          <div class="detailinfo">
+            <h3>${escapeHtml(it.title)}</h3>
+            <div class="metaline">${typeLabel(it.type)}${it.year ? ' · '+escapeHtml(it.year):''}${it.genre ? ' · '+escapeHtml(it.genre):''}</div>
+            <label>Ma note</label>
+            <div class="ratebox">
+              <input type="text" inputmode="decimal" id="rateInput" style="color:${ratingColor(it.rating)}" value="${it.rating ? it.rating : ''}" placeholder="—">
+              <span class="outof">/ 10</span>
+            </div>
+          </div>
+        </div>
+        <div class="pubbox"><span class="l">📺 Note moyenne des viewers${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
+        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
+        ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
+        ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="rediffLink">▶ Voir la rediff</a>` : ''}
+        ${(viewerRatings[id]||[]).some(r=>r.comment) ? `
+          <div class="commentsTitle">Avis des viewers</div>
+          ${(viewerRatings[id]||[]).filter(r=>r.comment).slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).map(r => `
+            <div class="comment">
+              <div class="who"><span>📺 ${escapeHtml(r.who)}</span><span style="color:${ratingColor(r.score)}">${r.score % 1 === 0 ? r.score : r.score.toFixed(1)}/10</span></div>
+              <div class="txt">${escapeHtml(r.comment)}</div>
+            </div>
+          `).join('')}
+        ` : ''}
+        <div class="modalbtns">
+          <button class="btn danger" id="delBtn">Supprimer</button>
+          <button class="btn ghost" id="editBtn">Modifier</button>
+          <button class="btn primary" id="closeBtn">Fermer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('closeBtn').onclick = closeModal;
+  document.getElementById('editBtn').onclick = () => openModal(it);
+  const epsBtn = document.getElementById('epsBtn');
+  if(epsBtn) epsBtn.onclick = () => openEpisodesManager(it);
+  document.getElementById('delBtn').onclick = async () => {
+    items = items.filter(x => x.id !== id);
+    delete viewerRatings[id];
+    await saveCatalog();
+    await saveRatings();
+    closeModal();
+    renderGrid('creator');
+  };
+  const rateInput = root.querySelector('#rateInput');
+  const commitRating = async () => {
+    const raw = rateInput.value.replace(',', '.').trim();
+    let val = parseFloat(raw);
+    if(raw === '' || isNaN(val)){
+      it.rating = 0;
+      rateInput.value = '';
+    } else {
+      val = Math.max(0, Math.min(10, val));
+      val = Math.round(val * 10) / 10;
+      it.rating = val;
+      rateInput.value = val;
+    }
+    await saveCatalog();
+    renderGrid('creator');
+  };
+  rateInput.addEventListener('input', () => {
+    const v = parseFloat(rateInput.value.replace(',', '.'));
+    rateInput.style.color = ratingColor(isNaN(v) ? 0 : v);
+  });
+  rateInput.addEventListener('blur', commitRating);
+  rateInput.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ rateInput.blur(); } });
+}
+
+/* ---------- VIEWER: rate view ---------- */
+function openViewerRate(id){
+  const it = items.find(x => x.id === id);
+  if(!it) return;
+  const pub = publicStats(id);
+  const mine = (viewerRatings[id] || []).find(r => r.who.toLowerCase() === viewerName.toLowerCase());
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <div class="detailhead">
+          <div class="detailposter" style="${it.poster?`background-image:url('${it.poster}')`:''}">${it.poster?'':'🎬'}</div>
+          <div class="detailinfo">
+            <h3>${escapeHtml(it.title)}</h3>
+            <div class="metaline">${typeLabel(it.type)}${it.year ? ' · '+escapeHtml(it.year):''}${it.genre ? ' · '+escapeHtml(it.genre):''}</div>
+            <label>Ta note</label>
+            <div class="ratebox viewer">
+              <input type="text" inputmode="decimal" id="rateInput" style="color:${ratingColor(mine ? mine.score : 0)}" value="${mine ? mine.score : ''}" placeholder="—">
+              <span class="outof">/ 10</span>
+            </div>
+          </div>
+        </div>
+        <div class="pubbox"><span class="l">🎬 Note du créateur</span><span class="v" style="color:${ratingColor(it.rating)}">${it.rating ? (it.rating % 1 === 0 ? it.rating : it.rating.toFixed(1))+'/10' : '—'}</span></div>
+        <div class="pubbox"><span class="l">📺 Note moyenne des viewers${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
+        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
+        <label>Ton avis (optionnel)</label>
+        <textarea id="commentInput" placeholder="Ce que tu en as pensé...">${escapeHtml(mine && mine.comment ? mine.comment : '')}</textarea>
+        ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
+        ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="rediffLink">▶ Voir la rediff</a>` : ''}
+        <div class="modalbtns">
+          <button class="btn ghost" id="closeBtn">Fermer</button>
+          <button class="btn primary" id="submitBtn">${mine ? 'Mettre à jour ma note' : 'Envoyer ma note'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('closeBtn').onclick = closeModal;
+  const epsBtn = document.getElementById('epsBtn');
+  if(epsBtn) epsBtn.onclick = () => openViewerEpisodes(it);
+  const vRateInput = document.getElementById('rateInput');
+  vRateInput.addEventListener('input', () => {
+    const v = parseFloat(vRateInput.value.replace(',', '.'));
+    vRateInput.style.color = ratingColor(isNaN(v) ? 0 : v);
+  });
+  document.getElementById('submitBtn').onclick = async () => {
+    const rateInput = document.getElementById('rateInput');
+    const raw = rateInput.value.replace(',', '.').trim();
+    let val = parseFloat(raw);
+    if(raw === '' || isNaN(val)) return;
+    val = Math.max(0, Math.min(10, val));
+    val = Math.round(val * 10) / 10;
+
+    const comment = document.getElementById('commentInput').value.trim();
+    if(!viewerRatings[id]) viewerRatings[id] = [];
+    const idx = viewerRatings[id].findIndex(r => r.who.toLowerCase() === viewerName.toLowerCase());
+    const entry = {who: viewerName, score: val, comment, ts: Date.now()};
+    if(idx >= 0) viewerRatings[id][idx] = entry; else viewerRatings[id].push(entry);
+
+    await saveRatings();
+    closeModal();
+    renderGrid('viewer');
+  };
+}
+
+/* ---------- CREATOR: manage seasons & episodes ---------- */
+function openEpisodesManager(it){
+  if(!it.seasons) it.seasons = [];
+  const root = document.getElementById('modalRoot');
+
+  function draw(){
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h3>🎞️ ${escapeHtml(it.title)}</h3>
+          <div id="seasonsWrap"></div>
+          <button class="addSeasonBtn" id="addSeasonBtn">+ Ajouter une saison</button>
+          <div class="modalbtns" style="margin-top:18px;">
+            <button class="btn ghost" id="closeBtn">Fermer</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+    document.getElementById('closeBtn').onclick = closeModal;
+
+    const wrap = document.getElementById('seasonsWrap');
+    if(it.seasons.length === 0){
+      wrap.innerHTML = `<div class="empty" style="padding:36px 18px;"><div class="ic">🎬</div><div>Aucune saison pour l'instant. Ajoute ta première saison ci-dessous.</div></div>`;
+    } else {
+      wrap.innerHTML = it.seasons.map(s => `
+        <div class="seasonBlock">
+          <div class="seasonHead">
+            <span class="seasonTitle">Saison ${s.number}</span>
+            <button class="delSeasonBtn" data-season="${s.id}">Supprimer la saison ✕</button>
+          </div>
+          ${(s.episodes||[]).map(e => `
+            <div class="epRow">
+              <span class="epNum">E${e.number}</span>
+              <span class="epLabel">Épisode ${e.number}</span>
+              <input type="text" inputmode="decimal" class="epInput" data-season="${s.id}" data-ep="${e.id}"
+                style="color:${ratingColor(e.rating)}" value="${e.rating ? e.rating : ''}" placeholder="—">
+              <button class="epDel" data-season="${s.id}" data-ep="${e.id}">✕</button>
+            </div>
+          `).join('')}
+          <button class="addEpBtn" data-season="${s.id}">+ Ajouter un épisode</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('addSeasonBtn').onclick = async () => {
+      const nextNum = it.seasons.length ? Math.max(...it.seasons.map(s => s.number)) + 1 : 1;
+      it.seasons.push({id: 'se-' + Math.random().toString(36).slice(2,9), number: nextNum, episodes: []});
+      await saveCatalog();
+      draw();
+    };
+
+    wrap.querySelectorAll('.delSeasonBtn').forEach(b => {
+      b.onclick = async () => {
+        const season = it.seasons.find(s => s.id === b.dataset.season);
+        (season.episodes||[]).forEach(e => { delete viewerRatings[episodeKey(it.id, season.number, e.number)]; });
+        it.seasons = it.seasons.filter(s => s.id !== b.dataset.season);
+        await saveCatalog();
+        await saveRatings();
+        draw();
+      };
+    });
+
+    wrap.querySelectorAll('.addEpBtn').forEach(b => {
+      b.onclick = async () => {
+        const season = it.seasons.find(s => s.id === b.dataset.season);
+        if(!season.episodes) season.episodes = [];
+        const nextNum = season.episodes.length ? Math.max(...season.episodes.map(e => e.number)) + 1 : 1;
+        season.episodes.push({id: 'ep-' + Math.random().toString(36).slice(2,9), number: nextNum, rating: 0});
+        await saveCatalog();
+        draw();
+      };
+    });
+
+    wrap.querySelectorAll('.epDel').forEach(b => {
+      b.onclick = async () => {
+        const season = it.seasons.find(s => s.id === b.dataset.season);
+        const ep = season.episodes.find(e => e.id === b.dataset.ep);
+        delete viewerRatings[episodeKey(it.id, season.number, ep.number)];
+        season.episodes = season.episodes.filter(e => e.id !== b.dataset.ep);
+        await saveCatalog();
+        await saveRatings();
+        draw();
+      };
+    });
+
+    wrap.querySelectorAll('.epInput').forEach(inp => {
+      const commit = async () => {
+        const season = it.seasons.find(s => s.id === inp.dataset.season);
+        const ep = season.episodes.find(e => e.id === inp.dataset.ep);
+        const raw = inp.value.replace(',', '.').trim();
+        let val = parseFloat(raw);
+        if(raw === '' || isNaN(val)){
+          ep.rating = 0; inp.value = '';
+        } else {
+          val = Math.max(0, Math.min(10, val));
+          val = Math.round(val * 10) / 10;
+          ep.rating = val; inp.value = val;
+        }
+        inp.style.color = ratingColor(ep.rating);
+        await saveCatalog();
+        renderGrid('creator');
+      };
+      inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value.replace(',', '.'));
+        inp.style.color = ratingColor(isNaN(v) ? 0 : v);
+      });
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', (e) => { if(e.key === 'Enter') inp.blur(); });
+    });
+  }
+  draw();
+}
+
+/* ---------- VIEWER: rate seasons & episodes ---------- */
+function openViewerEpisodes(it){
+  const root = document.getElementById('modalRoot');
+
+  function draw(){
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h3>🎞️ ${escapeHtml(it.title)}</h3>
+          <div id="seasonsWrap"></div>
+          <div class="modalbtns" style="margin-top:18px;">
+            <button class="btn primary" id="closeBtn">Fermer</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+    document.getElementById('closeBtn').onclick = closeModal;
+
+    const wrap = document.getElementById('seasonsWrap');
+    const seasons = it.seasons || [];
+    if(seasons.length === 0){
+      wrap.innerHTML = `<div class="empty" style="padding:36px 18px;"><div class="ic">🎬</div><div>Le créateur n'a pas encore ajouté de saisons pour ce titre.</div></div>`;
+      return;
+    }
+    wrap.innerHTML = seasons.map(s => `
+      <div class="seasonBlock">
+        <div class="seasonHead"><span class="seasonTitle">Saison ${s.number}</span></div>
+        ${(s.episodes||[]).map(e => {
+          const key = episodeKey(it.id, s.number, e.number);
+          const list = viewerRatings[key] || [];
+          const mine = list.find(r => r.who.toLowerCase() === viewerName.toLowerCase());
+          return `
+            <div class="epRow">
+              <span class="epNum">E${e.number}</span>
+              <span class="epLabel">Épisode ${e.number}${e.rating ? ` · 🎬 ${e.rating}/10` : ''}</span>
+              <input type="text" inputmode="decimal" class="epInput" data-season="${s.number}" data-ep="${e.number}"
+                style="color:${ratingColor(mine ? mine.score : 0)}" value="${mine ? mine.score : ''}" placeholder="—">
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.epInput').forEach(inp => {
+      const commit = async () => {
+        const season = parseInt(inp.dataset.season, 10);
+        const ep = parseInt(inp.dataset.ep, 10);
+        const key = episodeKey(it.id, season, ep);
+        const raw = inp.value.replace(',', '.').trim();
+        let val = parseFloat(raw);
+        if(raw === '' || isNaN(val)) return;
+        val = Math.max(0, Math.min(10, val));
+        val = Math.round(val * 10) / 10;
+        if(!viewerRatings[key]) viewerRatings[key] = [];
+        const idx = viewerRatings[key].findIndex(r => r.who.toLowerCase() === viewerName.toLowerCase());
+        const entry = {who: viewerName, score: val, ts: Date.now()};
+        if(idx >= 0) viewerRatings[key][idx] = entry; else viewerRatings[key].push(entry);
+        await saveRatings();
+        inp.style.color = ratingColor(val);
+        renderGrid('viewer');
+      };
+      inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value.replace(',', '.'));
+        inp.style.color = ratingColor(isNaN(v) ? 0 : v);
+      });
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', (e) => { if(e.key === 'Enter') inp.blur(); });
+    });
+  }
+  draw();
+}
+
+/* ---------- VIEWER: edit my own profile (avatar + bio) ---------- */
+function openMyProfileModal(){
+  const key = (viewerName||'').toLowerCase();
+  const profile = viewerProfiles[key] || {display: viewerName, avatar:'', bio:''};
+  let localAvatar = profile.avatar || '';
+  const stats = getViewerStats(key);
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>👤 Mon profil</h3>
+        <div class="avatarRow">
+          <div class="avatarPreview" id="avatarPreview">${localAvatar ? `<img src="${localAvatar}">` : '🍿'}</div>
+          <div>
+            <label class="filebtn" for="avatarFile" style="margin-bottom:0;">📁 Changer la photo</label>
+            <input type="file" id="avatarFile" accept="image/*">
+          </div>
+        </div>
+        <label>Ta bio</label>
+        <textarea id="bioInput" placeholder="Quelques mots sur toi...">${escapeHtml(profile.bio||'')}</textarea>
+        <div class="statsRow">
+          <div class="statBox"><div class="n">${stats.filmsRated}</div><div class="l">Films notés</div></div>
+          <div class="statBox"><div class="n">${stats.showsRated}</div><div class="l">Séries/animes</div></div>
+          <div class="statBox"><div class="n">${stats.episodesRated}</div><div class="l">Épisodes notés</div></div>
+        </div>
+        <label>Tes badges</label>
+        ${badgesRowHtml(key)}
+        <div class="modalbtns">
+          <button class="btn ghost" id="closeBtn">Fermer</button>
+          <button class="btn primary" id="saveBtn">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('closeBtn').onclick = closeModal;
+  document.getElementById('avatarFile').onchange = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      img.onload = () => {
+        const maxW = 160;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const c2 = canvas.getContext('2d');
+        c2.drawImage(img, 0, 0, canvas.width, canvas.height);
+        localAvatar = canvas.toDataURL('image/jpeg', 0.75);
+        document.getElementById('avatarPreview').innerHTML = `<img src="${localAvatar}">`;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  document.getElementById('saveBtn').onclick = async () => {
+    const bio = document.getElementById('bioInput').value.trim();
+    viewerProfiles[key] = {display: viewerName, avatar: localAvatar, bio};
+    await saveProfiles();
+    closeModal();
+    render();
+  };
+}
+
+/* ---------- CREATOR: settings (twitch channel) ---------- */
+function openCreatorSettings(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>⚙️ Réglages</h3>
+        <label>Ton pseudo Twitch (pour le lecteur en direct)</label>
+        <input type="text" id="sChannel" value="${escapeHtml(creatorSettings.twitchChannel||'')}" placeholder="ex : monPseudoTwitch">
+        <div class="hint" style="text-align:left;margin-bottom:16px;">
+          C'est le nom de chaîne utilisé pour afficher ton stream en direct dans l'onglet « Stream » du site.
+        </div>
+        <label>Code d'accès à l'espace créateur (optionnel)</label>
+        <input type="text" id="sCode" value="${escapeHtml(creatorSettings.creatorCode||'')}" placeholder="ex : 1234">
+        <div class="hint" style="text-align:left;margin-bottom:16px;">
+          Si rempli, ce code sera demandé pour entrer dans l'espace créateur. Laisse vide pour ne rien demander.
+          ⚠️ C'est une protection légère (côté navigateur), pas un vrai système de sécurité — ça évite que tes viewers touchent au catalogue par erreur, pas une attaque volontaire.
+        </div>
+        <div class="modalbtns">
+          <button class="btn ghost" id="cancelBtn">Annuler</button>
+          <button class="btn primary" id="saveBtn">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('cancelBtn').onclick = closeModal;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('saveBtn').onclick = async () => {
+    creatorSettings.twitchChannel = document.getElementById('sChannel').value.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i,'');
+    creatorSettings.creatorCode = document.getElementById('sCode').value.trim();
+    await saveSettings();
+    closeModal();
+    if(mode === 'stream-view') render();
+  };
+}
+
+/* ---------- STREAM (lecteur Twitch intégré) ---------- */
+let streamViewFromCreator = true;
+
+function renderStreamView(){
+  const inCreator = streamViewFromCreator;
+  const channel = (creatorSettings.twitchChannel || '').trim();
+  const parent = window.location.hostname || 'localhost';
+  const src = channel ? `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(parent)}&muted=false` : '';
+
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('stream', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">STREAM</h1>
+        <div class="tag">${channel ? 'en direct depuis Twitch' : 'aucune chaîne configurée'}</div>
+      </div>
+      ${!channel ? `
+        <div class="streamOfflineCard">
+          <div style="font-size:34px;margin-bottom:12px;">📡</div>
+          <div>${inCreator ? "Ajoute ta chaîne Twitch dans les Réglages pour l'afficher ici." : "Le créateur n'a pas encore configuré sa chaîne Twitch."}</div>
+        </div>
+      ` : `
+        <div class="twitchEmbedWrap">
+          <iframe src="${src}" allowfullscreen scrolling="no"></iframe>
+        </div>
+        <div class="hint">
+          Si le lecteur ne s'affiche pas, Twitch bloque parfois l'intégration selon le domaine. Tu peux toujours
+          <a href="https://twitch.tv/${encodeURIComponent(channel)}" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">ouvrir le stream directement sur Twitch</a>.
+        </div>
+      `}
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+}
+
+/* ---------- MINI-JEUX & CLASSEMENT ---------- */
+let gamesViewFromCreator = true;
+
+function leaderboardHtml(){
+  const rows = Object.entries(gameScores)
+    .map(([key, pts]) => ({key, pts, display: (viewerProfiles[key] && viewerProfiles[key].display) || key}))
+    .sort((a,b) => b.pts - a.pts);
+  if(rows.length === 0){
+    return `<div class="empty"><div class="ic">🏆</div><div>Aucun score enregistré pour l'instant. Joue pour apparaître ici !</div></div>`;
+  }
+  const medals = ['top1','top2','top3'];
+  return rows.map((r, i) => `
+    <div class="lbRow ${viewerName && r.key === viewerName.toLowerCase() ? 'me' : ''}">
+      <div class="lbRank ${medals[i] || ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : (i+1)}</div>
+      <div class="lbName">${escapeHtml(r.display)}</div>
+      <div class="lbPts">${r.pts} pts</div>
+    </div>
+  `).join('');
+}
+
+function renderGames(){
+  const inCreator = gamesViewFromCreator;
+  const key = (viewerName||'').toLowerCase();
+  const myPoints = gameScores[key] || 0;
+
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('games', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">MINI-JEUX</h1>
+        <div class="tag">${inCreator ? 'réservés aux viewers · voici le classement' : 'joue et grimpe au classement'}</div>
+      </div>
+      ${!inCreator ? `
+        <div class="myPointsBox">
+          <div class="n">${myPoints}</div>
+          <div class="l">Tes points</div>
+        </div>
+        <div class="gamesGrid">
+          <div class="gameCard" id="gameClick">
+            <div class="gicon">⚡</div>
+            <div class="gtitle">Clic Éclair</div>
+            <div class="gdesc">Clique un maximum de fois en 10 secondes. 1 clic = 1 point.</div>
+          </div>
+          <div class="gameCard" id="gameQuiz">
+            <div class="gicon">🎬</div>
+            <div class="gtitle">Quiz Ciné</div>
+            <div class="gdesc">Devine quel film a la meilleure note du créateur. 5 questions, 10 points chacune.</div>
+          </div>
+        </div>
+      ` : ''}
+      <div class="sectionLabel">Classement</div>
+      <div id="leaderboard"></div>
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+  document.getElementById('leaderboard').innerHTML = leaderboardHtml();
+  const gc = document.getElementById('gameClick');
+  if(gc) gc.onclick = () => openClickGame();
+  const gq = document.getElementById('gameQuiz');
+  if(gq) gq.onclick = () => openQuizGame();
+}
+
+function openClickGame(){
+  const root = document.getElementById('modalRoot');
+  let count = 0, timeLeft = 10, started = false, timer = null;
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>⚡ Clic Éclair</h3>
+        <div class="gameStage">
+          <div class="gameTimer" id="gTimer">10s</div>
+          <button class="clickTarget" id="targetBtn">CLIQUE !</button>
+          <div class="gameCount" id="gCount">0 clic</div>
+        </div>
+        <div class="modalbtns" style="margin-top:18px;">
+          <button class="btn ghost" id="closeBtn">Fermer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay'){ clearInterval(timer); closeModal(); } };
+  document.getElementById('closeBtn').onclick = () => { clearInterval(timer); closeModal(); };
+
+  const targetBtn = document.getElementById('targetBtn');
+  const timerEl = document.getElementById('gTimer');
+  const countEl = document.getElementById('gCount');
+
+  targetBtn.onclick = async () => {
+    if(timeLeft <= 0) return;
+    if(!started){
+      started = true;
+      timer = setInterval(async () => {
+        timeLeft--;
+        timerEl.textContent = timeLeft + 's';
+        if(timeLeft <= 0){
+          clearInterval(timer);
+          targetBtn.textContent = 'FINI !';
+          targetBtn.disabled = true;
+          const key = (viewerName||'').toLowerCase();
+          await addPoints(key, count);
+          countEl.innerHTML = `${count} points gagnés ! 🎉`;
+        }
+      }, 1000);
+    }
+    count++;
+    countEl.textContent = count + ' clic' + (count>1?'s':'');
+  };
+}
+
+function openQuizGame(){
+  const rated = items.filter(it => !isEpisodic(it.type) ? it.rating > 0 : seriesCreatorAvg(it).count > 0);
+  const root = document.getElementById('modalRoot');
+  if(rated.length < 2){
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h3>🎬 Quiz Ciné</h3>
+          <div class="empty"><div class="ic">🎬</div><div>Il faut au moins 2 titres notés par le créateur pour jouer.</div></div>
+          <div class="modalbtns"><button class="btn primary" id="closeBtn">Fermer</button></div>
+        </div>
+      </div>
+    `;
+    document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+    document.getElementById('closeBtn').onclick = closeModal;
+    return;
+  }
+
+  let round = 0, score = 0;
+  const totalRounds = 5;
+
+  function ratingOf(it){ return isEpisodic(it.type) ? seriesCreatorAvg(it).avg : it.rating; }
+
+  function pickPair(){
+    const shuffled = rated.slice().sort(() => Math.random() - 0.5);
+    return [shuffled[0], shuffled[1]];
+  }
+
+  function draw(){
+    if(round >= totalRounds){
+      const key = (viewerName||'').toLowerCase();
+      addPoints(key, score * 10);
+      root.innerHTML = `
+        <div class="overlay" id="overlay">
+          <div class="modal">
+            <h3>🎬 Quiz Ciné</h3>
+            <div class="empty">
+              <div class="ic">🏆</div>
+              <div>${score}/${totalRounds} bonnes réponses<br>+ ${score*10} points gagnés !</div>
+            </div>
+            <div class="modalbtns"><button class="btn primary" id="closeBtn">Fermer</button></div>
+          </div>
+        </div>
+      `;
+      document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+      document.getElementById('closeBtn').onclick = closeModal;
+      return;
+    }
+    const [a, b] = pickPair();
+    root.innerHTML = `
+      <div class="overlay" id="overlay">
+        <div class="modal">
+          <h3>🎬 Quiz Ciné — Question ${round+1}/${totalRounds}</h3>
+          <div class="hint" style="margin-bottom:10px;">Lequel a la meilleure note du créateur ?</div>
+          <div class="quizOptions">
+            <div class="quizOpt" data-id="${a.id}">${escapeHtml(a.title)}</div>
+            <div class="quizOpt" data-id="${b.id}">${escapeHtml(b.title)}</div>
+          </div>
+          <div class="hint" id="quizScore" style="margin-top:16px;">Score : ${score}/${round}</div>
+        </div>
+      </div>
+    `;
+    document.querySelectorAll('.quizOpt').forEach(opt => {
+      opt.onclick = () => {
+        if(opt.dataset.locked) return;
+        document.querySelectorAll('.quizOpt').forEach(o => o.dataset.locked = '1');
+        const chosen = opt.dataset.id === a.id ? a : b;
+        const other = chosen === a ? b : a;
+        const correct = ratingOf(chosen) >= ratingOf(other);
+        document.querySelectorAll('.quizOpt').forEach(o => {
+          const it2 = o.dataset.id === a.id ? a : b;
+          if(ratingOf(it2) === Math.max(ratingOf(a), ratingOf(b))) o.classList.add('correct');
+          else if(o === opt) o.classList.add('wrong');
+        });
+        if(correct) score++;
+        round++;
+        setTimeout(draw, 900);
+      };
+    });
+  }
+  draw();
+}
+
+/* ---------- ROUE DES FILMS ---------- */
+let wheelViewFromCreator = true;
+let wheelSpinning = false;
+
+function polarToCartesian(cx, cy, r, angleDeg){
+  const a = (angleDeg - 90) * Math.PI / 180.0;
+  return {x: cx + r * Math.cos(a), y: cy + r * Math.sin(a)};
+}
+function describeArc(cx, cy, r, startAngle, endAngle){
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+}
+function truncateLabel(s, n){
+  s = s || '';
+  return s.length > n ? s.slice(0, n-1) + '…' : s;
+}
+function buildWheelSVG(wItems){
+  const size = 300, cx = size/2, cy = size/2, r = size/2 - 4;
+  const n = wItems.length;
+  const segAngle = 360 / n;
+  const palette = ['#ff8a5c','#8b6fe0','#7c5cd6','#c25f38','#ffb38a','#9146ff','#b39ddb'];
+  let paths = '', texts = '';
+  wItems.forEach((it, i) => {
+    const start = i*segAngle, end = start+segAngle;
+    const color = palette[i % palette.length];
+    paths += `<path d="${describeArc(cx,cy,r,start,end)}" fill="${color}" stroke="#071a17" stroke-width="1.5"/>`;
+    const mid = start + segAngle/2;
+    const tx = polarToCartesian(cx, cy, r*0.62, mid);
+    texts += `<text x="${tx.x}" y="${tx.y}" fill="#2a1608" font-size="10" font-family="Sora, sans-serif" font-weight="700" text-anchor="middle" transform="rotate(${mid}, ${tx.x}, ${tx.y})">${escapeHtml(truncateLabel(it.label,16))}</text>`;
+  });
+  return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${paths}${texts}</svg>`;
+}
+
+function renderWheel(){
+  const inCreator = wheelViewFromCreator;
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('wheel', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">ROUE DES FILMS</h1>
+        <div class="tag">${inCreator ? 'ajoute des titres et laisse le hasard décider' : 'ce que le créateur pourrait regarder'}</div>
+      </div>
+      <div class="wheelLayout">
+        <div class="wheelStageBox">
+          <div class="wheelWrap">
+            <div class="wheelPointer"></div>
+            <div class="wheelSpinner" id="wheelSpinner">${wheelItems.length ? buildWheelSVG(wheelItems) : ''}</div>
+          </div>
+          ${inCreator ? `<button class="spinBtn" id="spinBtn" ${wheelItems.length < 2 ? 'disabled' : ''}>🎡 Tourner la roue</button>` : ''}
+          <div class="wheelResult" id="wheelResult">${wheelState.lastWinner ? '🎉 ' + escapeHtml(wheelState.lastWinner) : ''}</div>
+          ${inCreator ? `
+            <div class="wheelResultActions" id="wheelResultActions" style="display:none;">
+              <button class="btn danger" id="wheelRemoveBtn">🗑️ Retirer de la roue</button>
+              <button class="btn ghost" id="wheelDismissBtn">✕ Fermer</button>
+            </div>
+          ` : ''}
+        </div>
+        ${inCreator ? `
+          <div class="wheelManage">
+            <div class="sectionLabel" style="margin-top:0;">Ajouter un titre à la roue</div>
+            <div class="wheelAddRow">
+              <input type="text" id="wheelInput" placeholder="ex : Old Boy">
+              <button class="addbtn" id="wheelAddBtn">+ Ajouter</button>
+            </div>
+            <div id="wheelList"></div>
+          </div>
+        ` : `
+          <div class="wheelManage">
+            <div class="sectionLabel" style="margin-top:0;">Titres sur la roue</div>
+            <div id="wheelList"></div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+
+  const listEl = document.getElementById('wheelList');
+  if(wheelItems.length === 0){
+    listEl.innerHTML = `<div class="empty" style="padding:30px 18px;"><div class="ic">🎡</div><div>${inCreator ? "Ajoute au moins 2 titres pour pouvoir tourner la roue." : "Le créateur n'a pas encore ajouté de titres à la roue."}</div></div>`;
+  } else {
+    listEl.innerHTML = wheelItems.map(it => `
+      <div class="wheelListItem">
+        <span class="wlLabel">${escapeHtml(it.label)}</span>
+        ${inCreator ? `<button class="wlDel" data-id="${it.id}">✕</button>` : ''}
+      </div>
+    `).join('');
+    if(inCreator){
+      listEl.querySelectorAll('.wlDel').forEach(b => {
+        b.onclick = async () => {
+          wheelItems = wheelItems.filter(w => w.id !== b.dataset.id);
+          await saveWheel();
+          renderWheel();
+        };
+      });
+    }
+  }
+
+  if(inCreator){
+    const addBtn = document.getElementById('wheelAddBtn');
+    const input = document.getElementById('wheelInput');
+    const addFn = async () => {
+      const val = input.value.trim();
+      if(!val) return;
+      wheelItems.push({id: 'w-' + Math.random().toString(36).slice(2,9), label: val});
+      await saveWheel();
+      input.value = '';
+      renderWheel();
+    };
+    addBtn.onclick = addFn;
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') addFn(); });
+
+    const spinBtn = document.getElementById('spinBtn');
+    if(spinBtn) spinBtn.onclick = () => spinTheWheel();
+  }
+}
+
+function spinTheWheel(){
+  if(wheelSpinning || wheelItems.length < 2) return;
+  wheelSpinning = true;
+  const spinBtn = document.getElementById('spinBtn');
+  const resultEl = document.getElementById('wheelResult');
+  const actionsEl = document.getElementById('wheelResultActions');
+  if(spinBtn) spinBtn.disabled = true;
+  resultEl.textContent = '';
+  if(actionsEl) actionsEl.style.display = 'none';
+
+  const n = wheelItems.length;
+  const segAngle = 360 / n;
+  const winnerIndex = Math.floor(Math.random() * n);
+  const winner = wheelItems[winnerIndex];
+  const center = winnerIndex * segAngle + segAngle / 2;
+  const spins = 6 + Math.floor(Math.random() * 3);
+  const finalDeg = spins * 360 + (360 - center);
+
+  const spinner = document.getElementById('wheelSpinner');
+  spinner.style.transition = 'none';
+  spinner.style.transform = 'rotate(0deg)';
+  void spinner.offsetWidth;
+  requestAnimationFrame(() => {
+    spinner.style.transition = 'transform 4.2s cubic-bezier(.17,.67,.22,1.01)';
+    spinner.style.transform = `rotate(${finalDeg}deg)`;
+  });
+
+  setTimeout(async () => {
+    wheelSpinning = false;
+    if(spinBtn) spinBtn.disabled = wheelItems.length < 2;
+    resultEl.textContent = '🎉 ' + winner.label;
+    wheelState.lastWinner = winner.label;
+    wheelState.lastSpinAt = Date.now();
+    await saveWheelState();
+
+    if(actionsEl){
+      actionsEl.style.display = 'flex';
+      const removeBtn = document.getElementById('wheelRemoveBtn');
+      const dismissBtn = document.getElementById('wheelDismissBtn');
+      removeBtn.onclick = async () => {
+        wheelItems = wheelItems.filter(w => w.id !== winner.id);
+        await saveWheel();
+        renderWheel();
+      };
+      dismissBtn.onclick = () => { actionsEl.style.display = 'none'; };
+    }
+  }, 4300);
+}
+
+/* ---------- DASHBOARD (créateur) ---------- */
+function computeDashboardStats(){
+  let best = null, bestVal = 0;
+  let mostCommented = null, mostCommentedCount = -1;
+  items.forEach(it => {
+    const r = overallRating(it);
+    if(r > bestVal){ bestVal = r; best = it; }
+    const c = (viewerRatings[it.id]||[]).filter(x => x.comment).length;
+    if(c > mostCommentedCount){ mostCommentedCount = c; mostCommented = it; }
+  });
+  const activityMap = {};
+  Object.keys(viewerRatings).forEach(k => {
+    (viewerRatings[k]||[]).forEach(r => {
+      const key = r.who.toLowerCase();
+      activityMap[key] = (activityMap[key]||0) + 1;
+    });
+  });
+  let topKey = null, topCount = 0;
+  Object.entries(activityMap).forEach(([k,c]) => { if(c > topCount){ topCount = c; topKey = k; } });
+  const topDisplay = topKey ? ((viewerProfiles[topKey] && viewerProfiles[topKey].display) || topKey) : null;
+
+  return {
+    totalTitles: items.length,
+    totalViewers: Object.keys(activityMap).length,
+    totalVotes: Object.values(activityMap).reduce((a,b)=>a+b,0),
+    best, bestVal,
+    mostCommented, mostCommentedCount: mostCommentedCount < 0 ? 0 : mostCommentedCount,
+    topDisplay, topCount
+  };
+}
+
+function renderDashboard(){
+  const s = computeDashboardStats();
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('dashboard','creator')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">DASHBOARD</h1>
+        <div class="tag">un coup d'œil sur ta communauté</div>
+      </div>
+      <div class="dashGrid">
+        <div class="dashStat"><div class="n">${s.totalTitles}</div><div class="l">Titres au catalogue</div></div>
+        <div class="dashStat"><div class="n">${s.totalViewers}</div><div class="l">Viewers actifs</div></div>
+        <div class="dashStat"><div class="n">${s.totalVotes}</div><div class="l">Votes reçus au total</div></div>
+      </div>
+      <div class="sectionLabel" style="margin-top:0;">Temps forts</div>
+      ${s.best ? `
+        <div class="dashHighlight">
+          <div class="dposter" style="${s.best.poster?`background-image:url('${s.best.poster}')`:''}">${s.best.poster?'':'🎬'}</div>
+          <div class="dinfo"><div class="dlabel">🏆 Titre le mieux noté</div><div class="dtitle">${escapeHtml(s.best.title)}</div></div>
+          <div class="dvalue" style="color:${ratingColor(s.bestVal)}">${s.bestVal.toFixed(1)}/10</div>
+        </div>
+      ` : ''}
+      ${s.mostCommented && s.mostCommentedCount > 0 ? `
+        <div class="dashHighlight">
+          <div class="dposter" style="${s.mostCommented.poster?`background-image:url('${s.mostCommented.poster}')`:''}">${s.mostCommented.poster?'':'🎬'}</div>
+          <div class="dinfo"><div class="dlabel">💬 Titre le plus commenté</div><div class="dtitle">${escapeHtml(s.mostCommented.title)}</div></div>
+          <div class="dvalue">${s.mostCommentedCount}</div>
+        </div>
+      ` : ''}
+      ${s.topDisplay ? `
+        <div class="dashHighlight">
+          <div class="dposter" style="display:flex;align-items:center;justify-content:center;">👤</div>
+          <div class="dinfo"><div class="dlabel">🔥 Viewer le plus actif</div><div class="dtitle">${escapeHtml(s.topDisplay)}</div></div>
+          <div class="dvalue">${s.topCount}</div>
+        </div>
+      ` : ''}
+      ${!s.best && !s.mostCommented && !s.topDisplay ? `<div class="empty"><div class="ic">📊</div><div>Pas encore assez de données pour afficher des temps forts.</div></div>` : ''}
+    </div>
+  `;
+  wireNav('creator');
+}
+
+/* ---------- BADGES ---------- */
+const BADGE_DEFS = [
+  {id:'first_review', icon:'📝', label:'Premier avis', check: s => s.comments >= 1},
+  {id:'critic', icon:'🖋️', label:'Critique confirmé', check: s => s.comments >= 5},
+  {id:'ten_films', icon:'🍿', label:'10 films notés', check: s => s.filmsRated >= 10},
+  {id:'series_fan', icon:'📺', label:'Fan de séries', check: s => s.showsRated >= 1},
+  {id:'marathon', icon:'🏃', label:'Marathonien', check: s => s.episodesRated >= 10},
+  {id:'gamer', icon:'🎮', label:'Joueur', check: s => s.gamePoints > 0},
+  {id:'podium', icon:'🏆', label:'Top 3 classement', check: s => s.rank && s.rank <= 3},
+];
+
+function getViewerCommentsCount(key){
+  let c = 0;
+  items.forEach(it => {
+    (viewerRatings[it.id]||[]).forEach(r => { if(r.who.toLowerCase() === key && r.comment) c++; });
+  });
+  return c;
+}
+function getLeaderboardRank(key){
+  const rows = Object.entries(gameScores).sort((a,b) => b[1]-a[1]);
+  const idx = rows.findIndex(([k]) => k === key);
+  return idx >= 0 ? idx+1 : null;
+}
+function getViewerBadges(key){
+  const base = getViewerStats(key);
+  const stats = {...base, comments: getViewerCommentsCount(key), gamePoints: gameScores[key]||0, rank: getLeaderboardRank(key)};
+  return BADGE_DEFS.map(b => ({...b, earned: !!b.check(stats)}));
+}
+function badgesRowHtml(key){
+  const badges = getViewerBadges(key);
+  return `<div class="badgesRow">${badges.map(b => `
+    <div class="badgeChip ${b.earned ? 'earned' : ''}" title="${escapeHtml(b.label)}">
+      <span class="bicon">${b.icon}</span>${escapeHtml(b.label)}
+    </div>
+  `).join('')}</div>`;
+}
+
+(async () => {
+  if(SUPABASE_URL.includes('TON-PROJET') || SUPABASE_ANON_KEY.includes('TA_CLE')){
+    document.getElementById('app').innerHTML = `
+      <div class="page" style="text-align:center;padding:80px 20px;">
+        <div style="font-size:40px;margin-bottom:16px;">⚙️</div>
+        <h1 style="font-family:'Rubik One',sans-serif;color:var(--gold);font-size:24px;">Configuration manquante</h1>
+        <p style="color:var(--text-dim);max-width:420px;margin:14px auto 0;line-height:1.6;">
+          Ouvre ce fichier, cherche <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> tout en haut,
+          et colle tes vraies valeurs récupérées dans Supabase (Settings → API).
+        </p>
+      </div>
+    `;
+    return;
+  }
+  await loadCatalog();
+  await loadRatings();
+  await loadSchedule();
+  await loadProfiles();
+  await loadSettings();
+  await loadScores();
+  await loadWheel();
+  await loadWheelState();
+  render();
+})();
+</script>
+</body>
+</html>
