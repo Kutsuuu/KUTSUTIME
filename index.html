@@ -655,6 +655,9 @@
 <script>
   const SUPABASE_URL = 'https://xtcnovgytqldzekalqce.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_mYa96a-4DCguHNx6EoLh1w_UXccYGtZ';
+  // Colle ici ton identifiant utilisateur Supabase (obtenu après ta première connexion Twitch,
+  // visible dans Supabase > Authentication > Users, colonne "UID")
+  const CREATOR_UID = 'TON-UID-CREATEUR-ICI';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -686,6 +689,7 @@ let genreFilter = 'all';
 let sortBy = 'recent';
 let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games
 let viewerName = null;
+let isCreatorAccount = false;
 let selectedViewerKey = null;
 let pendingAvatar = '';
 
@@ -836,13 +840,12 @@ const wrapEl = document.getElementById('wrap');
 
 function setMode(m){
   mode = m;
-  wrapEl.className = m === 'viewer-login' ? 'wrap narrow' : 'wrap';
+  wrapEl.className = m === 'select' ? 'wrap narrow' : 'wrap';
   render();
 }
 
 function render(){
   if(mode === 'select') return renderSelect();
-  if(mode === 'viewer-login') return renderViewerLogin();
   if(mode === 'creator') return renderCreator();
   if(mode === 'viewer') return renderViewer();
   if(mode === 'viewers-list') return renderViewersList();
@@ -899,6 +902,7 @@ function navHtml(activeKey, ctx){
         </div>
       </div>
       <div class="navright">
+        ${isCreatorAccount ? `<button class="pill" id="navBackCreator" title="Retour espace créateur">🔒</button>` : ''}
         <span class="viewerTag" id="navProfileTag" style="cursor:pointer;">${viewerAvatarHtml(viewerName, 18)} ${escapeHtml(viewerName||'')}</span>
         <button class="pill" id="navQuit">Quitter</button>
       </div>
@@ -927,15 +931,18 @@ function wireNav(ctx){
   }
   if(ctx === 'creator'){
     const sw = document.getElementById('navSwitch');
-    if(sw) sw.onclick = () => setMode('select');
+    if(sw) sw.onclick = () => setMode('viewer');
     const st = document.getElementById('navSettings');
     if(st) st.onclick = () => openCreatorSettings();
   } else {
+    const bc = document.getElementById('navBackCreator');
+    if(bc) bc.onclick = () => setMode('creator');
     const q = document.getElementById('navQuit');
     if(q) q.onclick = async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if(session) await supabaseClient.auth.signOut();
       viewerName = null;
+      isCreatorAccount = false;
       setMode('select');
     };
     const pt = document.getElementById('navProfileTag');
@@ -968,99 +975,17 @@ function renderSelect(){
           <div class="tag">ta collection, tes affiches, tes viewers</div>
         </div>
       </div>
-      <div class="role-grid">
-        <div class="role-card" id="pickCreator">
-          <div class="icon">🔒</div>
-          <div class="title">ESPACE CRÉATEUR</div>
-          <div class="desc">Ajoute tes films et séries, gère les affiches, les rediffs et le calendrier.</div>
-        </div>
-        <div class="role-card" id="pickViewer">
-          <div class="icon">🍿</div>
-          <div class="title">ESPACE VIEWER</div>
-          <div class="desc">Parcours la collection, note les films et découvre les prochaines rediffs.</div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('pickCreator').onclick = async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const isCreatorSession = session && session.user.app_metadata && session.user.app_metadata.provider !== 'twitch';
-    if(isCreatorSession){
-      setMode('creator');
-    } else {
-      openCreatorGate();
-    }
-  };
-  document.getElementById('pickViewer').onclick = () => setMode('viewer-login');
-}
-
-function openCreatorGate(){
-  const root = document.getElementById('modalRoot');
-  root.innerHTML = `
-    <div class="overlay" id="overlay">
-      <div class="modal">
-        <h3>🔒 Espace créateur</h3>
-        <label>Email</label>
-        <input type="text" id="gateEmail" placeholder="ton@email.com" autocomplete="username">
-        <label>Mot de passe</label>
-        <input type="password" id="gatePass" placeholder="••••••••" autocomplete="current-password">
-        <div class="hint" id="gateError" style="color:var(--rate-red);min-height:16px;"></div>
-        <div class="modalbtns">
-          <button class="btn ghost" id="cancelBtn">Annuler</button>
-          <button class="btn primary" id="enterBtn">Se connecter</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
-  document.getElementById('cancelBtn').onclick = closeModal;
-  const emailInput = document.getElementById('gateEmail');
-  const passInput = document.getElementById('gatePass');
-  const errorEl = document.getElementById('gateError');
-  const enterBtn = document.getElementById('enterBtn');
-  const tryEnter = async () => {
-    errorEl.textContent = '';
-    enterBtn.disabled = true;
-    enterBtn.textContent = 'Connexion...';
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: emailInput.value.trim(),
-      password: passInput.value
-    });
-    enterBtn.disabled = false;
-    enterBtn.textContent = 'Se connecter';
-    if(error){
-      errorEl.textContent = 'Email ou mot de passe incorrect.';
-      passInput.value = '';
-    } else {
-      closeModal();
-      setMode('creator');
-    }
-  };
-  enterBtn.onclick = tryEnter;
-  passInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') tryEnter(); });
-  emailInput.focus();
-}
-
-function renderViewerLogin(){
-  app.innerHTML = `
-    <div class="page">
-      <button class="back" id="back">← retour</button>
-      <div class="logo center" style="margin-bottom:24px;">
-        <h1 style="font-size:30px;">KUTSU TIME</h1>
-        <div class="tag">espace viewer</div>
-      </div>
-      <div class="twitchbox">
+      <div class="twitchbox" style="max-width:420px;margin:0 auto;">
         <div style="text-align:center;font-size:34px;margin-bottom:14px;">📺</div>
         <button class="btn twitch" id="twitchBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
           <span>📺</span> Se connecter avec Twitch
         </button>
         <div class="hint" style="margin-top:14px;">
-          Connexion en un clic avec ton compte Twitch — ton pseudo et ta photo de profil seront récupérés automatiquement. Tu pourras les modifier ensuite dans tes réglages.
+          Connexion en un clic avec ton compte Twitch. Le site te reconnaît automatiquement — espace créateur si c'est toi, espace viewer sinon.
         </div>
       </div>
     </div>
   `;
-  document.getElementById('back').onclick = () => setMode('select');
   document.getElementById('twitchBtn').onclick = async () => {
     await supabaseClient.auth.signInWithOAuth({
       provider: 'twitch',
@@ -2116,6 +2041,8 @@ function openCreatorSettings(){
   document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
   document.getElementById('logoutBtn').onclick = async () => {
     await supabaseClient.auth.signOut();
+    isCreatorAccount = false;
+    viewerName = null;
     closeModal();
     setMode('select');
   };
@@ -2655,7 +2582,7 @@ function badgesRowHtml(key){
   await loadWheel();
   await loadWheelState();
 
-  // Retour d'une connexion Twitch (ou session créateur déjà active) ?
+  // Retour d'une connexion Twitch ?
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(session && session.user.app_metadata && session.user.app_metadata.provider === 'twitch'){
     const meta = session.user.user_metadata || {};
@@ -2670,9 +2597,11 @@ function badgesRowHtml(key){
       bio: existing.bio || ''
     };
     await saveProfiles();
-    mode = 'viewer';
+    mode = (session.user.id === CREATOR_UID) ? 'creator' : 'viewer';
+    isCreatorAccount = (session.user.id === CREATOR_UID);
   }
 
+  wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
   render();
 })();
 </script>
