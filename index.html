@@ -747,9 +747,12 @@ function isEpisodic(type){ return type === 'serie' || type === 'anime'; }
 
 function publicStats(movieId){
   const list = viewerRatings[movieId] || [];
-  if(list.length === 0) return {avg:0, count:0};
-  const sum = list.reduce((a,r) => a + r.score, 0);
-  return {avg: sum/list.length, count: list.length};
+  const scores = list.map(r => r.score);
+  const it = items.find(x => x.id === movieId);
+  if(it && it.rating > 0) scores.push(it.rating);
+  if(scores.length === 0) return {avg:0, count:0};
+  const sum = scores.reduce((a,b) => a + b, 0);
+  return {avg: sum/scores.length, count: scores.length};
 }
 
 function getViewersSummary(){
@@ -793,6 +796,8 @@ function seriesPublicStats(it){
     const list = viewerRatings[episodeKey(it.id, s.number, e.number)] || [];
     list.forEach(r => { sum += r.score; count++; });
   }));
+  const creatorAvg = seriesCreatorAvg(it);
+  if(creatorAvg.count > 0){ sum += creatorAvg.avg; count++; }
   return {avg: count ? sum/count : 0, count};
 }
 function seriesViewerOwnAvg(it, name){
@@ -1043,28 +1048,13 @@ function renderViewerLogin(){
         <div class="tag">espace viewer</div>
       </div>
       <div class="twitchbox">
-        <button class="btn twitch" id="twitchBtn" style="width:100%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <div style="text-align:center;font-size:34px;margin-bottom:14px;">📺</div>
+        <button class="btn twitch" id="twitchBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
           <span>📺</span> Se connecter avec Twitch
         </button>
-        <div class="hint" style="margin-bottom:16px;">
-          Connexion en un clic avec ton compte Twitch — ton pseudo et ta photo de profil seront récupérés automatiquement.
+        <div class="hint" style="margin-top:14px;">
+          Connexion en un clic avec ton compte Twitch — ton pseudo et ta photo de profil seront récupérés automatiquement. Tu pourras les modifier ensuite dans tes réglages.
         </div>
-        <div class="hint" style="margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-          <span style="flex:1;height:1px;background:var(--border);"></span>ou<span style="flex:1;height:1px;background:var(--border);"></span>
-        </div>
-        <label>Ton pseudo</label>
-        <input type="text" id="pseudo" placeholder="ex : monPseudo">
-        <label>Photo de profil (optionnel)</label>
-        <div class="avatarRow">
-          <div class="avatarPreview" id="avatarPreview">🍿</div>
-          <div>
-            <label class="filebtn" for="avatarFile" style="margin-bottom:0;">📁 Choisir une image</label>
-            <input type="file" id="avatarFile" accept="image/*">
-          </div>
-        </div>
-        <label>Ta bio (optionnel)</label>
-        <textarea id="bioInput" placeholder="Quelques mots sur toi..."></textarea>
-        <button class="btn primary" id="go" style="width:100%;">Continuer sans Twitch</button>
       </div>
     </div>
   `;
@@ -1075,54 +1065,6 @@ function renderViewerLogin(){
       options: { redirectTo: window.location.origin + window.location.pathname }
     });
   };
-  pendingAvatar = '';
-
-  document.getElementById('avatarFile').onchange = (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      img.onload = () => {
-        const maxW = 160;
-        const scale = Math.min(1, maxW / img.width);
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const c2 = canvas.getContext('2d');
-        c2.drawImage(img, 0, 0, canvas.width, canvas.height);
-        pendingAvatar = canvas.toDataURL('image/jpeg', 0.75);
-        document.getElementById('avatarPreview').innerHTML = `<img src="${pendingAvatar}">`;
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  document.getElementById('pseudo').addEventListener('blur', () => {
-    const key = document.getElementById('pseudo').value.trim().toLowerCase();
-    const existing = viewerProfiles[key];
-    if(existing){
-      if(existing.avatar && !pendingAvatar){
-        pendingAvatar = existing.avatar;
-        document.getElementById('avatarPreview').innerHTML = `<img src="${existing.avatar}">`;
-      }
-      if(existing.bio) document.getElementById('bioInput').value = existing.bio;
-    }
-  });
-
-  const goFn = async () => {
-    const val = document.getElementById('pseudo').value.trim();
-    if(!val) return;
-    const bio = document.getElementById('bioInput').value.trim();
-    const key = val.toLowerCase();
-    viewerProfiles[key] = {display: val, avatar: pendingAvatar || (viewerProfiles[key]?.avatar || ''), bio};
-    await saveProfiles();
-    viewerName = val;
-    setMode('viewer');
-  };
-  document.getElementById('go').onclick = goFn;
-  document.getElementById('pseudo').addEventListener('keydown', (e) => { if(e.key==='Enter') goFn(); });
 }
 
 /* ---------- CREATOR ---------- */
@@ -1595,7 +1537,7 @@ function renderGrid(ctx){
         <div class="ratingsRow">
           <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\\.0$/,'') : '—'}</span>
           ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">👤 ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\\.0$/,'') : '—'}</span>` : ''}
-          <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Moyenne des viewers${pub.count ? ' ('+pub.count+')' : ''}">📺 ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
+          <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+')' : ''}">📺 ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
         </div>
       </div>
     </div>
@@ -1761,7 +1703,7 @@ function openDetail(id){
             </div>
           </div>
         </div>
-        <div class="pubbox"><span class="l">📺 Note moyenne des viewers${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
+        <div class="pubbox"><span class="l">📺 Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
         ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
         ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
         ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="rediffLink">▶ Voir la rediff</a>` : ''}
@@ -1842,7 +1784,7 @@ function openViewerRate(id){
           </div>
         </div>
         <div class="pubbox"><span class="l">🎬 Note du créateur</span><span class="v" style="color:${ratingColor(it.rating)}">${it.rating ? (it.rating % 1 === 0 ? it.rating : it.rating.toFixed(1))+'/10' : '—'}</span></div>
-        <div class="pubbox"><span class="l">📺 Note moyenne des viewers${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
+        <div class="pubbox"><span class="l">📺 Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
         ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
         <label>Ton avis (optionnel)</label>
         <textarea id="commentInput" placeholder="Ce que tu en as pensé...">${escapeHtml(mine && mine.comment ? mine.comment : '')}</textarea>
@@ -2089,6 +2031,11 @@ function openMyProfileModal(){
             <input type="file" id="avatarFile" accept="image/*">
           </div>
         </div>
+        <label>Pseudo affiché</label>
+        <input type="text" id="pseudoInput" value="${escapeHtml(profile.display || viewerName)}" placeholder="Ton pseudo">
+        <div class="hint" style="text-align:left;margin-bottom:14px;">
+          ⚠️ Si tu changes ton pseudo, tes notes déjà envoyées resteront affichées sous ton ancien pseudo dans l'historique.
+        </div>
         <label>Ta bio</label>
         <textarea id="bioInput" placeholder="Quelques mots sur toi...">${escapeHtml(profile.bio||'')}</textarea>
         <div class="statsRow">
@@ -2130,8 +2077,10 @@ function openMyProfileModal(){
   };
   document.getElementById('saveBtn').onclick = async () => {
     const bio = document.getElementById('bioInput').value.trim();
-    viewerProfiles[key] = {display: viewerName, avatar: localAvatar, bio};
+    const newDisplay = document.getElementById('pseudoInput').value.trim() || viewerName;
+    viewerProfiles[key] = {display: newDisplay, avatar: localAvatar, bio};
     await saveProfiles();
+    viewerName = newDisplay;
     closeModal();
     render();
   };
@@ -2704,13 +2653,14 @@ function badgesRowHtml(key){
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(session && session.user.app_metadata && session.user.app_metadata.provider === 'twitch'){
     const meta = session.user.user_metadata || {};
-    const display = meta.nickname || meta.preferred_username || meta.full_name || meta.name || 'Viewer';
-    viewerName = display;
-    const key = display.toLowerCase();
+    const twitchNick = meta.nickname || meta.preferred_username || meta.full_name || meta.name || 'Viewer';
+    const key = twitchNick.toLowerCase();
     const existing = viewerProfiles[key] || {};
+    const display = existing.display || twitchNick;
+    viewerName = display;
     viewerProfiles[key] = {
       display,
-      avatar: meta.avatar_url || existing.avatar || '',
+      avatar: existing.avatar || meta.avatar_url || '',
       bio: existing.bio || ''
     };
     await saveProfiles();
