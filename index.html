@@ -9,7 +9,7 @@
 <style>
   :root{
     --bg:#000000; --panel:#0a0a0a; --panel-2:#0f0f0f; --panel-3:#171717;
-    --gold:#ff8a5c; --gold-dim:#c25f38; --red:#e5484d;
+    --gold:#e6b325; --gold-dim:#8a6a15; --red:#e5484d;
     --twitch:#9146ff; --twitch-dim:#5c2ea6;
     --rate-red:#e5484d; --rate-orange:#f5a524; --rate-blue:#3b82f6; --rate-green:#22c55e;
     --text:#ffffff; --text-dim:#999999; --border:rgba(255,255,255,0.12);
@@ -45,7 +45,7 @@
   .navbrand{cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;}
   .navlogo{
     font-family:'Rubik One',sans-serif;font-weight:400;font-size:20px;letter-spacing:1px;
-    background:linear-gradient(180deg,#ffe8d6, var(--gold) 55%, var(--gold-dim));
+    background:linear-gradient(180deg,#ffffff, var(--gold) 65%, var(--gold-dim));
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   }
   .navlinks{
@@ -84,7 +84,7 @@
   .logo h1{
     font-family:'Rubik One',sans-serif;font-weight:400;font-size:clamp(30px,7vw,44px);
     letter-spacing:1.5px;margin:0;
-    background:linear-gradient(180deg,#ffe8d6, var(--gold) 55%, var(--gold-dim));
+    background:linear-gradient(180deg,#ffffff, var(--gold) 65%, var(--gold-dim));
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   }
   .logo .tag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.5px;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
@@ -534,7 +534,7 @@
   .gameStage{text-align:center;padding:10px 0;}
   .clickTarget{
     width:110px;height:110px;border-radius:50%;margin:20px auto;
-    background:radial-gradient(circle at 35% 30%, #ffb38a, var(--gold-dim));
+    background:radial-gradient(circle at 35% 30%, #f0d060, var(--gold-dim));
     border:none;cursor:pointer;font-family:'Rubik One',sans-serif;font-size:16px;color:#2a1608;
     display:flex;align-items:center;justify-content:center;user-select:none;
     box-shadow:var(--shadow-md);transition:transform .06s;
@@ -2376,7 +2376,7 @@ function buildWheelSVG(wItems){
   const size = 300, cx = size/2, cy = size/2, r = size/2 - 4;
   const n = wItems.length;
   const segAngle = 360 / n;
-  const palette = ['#ff8a5c','#8b6fe0','#7c5cd6','#c25f38','#ffb38a','#9146ff','#b39ddb'];
+  const palette = ['#e6b325','#c99a1e','#8a6a15','#f0d060','#b8860b','#9146ff','#d4af37'];
   let paths = '', texts = '';
   wItems.forEach((it, i) => {
     const start = i*segAngle, end = start+segAngle;
