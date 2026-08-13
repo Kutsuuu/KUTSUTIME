@@ -2582,23 +2582,32 @@ function badgesRowHtml(key){
   await loadWheel();
   await loadWheelState();
 
-  // Retour d'une connexion Twitch ?
+  // Session active (via Twitch, éventuellement fusionnée avec un compte email existant) ?
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if(session && session.user.app_metadata && session.user.app_metadata.provider === 'twitch'){
+  if(session){
     const meta = session.user.user_metadata || {};
-    const twitchNick = meta.nickname || meta.preferred_username || meta.full_name || meta.name || 'Viewer';
-    const key = twitchNick.toLowerCase();
-    const existing = viewerProfiles[key] || {};
-    const display = existing.display || twitchNick;
-    viewerName = display;
-    viewerProfiles[key] = {
-      display,
-      avatar: existing.avatar || meta.avatar_url || '',
-      bio: existing.bio || ''
-    };
-    await saveProfiles();
-    mode = (session.user.id === CREATOR_UID) ? 'creator' : 'viewer';
-    isCreatorAccount = (session.user.id === CREATOR_UID);
+    const twitchNick = meta.nickname || meta.preferred_username || meta.full_name || meta.name || '';
+    const isCreator = session.user.id === CREATOR_UID;
+
+    if(twitchNick){
+      const key = twitchNick.toLowerCase();
+      const existing = viewerProfiles[key] || {};
+      const display = existing.display || twitchNick;
+      viewerName = display;
+      viewerProfiles[key] = {
+        display,
+        avatar: existing.avatar || meta.avatar_url || '',
+        bio: existing.bio || ''
+      };
+      await saveProfiles();
+    }
+
+    if(isCreator){
+      isCreatorAccount = true;
+      mode = 'creator';
+    } else if(twitchNick){
+      mode = 'viewer';
+    }
   }
 
   wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
