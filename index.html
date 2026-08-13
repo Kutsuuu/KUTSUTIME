@@ -1625,14 +1625,16 @@ function openModal(existing){
     const reader = new FileReader();
     reader.onload = (ev) => {
       img.onload = () => {
-        const maxW = 240;
+        const maxW = 600;
         const scale = Math.min(1, maxW / img.width);
         const canvas = document.createElement('canvas');
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
         const ctx2 = canvas.getContext('2d');
+        ctx2.imageSmoothingEnabled = true;
+        ctx2.imageSmoothingQuality = 'high';
         ctx2.drawImage(img, 0, 0, canvas.width, canvas.height);
-        posterData = canvas.toDataURL('image/jpeg', 0.7);
+        posterData = canvas.toDataURL('image/jpeg', 0.85);
         document.getElementById('posterPreview').style.backgroundImage = `url('${posterData}')`;
         document.getElementById('posterPreview').textContent = '';
         document.getElementById('fPosterUrl').value = '';
@@ -2061,14 +2063,16 @@ function openMyProfileModal(){
     const reader = new FileReader();
     reader.onload = (ev) => {
       img.onload = () => {
-        const maxW = 160;
+        const maxW = 320;
         const scale = Math.min(1, maxW / img.width);
         const canvas = document.createElement('canvas');
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
         const c2 = canvas.getContext('2d');
+        c2.imageSmoothingEnabled = true;
+        c2.imageSmoothingQuality = 'high';
         c2.drawImage(img, 0, 0, canvas.width, canvas.height);
-        localAvatar = canvas.toDataURL('image/jpeg', 0.75);
+        localAvatar = canvas.toDataURL('image/jpeg', 0.85);
         document.getElementById('avatarPreview').innerHTML = `<img src="${localAvatar}">`;
       };
       img.src = ev.target.result;
