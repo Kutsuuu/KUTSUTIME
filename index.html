@@ -799,6 +799,14 @@ function seriesCreatorAvg(it){
   if(vals.length === 0) return {avg:0, count:0};
   return {avg: vals.reduce((a,b)=>a+b,0)/vals.length, count: vals.length};
 }
+function creatorRatingStat(it){
+  if(isEpisodic(it.type)){
+    const epStat = seriesCreatorAvg(it);
+    if(epStat.count > 0) return epStat;
+    return {avg: it.rating||0, count: it.rating?1:0};
+  }
+  return {avg: it.rating||0, count: it.rating?1:0};
+}
 function seriesPublicStats(it){
   let sum=0, count=0;
   (it.seasons||[]).forEach(s => (s.episodes||[]).forEach(e => {
@@ -1418,7 +1426,7 @@ function wireFilterControls(ctx){
 }
 
 function overallRating(it){
-  return isEpisodic(it.type) ? seriesCreatorAvg(it).avg : (it.rating || 0);
+  return creatorRatingStat(it).avg;
 }
 
 function isFavorite(it, ctx){
@@ -1547,7 +1555,7 @@ function renderGrid(ctx){
   }
   grid.innerHTML = backHtml + `<div class="grid">${list.map(it => {
     const episodic = isEpisodic(it.type);
-    const creatorStat = episodic ? seriesCreatorAvg(it) : {avg: it.rating||0, count: it.rating?1:0};
+    const creatorStat = creatorRatingStat(it);
     const pub = episodic ? seriesPublicStats(it) : publicStats(it.id);
     const mineStat = ctx === 'viewer'
       ? (episodic ? seriesViewerOwnAvg(it, viewerName) : {avg: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase())?.score || 0, count: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase()) ? 1 : 0})
@@ -1730,7 +1738,7 @@ function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 function openDetail(id){
   const it = items.find(x => x.id === id);
   if(!it) return;
-  const pub = publicStats(id);
+  const pub = isEpisodic(it.type) ? seriesPublicStats(it) : publicStats(id);
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="overlay" id="overlay">
@@ -1815,7 +1823,9 @@ function openDetail(id){
 function openViewerRate(id){
   const it = items.find(x => x.id === id);
   if(!it) return;
-  const pub = publicStats(id);
+  const episodic = isEpisodic(it.type);
+  const pub = episodic ? seriesPublicStats(it) : publicStats(id);
+  const creatorStat = creatorRatingStat(it);
   const mine = (viewerRatings[id] || []).find(r => r.who.toLowerCase() === viewerName.toLowerCase());
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
@@ -1833,7 +1843,7 @@ function openViewerRate(id){
             </div>
           </div>
         </div>
-        <div class="pubbox"><span class="l">🎬 Note du créateur</span><span class="v" style="color:${ratingColor(it.rating)}">${it.rating ? (it.rating % 1 === 0 ? it.rating : it.rating.toFixed(1))+'/10' : '—'}</span></div>
+        <div class="pubbox"><span class="l">🎬 Note du créateur</span><span class="v" style="color:${ratingColor(creatorStat.avg)}">${creatorStat.count ? (creatorStat.avg % 1 === 0 ? creatorStat.avg : creatorStat.avg.toFixed(1))+'/10' : '—'}</span></div>
         <div class="pubbox"><span class="l">📺 Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
         ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
         <label>Ton avis (optionnel)</label>
