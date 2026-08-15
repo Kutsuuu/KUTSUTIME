@@ -1429,7 +1429,9 @@ function isFavorite(it, ctx){
 }
 async function toggleFavorite(it, ctx){
   if(ctx === 'creator'){
-    it.favorite = !it.favorite;
+    await loadCatalog();
+    const fresh = items.find(x => x.id === it.id);
+    if(fresh) fresh.favorite = !fresh.favorite;
     await saveCatalog();
   } else {
     const key = (viewerName||'').toLowerCase();
@@ -1703,9 +1705,12 @@ function openModal(existing){
     const urlVal = document.getElementById('fPosterUrl').value.trim();
     if(urlVal) posterData = urlVal;
 
+    await loadCatalog();
     if(isEdit){
       const idx = items.findIndex(x => x.id === it.id);
-      items[idx] = {...items[idx], title, year, genre, saga, synopsis, rediff, poster: posterData, type: currentType};
+      if(idx >= 0){
+        items[idx] = {...items[idx], title, year, genre, saga, synopsis, rediff, poster: posterData, type: currentType};
+      }
     } else {
       items.push({
         id: 'm-' + Math.random().toString(36).slice(2,10),
@@ -1769,6 +1774,7 @@ function openDetail(id){
   const epsBtn = document.getElementById('epsBtn');
   if(epsBtn) epsBtn.onclick = () => openEpisodesManager(it);
   document.getElementById('delBtn').onclick = async () => {
+    await loadCatalog();
     items = items.filter(x => x.id !== id);
     delete viewerRatings[id];
     await saveCatalog();
@@ -1780,15 +1786,20 @@ function openDetail(id){
   const commitRating = async () => {
     const raw = rateInput.value.replace(',', '.').trim();
     let val = parseFloat(raw);
+    let newRating;
     if(raw === '' || isNaN(val)){
-      it.rating = 0;
+      newRating = 0;
       rateInput.value = '';
     } else {
       val = Math.max(0, Math.min(10, val));
       val = Math.round(val * 10) / 10;
-      it.rating = val;
+      newRating = val;
       rateInput.value = val;
     }
+    await loadCatalog();
+    const fresh = items.find(x => x.id === it.id);
+    if(fresh) fresh.rating = newRating;
+    it.rating = newRating;
     await saveCatalog();
     renderGrid('creator');
   };
@@ -1911,6 +1922,9 @@ function openEpisodesManager(it){
     }
 
     document.getElementById('addSeasonBtn').onclick = async () => {
+      await loadCatalog();
+      it = items.find(x => x.id === it.id) || it;
+      if(!it.seasons) it.seasons = [];
       const nextNum = it.seasons.length ? Math.max(...it.seasons.map(s => s.number)) + 1 : 1;
       it.seasons.push({id: 'se-' + Math.random().toString(36).slice(2,9), number: nextNum, episodes: []});
       await saveCatalog();
@@ -1919,6 +1933,8 @@ function openEpisodesManager(it){
 
     wrap.querySelectorAll('.delSeasonBtn').forEach(b => {
       b.onclick = async () => {
+        await loadCatalog();
+        it = items.find(x => x.id === it.id) || it;
         const season = it.seasons.find(s => s.id === b.dataset.season);
         (season.episodes||[]).forEach(e => { delete viewerRatings[episodeKey(it.id, season.number, e.number)]; });
         it.seasons = it.seasons.filter(s => s.id !== b.dataset.season);
@@ -1930,6 +1946,8 @@ function openEpisodesManager(it){
 
     wrap.querySelectorAll('.addEpBtn').forEach(b => {
       b.onclick = async () => {
+        await loadCatalog();
+        it = items.find(x => x.id === it.id) || it;
         const season = it.seasons.find(s => s.id === b.dataset.season);
         if(!season.episodes) season.episodes = [];
         const nextNum = season.episodes.length ? Math.max(...season.episodes.map(e => e.number)) + 1 : 1;
@@ -1941,6 +1959,8 @@ function openEpisodesManager(it){
 
     wrap.querySelectorAll('.epDel').forEach(b => {
       b.onclick = async () => {
+        await loadCatalog();
+        it = items.find(x => x.id === it.id) || it;
         const season = it.seasons.find(s => s.id === b.dataset.season);
         const ep = season.episodes.find(e => e.id === b.dataset.ep);
         delete viewerRatings[episodeKey(it.id, season.number, ep.number)];
@@ -1953,18 +1973,22 @@ function openEpisodesManager(it){
 
     wrap.querySelectorAll('.epInput').forEach(inp => {
       const commit = async () => {
-        const season = it.seasons.find(s => s.id === inp.dataset.season);
-        const ep = season.episodes.find(e => e.id === inp.dataset.ep);
         const raw = inp.value.replace(',', '.').trim();
         let val = parseFloat(raw);
+        let newVal;
         if(raw === '' || isNaN(val)){
-          ep.rating = 0; inp.value = '';
+          newVal = 0; inp.value = '';
         } else {
           val = Math.max(0, Math.min(10, val));
           val = Math.round(val * 10) / 10;
-          ep.rating = val; inp.value = val;
+          newVal = val; inp.value = val;
         }
-        inp.style.color = ratingColor(ep.rating);
+        inp.style.color = ratingColor(newVal);
+        await loadCatalog();
+        it = items.find(x => x.id === it.id) || it;
+        const season = it.seasons.find(s => s.id === inp.dataset.season);
+        const ep = season.episodes.find(e => e.id === inp.dataset.ep);
+        ep.rating = newVal;
         await saveCatalog();
         renderGrid('creator');
       };
