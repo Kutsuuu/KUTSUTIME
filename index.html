@@ -688,6 +688,7 @@ let filter = 'all';
 let query = '';
 let genreFilter = 'all';
 let sagaFilter = 'all';
+let selectedSaga = null;
 let sortBy = 'recent';
 let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games
 let viewerName = null;
@@ -857,14 +858,13 @@ function render(){
   if(mode === 'stream-view') return renderStreamView();
   if(mode === 'games') return renderGames();
   if(mode === 'wheel') return renderWheel();
-  if(mode === 'sagas') return renderSagas();
   if(mode === 'dashboard') return renderDashboard();
 }
 
 /* ---------- shared navbar ---------- */
 function navHtml(activeKey, ctx){
   if(ctx === 'creator'){
-    const moreActive = ['viewers','stream','games','wheel','dashboard','sagas'].includes(activeKey);
+    const moreActive = ['viewers','stream','games','wheel','dashboard'].includes(activeKey);
     return `
       <div class="navbar">
         <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
@@ -874,7 +874,6 @@ function navHtml(activeKey, ctx){
           <div class="navMore">
             <button class="navlink ${moreActive?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
             <div class="navMorePanel" id="navMorePanel">
-              <button class="navlink ${activeKey==='sagas'?'active':''}" data-go="sagas">🧩 Sagas</button>
               <button class="navlink ${activeKey==='viewers'?'active':''}" data-go="viewers-list">👥 Viewers</button>
               <button class="navlink ${activeKey==='dashboard'?'active':''}" data-go="dashboard">📊 Dashboard</button>
               <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
@@ -890,7 +889,7 @@ function navHtml(activeKey, ctx){
       </div>
     `;
   }
-  const moreActiveV = ['stream','games','sagas'].includes(activeKey);
+  const moreActiveV = ['stream','games'].includes(activeKey);
   return `
     <div class="navbar">
       <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
@@ -900,7 +899,6 @@ function navHtml(activeKey, ctx){
         <div class="navMore">
           <button class="navlink ${moreActiveV?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
           <div class="navMorePanel" id="navMorePanel">
-            <button class="navlink ${activeKey==='sagas'?'active':''}" data-go="sagas">🧩 Sagas</button>
             <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
             <button class="navlink ${activeKey==='games'?'active':''}" data-go="games">🎮 Jeux</button>
           </div>
@@ -921,7 +919,6 @@ function wireNav(ctx){
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'wheel') wheelViewFromCreator = (ctx === 'creator');
-      if(b.dataset.go === 'sagas') sagasViewFromCreator = (ctx === 'creator');
       setMode(b.dataset.go);
     };
   });
@@ -1015,6 +1012,7 @@ function renderCreator(){
         <button class="tab ${filter==='film'?'active':''}" data-f="film">Films</button>
         <button class="tab ${filter==='serie'?'active':''}" data-f="serie">Séries</button>
         <button class="tab ${filter==='anime'?'active':''}" data-f="anime">Animes</button>
+        <button class="tab ${filter==='sagas'?'active':''}" data-f="sagas">🧩 Sagas</button>
         <button class="tab ${filter==='favorites'?'active':''}" data-f="favorites">♥ Favoris</button>
       </div>
       <div id="grid"></div>
@@ -1028,6 +1026,7 @@ function renderCreator(){
     const btn = e.target.closest('.tab');
     if(!btn) return;
     filter = btn.dataset.f;
+    selectedSaga = null;
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t===btn));
     renderGrid('creator');
   });
@@ -1048,6 +1047,7 @@ function renderViewer(){
         <button class="tab ${filter==='film'?'active':''}" data-f="film">Films</button>
         <button class="tab ${filter==='serie'?'active':''}" data-f="serie">Séries</button>
         <button class="tab ${filter==='anime'?'active':''}" data-f="anime">Animes</button>
+        <button class="tab ${filter==='sagas'?'active':''}" data-f="sagas">🧩 Sagas</button>
         <button class="tab ${filter==='favorites'?'active':''}" data-f="favorites">♥ Favoris</button>
       </div>
       <div id="grid"></div>
@@ -1060,6 +1060,7 @@ function renderViewer(){
     const btn = e.target.closest('.tab');
     if(!btn) return;
     filter = btn.dataset.f;
+    selectedSaga = null;
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t===btn));
     renderGrid('viewer');
   });
@@ -1441,30 +1442,19 @@ async function toggleFavorite(it, ctx){
   }
 }
 
-let sagasViewFromCreator = true;
+function renderSagaCards(grid, ctx){
+  const summaries = getSagaGroups().map(g => {
+    const rated = g.items.filter(it => overallRating(it) > 0);
+    const avg = rated.length ? rated.reduce((a,it) => a + overallRating(it), 0) / rated.length : 0;
+    const cover = (g.items.find(it => it.poster) || {}).poster || '';
+    return {name: g.name, items: g.items, avg, count: g.items.length, cover};
+  });
 
-function renderSagas(){
-  const isCreator = sagasViewFromCreator;
-  const groups = getSagaGroups();
-
-  app.innerHTML = `
-    <div class="page">
-      ${navHtml('sagas', isCreator ? 'creator' : 'viewer')}
-      <div class="logo" style="margin-bottom:22px;">
-        <h1 style="font-size:28px;">SAGAS</h1>
-        <div class="tag">${groups.length ? groups.length + ' saga' + (groups.length>1?'s':'') : "aucune saga créée pour l'instant"}</div>
-      </div>
-      <div id="sagasWrap"></div>
-    </div>
-  `;
-  wireNav(isCreator ? 'creator' : 'viewer');
-
-  const wrap = document.getElementById('sagasWrap');
-  if(groups.length === 0){
-    wrap.innerHTML = `
+  if(summaries.length === 0){
+    grid.innerHTML = `
       <div class="empty">
         <div class="ic">🧩</div>
-        <div>${isCreator
+        <div>${ctx === 'creator'
           ? "Aucune saga pour l'instant. Ouvre un titre → Modifier, et remplis le champ « Saga » (ex : Harry Potter, MCU, Spider-Man) pour le regrouper avec d'autres."
           : "Le créateur n'a pas encore organisé de sagas."}</div>
       </div>
@@ -1472,43 +1462,47 @@ function renderSagas(){
     return;
   }
 
-  wrap.innerHTML = groups.map(g => `
-    <div class="sagaBlock">
-      <div class="sectionLabel" style="margin-top:0;">${escapeHtml(g.name)} <span style="color:var(--text-dim);font-weight:400;">(${g.items.length})</span></div>
-      <div class="grid saga-grid">
-        ${g.items.map(it => {
-          const episodic = isEpisodic(it.type);
-          const creatorStat = episodic ? seriesCreatorAvg(it) : {avg: it.rating||0, count: it.rating?1:0};
-          return `
-          <div class="card" data-id="${it.id}">
-            <div class="poster" style="${it.poster ? `background-image:url('${it.poster}')` : ''}">
-              ${it.poster ? '' : '🎬'}
-              <span class="badge">${typeLabel(it.type)}</span>
-            </div>
-            <div class="info">
-              <div class="title">${escapeHtml(it.title)}</div>
-              ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
-              <div class="ratingsRow">
-                <span class="rchip" style="color:${ratingColor(creatorStat.avg)}">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
-              </div>
-            </div>
-          </div>
-        `}).join('')}
+  grid.innerHTML = `<div class="grid">${summaries.map(s => `
+    <div class="card sagaCard" data-saga="${escapeHtml(s.name)}">
+      <div class="poster" style="${s.cover ? `background-image:url('${s.cover}')` : ''}">
+        ${s.cover ? '' : '🧩'}
+        <span class="badge">${s.count} titre${s.count>1?'s':''}</span>
+      </div>
+      <div class="info">
+        <div class="title">${escapeHtml(s.name)}</div>
+        <div class="ratingsRow">
+          <span class="rchip" style="color:${ratingColor(s.avg)}" title="Note moyenne de la saga">🎬 ${s.avg ? s.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
+        </div>
       </div>
     </div>
-  `).join('');
+  `).join('')}</div>`;
 
-  wrap.querySelectorAll('.card').forEach(c => {
-    c.onclick = () => isCreator ? openDetail(c.dataset.id) : openViewerRate(c.dataset.id);
+  grid.querySelectorAll('.sagaCard').forEach(c => {
+    c.onclick = () => { selectedSaga = c.dataset.saga; renderGrid(ctx); };
   });
 }
 
-
 function renderGrid(ctx){
   const grid = document.getElementById('grid');
-  let list = items.filter(it => filter==='all' || filter==='favorites' || it.type===filter);
-  if(filter === 'favorites'){
-    list = list.filter(it => isFavorite(it, ctx));
+
+  if(filter === 'sagas' && !selectedSaga){
+    renderSagaCards(grid, ctx);
+    return;
+  }
+
+  const backHtml = (filter === 'sagas' && selectedSaga) ? `
+    <button class="back" id="backToSagas" style="margin-bottom:16px;">← Toutes les sagas</button>
+    <div class="sectionLabel" style="margin-top:0;">${escapeHtml(selectedSaga)}</div>
+  ` : '';
+
+  let list;
+  if(filter === 'sagas' && selectedSaga){
+    list = items.filter(it => (it.saga||'').trim() === selectedSaga);
+  } else {
+    list = items.filter(it => filter==='all' || filter==='favorites' || it.type===filter);
+    if(filter === 'favorites'){
+      list = list.filter(it => isFavorite(it, ctx));
+    }
   }
   if(genreFilter !== 'all'){
     list = list.filter(it => (it.genre||'').trim() === genreFilter);
@@ -1542,12 +1536,14 @@ function renderGrid(ctx){
     return;
   }
   if(list.length === 0){
-    grid.innerHTML = filter === 'favorites'
+    grid.innerHTML = backHtml + (filter === 'favorites'
       ? `<div class="empty"><div class="ic">♥</div><div>Aucun favori pour l'instant.</div></div>`
-      : `<div class="empty"><div class="ic">🔍</div><div>Aucun résultat pour cette recherche.</div></div>`;
+      : `<div class="empty"><div class="ic">🔍</div><div>Aucun résultat pour cette recherche.</div></div>`);
+    const bb = document.getElementById('backToSagas');
+    if(bb) bb.onclick = () => { selectedSaga = null; renderGrid(ctx); };
     return;
   }
-  grid.innerHTML = `<div class="grid">${list.map(it => {
+  grid.innerHTML = backHtml + `<div class="grid">${list.map(it => {
     const episodic = isEpisodic(it.type);
     const creatorStat = episodic ? seriesCreatorAvg(it) : {avg: it.rating||0, count: it.rating?1:0};
     const pub = episodic ? seriesPublicStats(it) : publicStats(it.id);
@@ -1597,6 +1593,9 @@ function renderGrid(ctx){
       }
     };
   });
+
+  const backBtn = document.getElementById('backToSagas');
+  if(backBtn) backBtn.onclick = () => { selectedSaga = null; renderGrid(ctx); };
 }
 
 /* ---------- CREATOR: add/edit modal ---------- */
