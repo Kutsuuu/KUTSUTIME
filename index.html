@@ -144,6 +144,7 @@
     color:var(--text-dim);margin:26px 0 12px;display:flex;align-items:center;gap:10px;
   }
   .sectionLabel::after{content:'';flex:1;height:1px;background:var(--border);}
+  .sagaBlock{margin-bottom:8px;}
 
   .grid{
     display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:22px;
@@ -686,6 +687,7 @@ let wheelState = {}; // {lastWinner, lastSpinAt}
 let filter = 'all';
 let query = '';
 let genreFilter = 'all';
+let sagaFilter = 'all';
 let sortBy = 'recent';
 let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games
 let viewerName = null;
@@ -855,13 +857,14 @@ function render(){
   if(mode === 'stream-view') return renderStreamView();
   if(mode === 'games') return renderGames();
   if(mode === 'wheel') return renderWheel();
+  if(mode === 'sagas') return renderSagas();
   if(mode === 'dashboard') return renderDashboard();
 }
 
 /* ---------- shared navbar ---------- */
 function navHtml(activeKey, ctx){
   if(ctx === 'creator'){
-    const moreActive = ['viewers','stream','games','wheel','dashboard'].includes(activeKey);
+    const moreActive = ['viewers','stream','games','wheel','dashboard','sagas'].includes(activeKey);
     return `
       <div class="navbar">
         <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
@@ -871,6 +874,7 @@ function navHtml(activeKey, ctx){
           <div class="navMore">
             <button class="navlink ${moreActive?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
             <div class="navMorePanel" id="navMorePanel">
+              <button class="navlink ${activeKey==='sagas'?'active':''}" data-go="sagas">🧩 Sagas</button>
               <button class="navlink ${activeKey==='viewers'?'active':''}" data-go="viewers-list">👥 Viewers</button>
               <button class="navlink ${activeKey==='dashboard'?'active':''}" data-go="dashboard">📊 Dashboard</button>
               <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
@@ -886,7 +890,7 @@ function navHtml(activeKey, ctx){
       </div>
     `;
   }
-  const moreActiveV = ['stream','games'].includes(activeKey);
+  const moreActiveV = ['stream','games','sagas'].includes(activeKey);
   return `
     <div class="navbar">
       <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
@@ -896,6 +900,7 @@ function navHtml(activeKey, ctx){
         <div class="navMore">
           <button class="navlink ${moreActiveV?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
           <div class="navMorePanel" id="navMorePanel">
+            <button class="navlink ${activeKey==='sagas'?'active':''}" data-go="sagas">🧩 Sagas</button>
             <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
             <button class="navlink ${activeKey==='games'?'active':''}" data-go="games">🎮 Jeux</button>
           </div>
@@ -916,6 +921,7 @@ function wireNav(ctx){
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'wheel') wheelViewFromCreator = (ctx === 'creator');
+      if(b.dataset.go === 'sagas') sagasViewFromCreator = (ctx === 'creator');
       setMode(b.dataset.go);
     };
   });
@@ -1352,13 +1358,41 @@ function getGenres(){
   return Array.from(set).sort((a,b) => a.localeCompare(b));
 }
 
+function getSagas(){
+  const set = new Set();
+  items.forEach(it => { if(it.saga && it.saga.trim()) set.add(it.saga.trim()); });
+  return Array.from(set).sort((a,b) => a.localeCompare(b));
+}
+
+function getSagaGroups(){
+  const map = {};
+  items.forEach(it => {
+    if(it.saga && it.saga.trim()){
+      const key = it.saga.trim();
+      if(!map[key]) map[key] = [];
+      map[key].push(it);
+    }
+  });
+  return Object.keys(map).sort((a,b) => a.localeCompare(b)).map(name => ({
+    name,
+    items: map[name].sort((a,b) => (parseInt(a.year,10)||0) - (parseInt(b.year,10)||0))
+  }));
+}
+
 function filterControlsHtml(){
   const genres = getGenres();
+  const sagas = getSagas();
   return `
     <select class="selectBox" id="genreFilter">
       <option value="all">Tous les genres</option>
       ${genres.map(g => `<option value="${escapeHtml(g)}" ${genreFilter===g?'selected':''}>${escapeHtml(g)}</option>`).join('')}
     </select>
+    ${sagas.length ? `
+    <select class="selectBox" id="sagaFilter">
+      <option value="all">Toutes les sagas</option>
+      ${sagas.map(s => `<option value="${escapeHtml(s)}" ${sagaFilter===s?'selected':''}>${escapeHtml(s)}</option>`).join('')}
+    </select>
+    ` : ''}
     <select class="selectBox" id="sortFilter">
       <option value="recent" ${sortBy==='recent'?'selected':''}>Récemment ajoutés</option>
       <option value="alpha" ${sortBy==='alpha'?'selected':''}>Alphabétique (A→Z)</option>
@@ -1371,10 +1405,15 @@ function filterControlsHtml(){
 function wireFilterControls(ctx){
   const g = document.getElementById('genreFilter');
   const s = document.getElementById('sortFilter');
+  const sg = document.getElementById('sagaFilter');
   g.value = genreFilter;
   s.value = sortBy;
   g.addEventListener('change', (e) => { genreFilter = e.target.value; renderGrid(ctx); });
   s.addEventListener('change', (e) => { sortBy = e.target.value; renderGrid(ctx); });
+  if(sg){
+    sg.value = sagaFilter;
+    sg.addEventListener('change', (e) => { sagaFilter = e.target.value; renderGrid(ctx); });
+  }
 }
 
 function overallRating(it){
@@ -1402,6 +1441,69 @@ async function toggleFavorite(it, ctx){
   }
 }
 
+let sagasViewFromCreator = true;
+
+function renderSagas(){
+  const isCreator = sagasViewFromCreator;
+  const groups = getSagaGroups();
+
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('sagas', isCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:22px;">
+        <h1 style="font-size:28px;">SAGAS</h1>
+        <div class="tag">${groups.length ? groups.length + ' saga' + (groups.length>1?'s':'') : "aucune saga créée pour l'instant"}</div>
+      </div>
+      <div id="sagasWrap"></div>
+    </div>
+  `;
+  wireNav(isCreator ? 'creator' : 'viewer');
+
+  const wrap = document.getElementById('sagasWrap');
+  if(groups.length === 0){
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="ic">🧩</div>
+        <div>${isCreator
+          ? "Aucune saga pour l'instant. Ouvre un titre → Modifier, et remplis le champ « Saga » (ex : Harry Potter, MCU, Spider-Man) pour le regrouper avec d'autres."
+          : "Le créateur n'a pas encore organisé de sagas."}</div>
+      </div>
+    `;
+    return;
+  }
+
+  wrap.innerHTML = groups.map(g => `
+    <div class="sagaBlock">
+      <div class="sectionLabel" style="margin-top:0;">${escapeHtml(g.name)} <span style="color:var(--text-dim);font-weight:400;">(${g.items.length})</span></div>
+      <div class="grid saga-grid">
+        ${g.items.map(it => {
+          const episodic = isEpisodic(it.type);
+          const creatorStat = episodic ? seriesCreatorAvg(it) : {avg: it.rating||0, count: it.rating?1:0};
+          return `
+          <div class="card" data-id="${it.id}">
+            <div class="poster" style="${it.poster ? `background-image:url('${it.poster}')` : ''}">
+              ${it.poster ? '' : '🎬'}
+              <span class="badge">${typeLabel(it.type)}</span>
+            </div>
+            <div class="info">
+              <div class="title">${escapeHtml(it.title)}</div>
+              ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
+              <div class="ratingsRow">
+                <span class="rchip" style="color:${ratingColor(creatorStat.avg)}">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
+              </div>
+            </div>
+          </div>
+        `}).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.card').forEach(c => {
+    c.onclick = () => isCreator ? openDetail(c.dataset.id) : openViewerRate(c.dataset.id);
+  });
+}
+
+
 function renderGrid(ctx){
   const grid = document.getElementById('grid');
   let list = items.filter(it => filter==='all' || filter==='favorites' || it.type===filter);
@@ -1410,6 +1512,9 @@ function renderGrid(ctx){
   }
   if(genreFilter !== 'all'){
     list = list.filter(it => (it.genre||'').trim() === genreFilter);
+  }
+  if(sagaFilter !== 'all'){
+    list = list.filter(it => (it.saga||'').trim() === sagaFilter);
   }
   if(query.trim()){
     const q = query.trim().toLowerCase();
@@ -1462,8 +1567,8 @@ function renderGrid(ctx){
         <div class="title">${escapeHtml(it.title)}</div>
         ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
         <div class="ratingsRow">
-          <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\\.0$/,'') : '—'}</span>
-          ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">👤 ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\\.0$/,'') : '—'}</span>` : ''}
+          <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
+          ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">👤 ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>` : ''}
           <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+')' : ''}">📺 ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
         </div>
       </div>
@@ -1497,7 +1602,7 @@ function renderGrid(ctx){
 /* ---------- CREATOR: add/edit modal ---------- */
 function openModal(existing){
   const isEdit = !!existing;
-  const it = existing || {type:'film', title:'', year:'', genre:'', synopsis:'', poster:'', rating:0, rediff:''};
+  const it = existing || {type:'film', title:'', year:'', genre:'', saga:'', synopsis:'', poster:'', rating:0, rediff:''};
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="overlay" id="overlay">
@@ -1514,6 +1619,11 @@ function openModal(existing){
           <div style="flex:1;"><label>Année</label><input type="text" id="fYear" value="${escapeHtml(it.year)}" placeholder="2019"></div>
           <div style="flex:1;"><label>Genre</label><input type="text" id="fGenre" value="${escapeHtml(it.genre)}" placeholder="Thriller"></div>
         </div>
+        <label>Saga (optionnel)</label>
+        <input type="text" id="fSaga" list="sagaList" value="${escapeHtml(it.saga||'')}" placeholder="ex : Harry Potter">
+        <datalist id="sagaList">
+          ${getSagas().map(s => `<option value="${escapeHtml(s)}"></option>`).join('')}
+        </datalist>
         <label>Affiche</label>
         <div class="posterrow">
           <div class="posterpreview" id="posterPreview" style="${it.poster ? `background-image:url('${it.poster}')`:''}">${it.poster ? '' : '🖼️'}</div>
@@ -1588,6 +1698,7 @@ function openModal(existing){
     if(!title) return;
     const year = document.getElementById('fYear').value.trim();
     const genre = document.getElementById('fGenre').value.trim();
+    const saga = document.getElementById('fSaga').value.trim();
     const synopsis = document.getElementById('fSynopsis').value.trim();
     const rediff = document.getElementById('fRediff').value.trim();
     const urlVal = document.getElementById('fPosterUrl').value.trim();
@@ -1595,11 +1706,11 @@ function openModal(existing){
 
     if(isEdit){
       const idx = items.findIndex(x => x.id === it.id);
-      items[idx] = {...items[idx], title, year, genre, synopsis, rediff, poster: posterData, type: currentType};
+      items[idx] = {...items[idx], title, year, genre, saga, synopsis, rediff, poster: posterData, type: currentType};
     } else {
       items.push({
         id: 'm-' + Math.random().toString(36).slice(2,10),
-        title, year, genre, synopsis, rediff, poster: posterData, type: currentType,
+        title, year, genre, saga, synopsis, rediff, poster: posterData, type: currentType,
         rating: 0, seasons: [], addedAt: Date.now()
       });
     }
