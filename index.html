@@ -20,12 +20,49 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:
-      radial-gradient(ellipse 900px 500px at 20% -10%, rgba(255,138,92,0.12), transparent 60%),
-      radial-gradient(ellipse 900px 600px at 100% 0%, rgba(45,212,167,0.07), transparent 55%),
-      radial-gradient(ellipse at top, #000000 0%, var(--bg) 55%), var(--bg);
+    background:var(--bg);
     color:var(--text); font-family:'Sora',sans-serif; min-height:100vh;
     -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+  .bgBlobs{
+    position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;
+  }
+  .bgBlobs::before, .bgBlobs::after, .bgBlobs .blob3{
+    content:'';position:absolute;border-radius:50%;filter:blur(90px);
+  }
+  .bgBlobs::before{
+    width:640px;height:640px;top:-220px;left:-160px;
+    background:radial-gradient(circle, rgba(255,138,92,0.20), transparent 70%);
+    animation:blobDrift1 26s ease-in-out infinite;
+  }
+  .bgBlobs::after{
+    width:560px;height:560px;top:10%;right:-180px;
+    background:radial-gradient(circle, rgba(45,212,167,0.14), transparent 70%);
+    animation:blobDrift2 32s ease-in-out infinite;
+  }
+  .bgBlobs .blob3{
+    width:500px;height:500px;bottom:-200px;left:20%;
+    background:radial-gradient(circle, rgba(232,185,74,0.16), transparent 70%);
+    animation:blobDrift3 38s ease-in-out infinite;
+  }
+  @keyframes blobDrift1{
+    0%,100%{transform:translate(0,0) scale(1);}
+    33%{transform:translate(120px,80px) scale(1.15);}
+    66%{transform:translate(40px,160px) scale(0.9);}
+  }
+  @keyframes blobDrift2{
+    0%,100%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(-140px,120px) scale(1.2);}
+  }
+  @keyframes blobDrift3{
+    0%,100%{transform:translate(0,0) scale(1);}
+    40%{transform:translate(160px,-90px) scale(1.1);}
+    75%{transform:translate(-80px,-40px) scale(0.95);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bgBlobs::before, .bgBlobs::after, .bgBlobs .blob3{ animation:none; }
   }
   ::selection{background:rgba(255,138,92,0.38);}
   .wrap{max-width:1800px;margin:0 auto;padding:0 clamp(20px,4vw,64px) 90px;}
@@ -759,6 +796,7 @@
 </style>
 </head>
 <body>
+<div class="bgBlobs"><div class="blob3"></div></div>
 <div class="wrap" id="wrap">
   <div id="app"></div>
 </div>
