@@ -593,6 +593,44 @@
   .winnerBanner .wicon{font-size:48px;margin-bottom:14px;}
   .winnerBanner .wname{font-family:'Rubik One',sans-serif;font-size:26px;color:var(--gold);}
 
+  .raceTrack{
+    position:relative;background:repeating-linear-gradient(90deg, #111 0px, #111 38px, #161616 38px, #161616 40px);
+    border:1px solid var(--border);border-radius:14px;padding:10px 10px 10px 4px;
+    min-height:80px;overflow:visible;
+  }
+  .raceFinishLine{
+    position:absolute;right:6px;top:0;bottom:0;width:2px;
+    background:repeating-linear-gradient(180deg, var(--gold) 0 8px, transparent 8px 16px);
+  }
+  .raceFinishLine::after{content:'🏁';position:absolute;top:-22px;right:-10px;font-size:16px;}
+  .raceLane{height:52px;position:relative;}
+  .raceRunner{
+    position:absolute;top:0;transition:left .5s cubic-bezier(.34,1.2,.4,1);
+    display:flex;flex-direction:column;align-items:center;gap:2px;width:50px;
+  }
+  .raceRunner.clickable{cursor:crosshair;}
+  .runnerAvatar{
+    width:32px;height:32px;border-radius:50%;overflow:hidden;
+    background:var(--panel-3);border:2px solid var(--gold-dim);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+    box-shadow:var(--shadow-sm);
+  }
+  .runnerAvatar img{width:100%;height:100%;object-fit:cover;}
+  .raceRunner.out .runnerAvatar{border-color:var(--red);filter:grayscale(1);opacity:0.6;}
+  .raceRunner.caught .runnerAvatar{
+    border-color:var(--rate-red);
+    animation:caughtPulse 0.7s ease-in-out infinite;
+  }
+  @keyframes caughtPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,0.6);}
+    50%{box-shadow:0 0 0 7px rgba(229,72,77,0);}
+  }
+  .runnerName{
+    font-family:'Sora',sans-serif;font-size:9px;color:var(--text-dim);
+    max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+
   /* Wheel */
   .wheelLayout{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;}
   .wheelStageBox{flex:0 0 auto;text-align:center;}
@@ -2386,6 +2424,35 @@ function playersListHtml(showProgress){
   `).join('');
 }
 
+function runnerAvatarHtml(p){
+  if(p.avatar) return `<img src="${p.avatar}">`;
+  return escapeHtml((p.display||'?').slice(0,2).toUpperCase());
+}
+
+function raceTrackHtml(inCreator){
+  const target = soleilGame.target || 100;
+  const list = Object.entries(soleilGame.players || {});
+  if(list.length === 0) return `<div class="empty" style="padding:30px 18px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+  const lanes = list.map(([key, p], i) => {
+    const pct = Math.min(96, (p.progress / target) * 96);
+    return `
+      <div class="raceLane">
+        <div class="raceRunner ${p.eliminated ? 'out' : ''} ${p.caughtMoving ? 'caught' : ''} ${inCreator && !p.eliminated ? 'clickable' : ''}"
+             style="left:${pct}%;" data-key="${escapeHtml(key)}" title="${escapeHtml(p.display)}">
+          <div class="runnerAvatar">${p.eliminated ? '💀' : runnerAvatarHtml(p)}</div>
+          <div class="runnerName">${escapeHtml(p.display)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="raceTrack">
+      <div class="raceFinishLine">🏁</div>
+      ${lanes}
+    </div>
+  `;
+}
+
 function drawSoleil(inCreator){
   const wrap = document.getElementById('soleilStageWrap');
   if(!wrap) { stopSoleilPoll(); return; }
@@ -2440,7 +2507,7 @@ function drawSoleil(inCreator){
         await loadSoleil();
         soleilGame.status = 'playing';
         soleilGame.light = 'green';
-        Object.values(soleilGame.players).forEach(p => { p.progress = 0; p.eliminated = false; });
+        Object.values(soleilGame.players).forEach(p => { p.progress = 0; p.eliminated = false; p.caughtMoving = false; });
         await saveSoleil();
         drawSoleil(inCreator);
       };
@@ -2451,7 +2518,7 @@ function drawSoleil(inCreator){
         if(soleilGame.status !== 'lobby') { drawSoleil(inCreator); return; }
         const k = (viewerName||'').toLowerCase();
         const profile = viewerProfiles[k] || {};
-        soleilGame.players[k] = {display: viewerName, avatar: profile.avatar||'', progress:0, eliminated:false, joinedAt: Date.now()};
+        soleilGame.players[k] = {display: viewerName, avatar: profile.avatar||'', progress:0, eliminated:false, caughtMoving:false, joinedAt: Date.now()};
         await saveSoleil();
         drawSoleil(inCreator);
       };
@@ -2469,15 +2536,15 @@ function drawSoleil(inCreator){
           <button class="toggleLightBtn ${g.light === 'green' ? 'red' : 'green'}" id="toggleLightBtn">
             ${g.light === 'green' ? '🔴 Passer au rouge' : '🟢 Repasser au vert'}
           </button>
-          <div class="hint">Clique pour dire « 1, 2, 3... Soleil ! » et surprendre les joueurs.</div>
+          <div class="hint">Guette ceux qui bougent pendant le rouge (contour rouge qui pulse), puis clique sur leur personnage pour les éliminer.</div>
         ` : (me && !me.eliminated ? `
           <button class="tapZone" id="tapZoneBtn">☀️<br>AVANCE</button>
-          <div class="hint">${g.light === 'green' ? 'La voie est libre, avance !' : 'STOP ! Ne bouge plus...'}</div>
+          <div class="hint">${g.light === 'green' ? 'La voie est libre, avance !' : 'STOP ! Ne bouge plus... ou le créateur va te repérer.'}</div>
         ` : me && me.eliminated ? `
           <div class="hint" style="font-size:15px;color:var(--red);margin:20px 0;">❌ Tu as été éliminé ! Regarde la suite en spectateur.</div>
         ` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`)}
-        <div class="sectionLabel">Classement en direct</div>
-        <div id="soleilPlayers">${playersListHtml(true)}</div>
+        <div class="sectionLabel">La piste</div>
+        <div id="raceTrackWrap">${raceTrackHtml(inCreator)}</div>
         ${inCreator ? `<button class="btn ghost" id="stopGameBtn" style="width:100%;margin-top:14px;">⏹️ Arrêter la partie</button>` : ''}
       </div>
     `;
@@ -2485,6 +2552,9 @@ function drawSoleil(inCreator){
       document.getElementById('toggleLightBtn').onclick = async () => {
         await loadSoleil();
         soleilGame.light = soleilGame.light === 'green' ? 'red' : 'green';
+        if(soleilGame.light === 'green'){
+          Object.values(soleilGame.players).forEach(p => { p.caughtMoving = false; });
+        }
         await saveSoleil();
         drawSoleil(inCreator);
       };
@@ -2494,6 +2564,9 @@ function drawSoleil(inCreator){
         await saveSoleil();
         drawSoleil(inCreator);
       };
+      wrap.querySelectorAll('.raceRunner').forEach(r => {
+        r.onclick = () => eliminatePlayer(r.dataset.key, inCreator);
+      });
     } else {
       const tap = document.getElementById('tapZoneBtn');
       if(tap) tap.onclick = () => handleSoleilTap(inCreator);
@@ -2535,8 +2608,10 @@ async function handleSoleilTap(inCreator){
   if(!me || me.eliminated || soleilGame.status !== 'playing'){ soleilTapping = false; drawSoleil(inCreator); return; }
 
   if(soleilGame.light === 'red'){
-    me.eliminated = true;
+    me.caughtMoving = true;
+    me.progress = Math.min(soleilGame.target, me.progress + 1);
   } else {
+    me.caughtMoving = false;
     me.progress = Math.min(soleilGame.target, me.progress + Math.floor(Math.random()*3) + 2);
     if(me.progress >= soleilGame.target && !soleilGame.winner){
       soleilGame.winner = key;
@@ -2546,6 +2621,17 @@ async function handleSoleilTap(inCreator){
   }
   await saveSoleil();
   soleilTapping = false;
+  drawSoleil(inCreator);
+}
+
+async function eliminatePlayer(key, inCreator){
+  await loadSoleil();
+  const p = soleilGame.players[key];
+  if(p && !p.eliminated){
+    p.eliminated = true;
+    p.caughtMoving = false;
+    await saveSoleil();
+  }
   drawSoleil(inCreator);
 }
 
