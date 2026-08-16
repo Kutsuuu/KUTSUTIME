@@ -594,41 +594,77 @@
   .winnerBanner .wname{font-family:'Rubik One',sans-serif;font-size:26px;color:var(--gold);}
 
   .raceTrack{
-    position:relative;background:repeating-linear-gradient(90deg, #111 0px, #111 38px, #161616 38px, #161616 40px);
-    border:1px solid var(--border);border-radius:14px;padding:10px 10px 10px 4px;
-    min-height:80px;overflow:visible;
+    position:relative;overflow:hidden;border-radius:20px;
+    border:4px solid #4a7c1e;
+    min-height:420px;
+    background:linear-gradient(180deg, #8fd3f4 0%, #a8e0f5 26%, #9bd66b 26%, #7dbf4a 55%, #6ba83a 100%);
+    box-shadow:var(--shadow-lg);
+  }
+  .raceSky{position:absolute;top:10px;left:0;right:0;height:24%;pointer-events:none;}
+  .raceSun{position:absolute;top:10px;right:26px;font-size:38px;filter:drop-shadow(0 0 10px rgba(255,220,120,0.7));}
+  .raceCloud{position:absolute;font-size:26px;opacity:0.9;}
+  .raceCloud.c1{top:6px;left:8%;}
+  .raceCloud.c2{top:26px;left:32%;font-size:20px;}
+  .raceCloud.c3{top:2px;left:58%;font-size:22px;}
+  .raceDecor{position:absolute;bottom:6px;font-size:26px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.25));}
+  .raceGrassLine{
+    position:absolute;left:0;right:0;height:6px;
+    background:repeating-linear-gradient(90deg, #6ba83a 0, #6ba83a 6px, #82c94a 6px, #82c94a 12px);
   }
   .raceFinishLine{
-    position:absolute;right:6px;top:0;bottom:0;width:2px;
-    background:repeating-linear-gradient(180deg, var(--gold) 0 8px, transparent 8px 16px);
+    position:absolute;right:22px;top:26%;bottom:0;width:10px;
+    background:repeating-linear-gradient(180deg, #1a1a1a 0 10px, #fff 10px 20px);
+    border-radius:3px;box-shadow:var(--shadow-sm);
   }
-  .raceFinishLine::after{content:'🏁';position:absolute;top:-22px;right:-10px;font-size:16px;}
-  .raceLane{height:52px;position:relative;}
+  .raceFinishLine::after{content:'🏁';position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:24px;}
+  .raceLanes{position:relative;padding:6px 0 10px;}
+  .raceLane{height:76px;position:relative;}
   .raceRunner{
-    position:absolute;top:0;transition:left .5s cubic-bezier(.34,1.2,.4,1);
-    display:flex;flex-direction:column;align-items:center;gap:2px;width:50px;
+    position:absolute;bottom:6px;transition:left .5s cubic-bezier(.34,1.2,.4,1);
+    display:flex;flex-direction:column;align-items:center;width:60px;
   }
   .raceRunner.clickable{cursor:crosshair;}
-  .runnerAvatar{
-    width:32px;height:32px;border-radius:50%;overflow:hidden;
-    background:var(--panel-3);border:2px solid var(--gold-dim);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
-    box-shadow:var(--shadow-sm);
+  .beanBody{
+    position:relative;width:40px;height:46px;
+    border-radius:50% 50% 46% 46% / 60% 60% 40% 40%;
+    box-shadow:inset -5px -6px 0 rgba(0,0,0,0.12), inset 4px 4px 0 rgba(255,255,255,0.18), 0 4px 5px rgba(0,0,0,0.35);
   }
-  .runnerAvatar img{width:100%;height:100%;object-fit:cover;}
-  .raceRunner.out .runnerAvatar{border-color:var(--red);filter:grayscale(1);opacity:0.6;}
-  .raceRunner.caught .runnerAvatar{
-    border-color:var(--rate-red);
-    animation:caughtPulse 0.7s ease-in-out infinite;
+  .beanLegs{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);display:flex;gap:8px;}
+  .beanLeg{width:9px;height:11px;border-radius:0 0 5px 5px;filter:brightness(0.75);}
+  .beanFace{
+    position:absolute;top:3px;left:50%;transform:translateX(-50%);
+    width:26px;height:26px;border-radius:50%;overflow:hidden;
+    background:#fff5e6;border:2px solid rgba(0,0,0,0.18);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#3a2a1a;
+  }
+  .beanFace img{width:100%;height:100%;object-fit:cover;}
+  .beanArm{
+    position:absolute;top:20px;width:8px;height:16px;border-radius:6px;filter:brightness(0.85);
+  }
+  .beanArm.left{left:-4px;transform:rotate(18deg);}
+  .beanArm.right{right:-4px;transform:rotate(-18deg);}
+  @keyframes beanWalk{
+    0%,100%{transform:translateY(0) rotate(-3deg);}
+    50%{transform:translateY(-8px) rotate(3deg);}
+  }
+  .raceRunner.walking .beanBody{animation:beanWalk .35s ease-in-out infinite;}
+  .raceRunner.out .beanBody{filter:grayscale(1) brightness(0.6);transform:rotate(85deg) translateY(10px);box-shadow:none;}
+  .raceRunner.out .beanLegs, .raceRunner.out .beanArm{display:none;}
+  .raceRunner.caught .beanBody{
+    animation:caughtPulse 0.6s ease-in-out infinite, beanShake .25s ease-in-out infinite;
   }
   @keyframes caughtPulse{
-    0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,0.6);}
-    50%{box-shadow:0 0 0 7px rgba(229,72,77,0);}
+    0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,0.7), inset -5px -6px 0 rgba(0,0,0,0.12);}
+    50%{box-shadow:0 0 0 9px rgba(229,72,77,0), inset -5px -6px 0 rgba(0,0,0,0.12);}
+  }
+  @keyframes beanShake{
+    0%,100%{margin-left:0;} 25%{margin-left:-2px;} 75%{margin-left:2px;}
   }
   .runnerName{
-    font-family:'Sora',sans-serif;font-size:9px;color:var(--text-dim);
-    max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    margin-top:4px;font-family:'Sora',sans-serif;font-weight:700;font-size:10px;color:#1a1a1a;
+    background:rgba(255,255,255,0.75);padding:1px 6px;border-radius:8px;
+    max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
 
   /* Wheel */
@@ -2424,6 +2460,21 @@ function playersListHtml(showProgress){
   `).join('');
 }
 
+const BEAN_PALETTE = [
+  {body:'#ff6b6b', leg:'#c94b4b'},
+  {body:'#4ecdc4', leg:'#2e9c94'},
+  {body:'#ffd93d', leg:'#d9ab0f'},
+  {body:'#a78bfa', leg:'#7c5cd6'},
+  {body:'#6bcb77', leg:'#3f9c4a'},
+  {body:'#ff922b', leg:'#d9700f'},
+  {body:'#63c5da', leg:'#2f9bb3'},
+  {body:'#f783ac', leg:'#d9527f'},
+];
+
+function beanColorFor(index){
+  return BEAN_PALETTE[index % BEAN_PALETTE.length];
+}
+
 function runnerAvatarHtml(p){
   if(p.avatar) return `<img src="${p.avatar}">`;
   return escapeHtml((p.display||'?').slice(0,2).toUpperCase());
@@ -2432,23 +2483,62 @@ function runnerAvatarHtml(p){
 function raceTrackHtml(inCreator){
   const target = soleilGame.target || 100;
   const list = Object.entries(soleilGame.players || {});
-  if(list.length === 0) return `<div class="empty" style="padding:30px 18px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+  const scenery = `
+    <div class="raceSky">
+      <div class="raceSun">☀️</div>
+      <div class="raceCloud c1">☁️</div>
+      <div class="raceCloud c2">☁️</div>
+      <div class="raceCloud c3">☁️</div>
+    </div>
+    <div class="raceDecor" style="left:4%;">🌳</div>
+    <div class="raceDecor" style="left:14%;font-size:18px;">🌿</div>
+    <div class="raceDecor" style="left:40%;font-size:20px;">🌸</div>
+    <div class="raceDecor" style="left:68%;">🌳</div>
+    <div class="raceDecor" style="left:84%;font-size:18px;">🌿</div>
+    <div class="raceGrassLine" style="top:26%;"></div>
+  `;
+
+  if(list.length === 0){
+    return `
+      <div class="raceTrack" style="min-height:260px;display:flex;align-items:center;justify-content:center;">
+        ${scenery}
+        <div class="empty" style="position:relative;z-index:1;background:rgba(20,20,20,0.75);border:none;padding:24px 30px;">
+          <div class="ic">👥</div><div>Personne n'a encore rejoint.</div>
+        </div>
+      </div>
+    `;
+  }
+
   const lanes = list.map(([key, p], i) => {
-    const pct = Math.min(96, (p.progress / target) * 96);
+    const pct = Math.min(90, (p.progress / target) * 90);
+    const c = beanColorFor(i);
+    const walking = !p.eliminated && p.progress > 0 && soleilGame.light === 'green';
     return `
       <div class="raceLane">
-        <div class="raceRunner ${p.eliminated ? 'out' : ''} ${p.caughtMoving ? 'caught' : ''} ${inCreator && !p.eliminated ? 'clickable' : ''}"
+        <div class="raceRunner ${p.eliminated ? 'out' : ''} ${p.caughtMoving ? 'caught' : ''} ${walking ? 'walking' : ''} ${inCreator && !p.eliminated ? 'clickable' : ''}"
              style="left:${pct}%;" data-key="${escapeHtml(key)}" title="${escapeHtml(p.display)}">
-          <div class="runnerAvatar">${p.eliminated ? '💀' : runnerAvatarHtml(p)}</div>
+          <div class="beanBody" style="background:${c.body};">
+            <div class="beanArm left" style="background:${c.body};"></div>
+            <div class="beanArm right" style="background:${c.body};"></div>
+            <div class="beanFace">${p.eliminated ? '💀' : runnerAvatarHtml(p)}</div>
+            <div class="beanLegs">
+              <div class="beanLeg" style="background:${c.leg};"></div>
+              <div class="beanLeg" style="background:${c.leg};"></div>
+            </div>
+          </div>
           <div class="runnerName">${escapeHtml(p.display)}</div>
         </div>
       </div>
     `;
   }).join('');
+
   return `
     <div class="raceTrack">
-      <div class="raceFinishLine">🏁</div>
-      ${lanes}
+      ${scenery}
+      <div class="raceFinishLine"></div>
+      <div class="raceLanes" style="margin-top:90px;">
+        ${lanes}
+      </div>
     </div>
   `;
 }
