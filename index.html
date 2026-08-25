@@ -922,6 +922,9 @@ function publicStats(movieId){
 
 function getViewersSummary(){
   const map = {};
+  Object.keys(viewerProfiles).forEach(key => {
+    map[key] = {key, display: viewerProfiles[key].display || key, count: 0, sum: 0, lastTs: 0};
+  });
   Object.keys(viewerRatings).forEach(movieId => {
     (viewerRatings[movieId] || []).forEach(r => {
       const key = r.who.toLowerCase();
@@ -932,7 +935,7 @@ function getViewersSummary(){
     });
   });
   return Object.values(map)
-    .map(v => ({...v, avg: v.sum / v.count}))
+    .map(v => ({...v, avg: v.count ? v.sum / v.count : 0}))
     .sort((a,b) => b.lastTs - a.lastTs);
 }
 
@@ -1242,7 +1245,7 @@ function renderViewersList(){
       ${navHtml('viewers','creator')}
       <div class="logo" style="margin-bottom:20px;">
         <h1 style="font-size:28px;">VIEWERS</h1>
-        <div class="tag">${viewers.length} viewer${viewers.length>1?'s':''} ${viewers.length ? 'ont voté' : ''}</div>
+        <div class="tag">${viewers.length} compte${viewers.length>1?'s':''} viewer${viewers.length>1?'s':''}</div>
       </div>
       <div class="search" style="margin-bottom:20px;max-width:340px;">
         <span class="ic">🔍</span><input type="text" id="vsearch" placeholder="Chercher un viewer..." value="${escapeHtml(viewerSearchQuery)}">
@@ -1256,7 +1259,7 @@ function renderViewersList(){
     drawViewersList(viewers);
   });
   if(viewers.length === 0){
-    document.getElementById('vlist').innerHTML = `<div class="empty"><div class="ic">👥</div><div>Aucun viewer n'a encore noté de film.</div></div>`;
+    document.getElementById('vlist').innerHTML = `<div class="empty"><div class="ic">👥</div><div>Aucun viewer ne s'est encore connecté.</div></div>`;
     return;
   }
   drawViewersList(viewers);
@@ -1277,7 +1280,7 @@ function drawViewersList(viewers){
         <div class="vname">${escapeHtml(v.display)}</div>
         <div class="vsub">${v.count} film${v.count>1?'s':''} noté${v.count>1?'s':''}</div>
       </div>
-      <div class="vavg" style="color:${ratingColor(v.avg)}">${v.avg.toFixed(1)}</div>
+      <div class="vavg" style="color:${ratingColor(v.avg)}">${v.count ? v.avg.toFixed(1) : '—'}</div>
     </div>
   `).join('');
   vlist.querySelectorAll('.vrow').forEach(row => {
