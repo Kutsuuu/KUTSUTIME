@@ -606,6 +606,62 @@
   .winnerBanner .wicon{font-size:48px;margin-bottom:14px;}
   .winnerBanner .wname{font-family:'Space Grotesk',sans-serif;font-size:26px;color:var(--gold);}
 
+  /* Blind Test */
+  .btCatGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:18px;}
+  .btCatChip{
+    background:var(--panel);border:2px solid var(--border);border-radius:4px;padding:14px;text-align:center;
+    cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--text-dim);transition:.15s;
+  }
+  .btCatChip .n{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:4px;font-weight:500;}
+  .btCatChip.selected{border-color:var(--gold);color:var(--gold);background:var(--panel-2);}
+  .btPlayerBox{text-align:center;padding:20px 0;}
+  .btWaveform{
+    width:100%;max-width:360px;margin:0 auto 18px;height:80px;border-radius:4px;
+    background:var(--panel);border:2px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-size:34px;
+    position:relative;overflow:hidden;
+  }
+  .btWaveform.playing::before{
+    content:'';position:absolute;inset:0;
+    background:repeating-linear-gradient(90deg, var(--gold) 0 3px, transparent 3px 8px);
+    opacity:0.15;animation:btWave 1s linear infinite;
+  }
+  @keyframes btWave{ from{background-position-x:0;} to{background-position-x:40px;} }
+  .btUnlockBtn{
+    background:var(--gold);color:var(--ink);border:none;border-radius:4px;
+    padding:16px 26px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;cursor:pointer;
+  }
+  .btOptions{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:460px;margin:0 auto;}
+  .btOpt{
+    background:var(--panel);border:2px solid var(--border);border-radius:4px;
+    padding:16px 12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;color:var(--text);
+    transition:.15s;
+  }
+  .btOpt:hover:not(:disabled){border-color:var(--gold);}
+  .btOpt:disabled{cursor:not-allowed;opacity:0.6;}
+  .btOpt.correct{border-color:var(--rate-green);background:rgba(63,174,92,0.15);}
+  .btOpt.wrong{border-color:var(--rate-red);background:rgba(229,72,77,0.15);}
+  .btTimer{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);margin-bottom:10px;}
+  .btRoundPlayerRow{
+    display:flex;align-items:center;gap:12px;background:var(--panel);border:2px solid var(--border);
+    border-radius:4px;padding:10px 14px;margin-bottom:8px;
+  }
+  .btRoundPlayerRow .n{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;}
+  .btRoundPlayerRow .st{font-family:'JetBrains Mono',monospace;font-size:11px;}
+  .btRoundPlayerRow .pts{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--gold);}
+  .btTrackList{margin-top:10px;}
+  .btTrackRow{
+    display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--border);
+    border-radius:4px;padding:9px 12px;margin-bottom:7px;
+  }
+  .btTrackRow .cat{
+    font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--mustard);border:1px solid var(--mustard);border-radius:3px;padding:2px 6px;flex:0 0 auto;
+  }
+  .btTrackRow .t{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;}
+  .btTrackRow .del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;}
+  .btTrackRow .del:hover{color:var(--red);}
+
   .raceTrack{
     position:relative;overflow:hidden;border-radius:6px;
     border:4px solid #4a7c1e;
@@ -803,6 +859,9 @@ const SCORES_KEY = 'gameScores';
 const WHEEL_KEY = 'wheelItems';
 const WHEEL_STATE_KEY = 'wheelSpinState';
 const SOLEIL_KEY = 'soleilGame';
+const BT_TRACKS_KEY = 'blindtestTracks';
+const BT_GAME_KEY = 'blindtestGame';
+const BT_BUCKET = 'blindtest-audio';
 
 let items = [];
 let viewerRatings = {}; // { movieId: [{who, score, comment, ts}] }
@@ -813,13 +872,15 @@ let gameScores = {}; // { key(lowercase pseudo): points }
 let wheelItems = []; // [{id, label}]
 let wheelState = {}; // {lastWinner, lastSpinAt}
 let soleilGame = {status:'idle', light:'green', target:100, players:{}, winner:null};
+let btTracks = [];
+let btGame = {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
 let filter = 'all';
 let query = '';
 let genreFilter = 'all';
 let sagaFilter = 'all';
 let selectedSaga = null;
 let sortBy = 'recent';
-let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games | soleil
+let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games | soleil | blindtest-admin | blindtest
 let viewerName = null;
 let isCreatorAccount = false;
 let selectedViewerKey = null;
@@ -855,6 +916,7 @@ async function saveSettings(){ await kvSet(SETTINGS_KEY, creatorSettings); }
 async function loadScores(){ gameScores = (await kvGet(SCORES_KEY)) || {}; }
 async function saveScores(){ await kvSet(SCORES_KEY, gameScores); }
 async function addPoints(key, amount){
+  await loadScores();
   gameScores[key] = (gameScores[key] || 0) + amount;
   await saveScores();
 }
@@ -864,6 +926,13 @@ async function loadWheelState(){ wheelState = (await kvGet(WHEEL_STATE_KEY)) || 
 async function saveWheelState(){ await kvSet(WHEEL_STATE_KEY, wheelState); }
 async function loadSoleil(){ soleilGame = (await kvGet(SOLEIL_KEY)) || {status:'idle', light:'green', target:100, players:{}, winner:null}; }
 async function saveSoleil(){ await kvSet(SOLEIL_KEY, soleilGame); }
+
+const BT_CATEGORIES = ['Opening', 'Ending', 'OST Anime', 'Séries', 'Films'];
+
+async function loadBtTracks(){ btTracks = (await kvGet(BT_TRACKS_KEY)) || []; }
+async function saveBtTracks(){ await kvSet(BT_TRACKS_KEY, btTracks); }
+async function loadBtGame(){ btGame = (await kvGet(BT_GAME_KEY)) || {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0}; }
+async function saveBtGame(){ await kvSet(BT_GAME_KEY, btGame); }
 
 function escapeHtml(str){
   if(!str) return '';
@@ -1000,6 +1069,8 @@ function render(){
   if(mode === 'stream-view') return renderStreamView();
   if(mode === 'games') return renderGames();
   if(mode === 'soleil') return renderSoleil();
+  if(mode === 'blindtest-admin') return renderBtAdmin();
+  if(mode === 'blindtest') return renderBlindtest();
   if(mode === 'wheel') return renderWheel();
   if(mode === 'dashboard') return renderDashboard();
 }
@@ -2477,7 +2548,13 @@ function renderGames(){
           <div class="gtitle">1, 2, 3 Soleil</div>
           <div class="gdesc">${inCreator ? "Crée un lobby, laisse les viewers te rejoindre, puis lance la partie quand tu veux." : "Rejoins le lobby du créateur et avance sans te faire prendre !"}</div>
         </div>
+        <div class="gameCard" id="gameBlindtest">
+          <div class="gicon">🎵</div>
+          <div class="gtitle">Blind Test</div>
+          <div class="gdesc">${inCreator ? "Choisis tes catégories (opening, ending, OST...), lance la partie, les viewers devinent en direct." : "Écoute l'extrait et devine le titre avant les autres pour marquer plus de points !"}</div>
+        </div>
       </div>
+      ${inCreator ? `<button class="addbtn" id="manageBtTracks" style="margin-bottom:10px;">🎼 Gérer la bibliothèque de musiques</button>` : ''}
       <div class="sectionLabel">Classement</div>
       <div id="leaderboard"></div>
     </div>
@@ -2488,6 +2565,12 @@ function renderGames(){
     soleilViewFromCreator = inCreator;
     setMode('soleil');
   };
+  document.getElementById('gameBlindtest').onclick = () => {
+    btViewFromCreator = inCreator;
+    setMode('blindtest');
+  };
+  const mbt = document.getElementById('manageBtTracks');
+  if(mbt) mbt.onclick = () => setMode('blindtest-admin');
 }
 
 /* ---------- 1, 2, 3 SOLEIL ---------- */
@@ -2804,6 +2887,368 @@ async function eliminatePlayer(key, inCreator){
     await saveSoleil();
   }
   drawSoleil(inCreator);
+}
+
+/* ---------- BLIND TEST : bibliothèque de musiques ---------- */
+function renderBtAdmin(){
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('games','creator')}
+      <button class="back" id="backBt">← retour aux jeux</button>
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:26px;">🎼 BIBLIOTHÈQUE MUSICALE</h1>
+        <div class="tag">ajoute les musiques pour ton blind test</div>
+      </div>
+      <div class="twitchbox" style="max-width:480px;margin-bottom:24px;">
+        <label>Titre à deviner</label>
+        <input type="text" id="btTitle" placeholder="ex : Attack on Titan - Guren no Yumiya">
+        <label>Catégorie</label>
+        <select class="selectBox" id="btCategory" style="width:100%;margin-bottom:14px;">
+          ${BT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
+        </select>
+        <label class="filebtn" for="btFile">📁 Choisir un fichier audio (mp3, wav...)</label>
+        <input type="file" id="btFile" accept="audio/*">
+        <div class="hint" id="btUploadStatus" style="min-height:16px;"></div>
+        <button class="btn primary" id="btAddBtn" style="width:100%;margin-top:10px;">+ Ajouter à la bibliothèque</button>
+      </div>
+      <div class="sectionLabel" style="margin-top:0;">Musiques ajoutées (<span id="btCount">${btTracks.length}</span>)</div>
+      <div class="btTrackList" id="btTrackList"></div>
+    </div>
+  `;
+  wireNav('creator');
+  document.getElementById('backBt').onclick = () => setMode('games');
+  drawBtTrackList();
+
+  let pendingFile = null;
+  document.getElementById('btFile').onchange = (e) => { pendingFile = e.target.files[0] || null; };
+
+  document.getElementById('btAddBtn').onclick = async () => {
+    const title = document.getElementById('btTitle').value.trim();
+    const category = document.getElementById('btCategory').value;
+    const statusEl = document.getElementById('btUploadStatus');
+    if(!title){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = 'Ajoute un titre.'; return; }
+    if(!pendingFile){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = 'Choisis un fichier audio.'; return; }
+    statusEl.style.color = 'var(--text-dim)';
+    statusEl.textContent = 'Envoi en cours...';
+    const path = `${Date.now()}-${pendingFile.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const { error: upErr } = await supabaseClient.storage.from(BT_BUCKET).upload(path, pendingFile);
+    if(upErr){
+      statusEl.style.color = 'var(--rate-red)';
+      statusEl.textContent = 'Erreur : ' + upErr.message;
+      return;
+    }
+    const { data: urlData } = supabaseClient.storage.from(BT_BUCKET).getPublicUrl(path);
+    await loadBtTracks();
+    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, category, audioUrl: urlData.publicUrl, path});
+    await saveBtTracks();
+    statusEl.style.color = 'var(--rate-green)';
+    statusEl.textContent = '✓ Ajouté !';
+    document.getElementById('btTitle').value = '';
+    document.getElementById('btFile').value = '';
+    pendingFile = null;
+    drawBtTrackList();
+  };
+}
+
+function drawBtTrackList(){
+  const wrap = document.getElementById('btTrackList');
+  if(!wrap) return;
+  const countEl = document.getElementById('btCount');
+  if(countEl) countEl.textContent = btTracks.length;
+  if(btTracks.length === 0){
+    wrap.innerHTML = `<div class="empty"><div class="ic">🎵</div><div>Aucune musique ajoutée pour l'instant.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = btTracks.map(t => `
+    <div class="btTrackRow">
+      <span class="cat">${escapeHtml(t.category)}</span>
+      <span class="t">${escapeHtml(t.title)}</span>
+      <button class="del" data-id="${t.id}">✕</button>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.del').forEach(b => {
+    b.onclick = async () => {
+      await loadBtTracks();
+      const track = btTracks.find(t => t.id === b.dataset.id);
+      if(track && track.path){
+        try{ await supabaseClient.storage.from(BT_BUCKET).remove([track.path]); }catch(e){}
+      }
+      btTracks = btTracks.filter(t => t.id !== b.dataset.id);
+      await saveBtTracks();
+      drawBtTrackList();
+    };
+  });
+}
+
+/* ---------- BLIND TEST : la partie ---------- */
+let btViewFromCreator = true;
+let btPollTimer = null;
+let btSoundUnlocked = false;
+let btAudioEl = null;
+
+function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer = null; } }
+
+function renderBlindtest(){
+  const inCreator = btViewFromCreator;
+  stopBtPoll();
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('games', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">🎵 BLIND TEST</h1>
+        <div class="tag">${inCreator ? 'gère la partie' : 'devine le plus vite possible'}</div>
+      </div>
+      <div id="btStageWrap"></div>
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+  drawBt(inCreator);
+  btPollTimer = setInterval(async () => {
+    await loadBtGame();
+    drawBt(inCreator);
+  }, 1200);
+}
+
+function btPlayerRows(){
+  const list = Object.entries(btGame.players || {}).sort((a,b) => (b[1].score||0) - (a[1].score||0));
+  if(list.length === 0) return `<div class="empty" style="padding:24px 18px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+  return list.map(([key,p]) => `
+    <div class="btRoundPlayerRow">
+      <span class="n">${escapeHtml(p.display)}</span>
+      <span class="st" style="color:${p.answered ? (p.lastCorrect ? 'var(--rate-green)' : 'var(--rate-red)') : 'var(--text-dim)'};">
+        ${btGame.status==='playing' ? (p.answered ? '✓ a répondu' : '…') : (btGame.status==='revealed' && p.lastPoints ? '+'+p.lastPoints+' pts' : '')}
+      </span>
+      <span class="pts">${p.score||0} pts</span>
+    </div>
+  `).join('');
+}
+
+function drawBt(inCreator){
+  const wrap = document.getElementById('btStageWrap');
+  if(!wrap){ stopBtPoll(); if(btAudioEl) btAudioEl.pause(); return; }
+  const g = btGame;
+
+  if(g.status === 'idle'){
+    wrap.innerHTML = inCreator ? `
+      <div class="sectionLabel" style="margin-top:0;">Choisis les catégories</div>
+      <div class="btCatGrid" id="btCatGrid">
+        ${BT_CATEGORIES.map(c => {
+          const count = btTracks.filter(t=>t.category===c).length;
+          return `<div class="btCatChip selected" data-cat="${escapeHtml(c)}">${escapeHtml(c)}<span class="n">${count} piste${count>1?'s':''}</span></div>`;
+        }).join('')}
+      </div>
+      <button class="btn primary" id="btCreateLobby" style="width:100%;" ${btTracks.length < 4 ? 'disabled' : ''}>Créer le lobby</button>
+      ${btTracks.length < 4 ? `<div class="hint">Ajoute au moins 4 musiques dans la bibliothèque pour pouvoir jouer.</div>` : ''}
+    ` : `<div class="empty"><div class="ic">🎵</div><div>Le créateur n'a pas encore ouvert de blind test.</div></div>`;
+
+    if(inCreator){
+      const selectedCats = new Set(BT_CATEGORIES);
+      wrap.querySelectorAll('.btCatChip').forEach(chip => {
+        chip.onclick = () => {
+          const c = chip.dataset.cat;
+          if(selectedCats.has(c)){ selectedCats.delete(c); chip.classList.remove('selected'); }
+          else { selectedCats.add(c); chip.classList.add('selected'); }
+        };
+      });
+      document.getElementById('btCreateLobby').onclick = async () => {
+        const cats = Array.from(selectedCats);
+        const pool = btTracks.filter(t => cats.includes(t.category)).map(t=>t.id);
+        if(pool.length < 4){ alert('Pas assez de musiques dans les catégories choisies (4 minimum).'); return; }
+        btGame = {status:'lobby', categories:cats, pool, currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
+        await saveBtGame();
+        drawBt(inCreator);
+      };
+    }
+    return;
+  }
+
+  if(g.status === 'lobby'){
+    const key = (viewerName||'').toLowerCase();
+    const joined = !inCreator && g.players[key];
+    wrap.innerHTML = `
+      <div class="tag" style="margin-bottom:10px;">Catégories : ${g.categories.map(escapeHtml).join(', ')}</div>
+      <div id="btPlayers">${btPlayerRows()}</div>
+      ${inCreator ? `
+        <div class="modalbtns" style="margin-top:16px;">
+          <button class="btn ghost" id="btCloseLobby">✕ Fermer le lobby</button>
+          <button class="btn primary" id="btStart" ${Object.keys(g.players).length===0?'disabled':''}>▶️ Lancer le blind test</button>
+        </div>
+      ` : (joined ? `<div class="hint">Tu es dans le lobby ! En attente du lancement...</div>` : `
+        <button class="btn primary" id="btJoin" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">🎮 Rejoindre le lobby</button>
+      `)}
+    `;
+    if(inCreator){
+      document.getElementById('btCloseLobby').onclick = async () => {
+        btGame = {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
+        await saveBtGame();
+        drawBt(inCreator);
+      };
+      const sb = document.getElementById('btStart');
+      if(sb) sb.onclick = () => startBtRound(inCreator);
+    } else {
+      const jb = document.getElementById('btJoin');
+      if(jb) jb.onclick = async () => {
+        await loadBtGame();
+        if(btGame.status !== 'lobby'){ drawBt(inCreator); return; }
+        const k = (viewerName||'').toLowerCase();
+        const profile = viewerProfiles[k] || {};
+        btGame.players[k] = {display: viewerName, avatar: profile.avatar||'', score:0, answered:false, lastCorrect:null, lastPoints:0};
+        await saveBtGame();
+        drawBt(inCreator);
+      };
+    }
+    return;
+  }
+
+  if(g.status === 'playing'){
+    const key = (viewerName||'').toLowerCase();
+    const me = g.players[key];
+    const totalPlayers = Object.keys(g.players).length;
+    const answeredCount = Object.values(g.players).filter(p=>p.answered).length;
+    wrap.innerHTML = `
+      <div class="btPlayerBox">
+        <div class="tag" style="margin-bottom:10px;">Round ${g.round} · ${answeredCount}/${totalPlayers} ont répondu</div>
+        <div class="btWaveform ${btSoundUnlocked || inCreator ? 'playing' : ''}">🎵</div>
+        ${(!btSoundUnlocked && !inCreator) ? `<button class="btUnlockBtn" id="btUnlock">🔊 Activer le son</button>` : ''}
+        ${inCreator ? `
+          <div class="hint">Extrait en cours de lecture...</div>
+          <button class="btn ghost" id="btReveal" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Révéler la réponse</button>
+        ` : (me && !me.answered ? `
+          <div class="btOptions" id="btOptionsWrap">
+            ${(g.options||[]).map(opt => `<button class="btOpt" data-opt="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`).join('')}
+          </div>
+        ` : me && me.answered ? `<div class="hint">✓ Réponse envoyée, en attente des autres...</div>` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`)}
+      </div>
+      <div class="sectionLabel">Scores</div>
+      <div id="btPlayers">${btPlayerRows()}</div>
+    `;
+    if(!btAudioEl) btAudioEl = new Audio();
+    if(g.currentTrack && btAudioEl.dataset.trackId !== g.currentTrack.id){
+      btAudioEl.src = g.currentTrack.audioUrl;
+      btAudioEl.dataset.trackId = g.currentTrack.id;
+      if(btSoundUnlocked || inCreator) btAudioEl.play().catch(()=>{});
+    }
+    const unlockBtn = document.getElementById('btUnlock');
+    if(unlockBtn) unlockBtn.onclick = () => {
+      btSoundUnlocked = true;
+      btAudioEl.play().catch(()=>{});
+      drawBt(inCreator);
+    };
+    if(inCreator){
+      document.getElementById('btReveal').onclick = () => revealBtRound(inCreator);
+    } else {
+      wrap.querySelectorAll('.btOpt').forEach(b => {
+        b.onclick = () => submitBtAnswer(b.dataset.opt, inCreator);
+      });
+    }
+    return;
+  }
+
+  if(g.status === 'revealed'){
+    if(btAudioEl) btAudioEl.pause();
+    const hasMore = g.pool.length > 0;
+    wrap.innerHTML = `
+      <div class="winnerBanner" style="padding:24px 20px;">
+        <div class="wicon">🎶</div>
+        <div class="wname" style="font-size:18px;">${escapeHtml(g.currentTrack.title)}</div>
+        <div class="tag" style="margin-top:4px;">${escapeHtml(g.currentTrack.category)}</div>
+      </div>
+      <div class="sectionLabel">Résultats de la manche</div>
+      <div id="btPlayers">${btPlayerRows()}</div>
+      ${inCreator ? `
+        <div class="modalbtns" style="margin-top:16px;">
+          <button class="btn ghost" id="btFinish">🏁 Terminer</button>
+          ${hasMore ? `<button class="btn primary" id="btNextRound">▶️ Round suivant</button>` : ''}
+        </div>
+      ` : ''}
+    `;
+    if(inCreator){
+      document.getElementById('btFinish').onclick = async () => {
+        await loadBtGame();
+        btGame.status = 'finished';
+        await saveBtGame();
+        drawBt(inCreator);
+      };
+      const nb = document.getElementById('btNextRound');
+      if(nb) nb.onclick = () => startBtRound(inCreator);
+    }
+    return;
+  }
+
+  if(g.status === 'finished'){
+    wrap.innerHTML = `
+      <div class="sectionLabel" style="margin-top:0;">Classement final du blind test</div>
+      <div id="btPlayers">${btPlayerRows()}</div>
+      ${inCreator ? `<button class="btn primary" id="btNewBt" style="width:100%;margin-top:16px;">🔄 Nouveau blind test</button>` : ''}
+    `;
+    if(inCreator){
+      document.getElementById('btNewBt').onclick = async () => {
+        btGame = {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
+        await saveBtGame();
+        drawBt(inCreator);
+      };
+    }
+  }
+}
+
+async function startBtRound(inCreator){
+  await loadBtGame();
+  await loadBtTracks();
+  if(!btGame.pool || btGame.pool.length === 0){
+    btGame.status = 'finished';
+    await saveBtGame();
+    drawBt(inCreator);
+    return;
+  }
+  const idx = Math.floor(Math.random()*btGame.pool.length);
+  const trackId = btGame.pool[idx];
+  btGame.pool = btGame.pool.filter(id => id !== trackId);
+  const track = btTracks.find(t => t.id === trackId);
+  if(!track){ await saveBtGame(); drawBt(inCreator); return; }
+
+  const sameCat = btTracks.filter(t => t.category === track.category && t.id !== track.id);
+  const others = btTracks.filter(t => t.id !== track.id);
+  const decoysPool = sameCat.length >= 3 ? sameCat : others;
+  const shuffledDecoys = decoysPool.slice().sort(()=>Math.random()-0.5).slice(0,3);
+  const options = [track.title, ...shuffledDecoys.map(t=>t.title)].sort(()=>Math.random()-0.5);
+
+  Object.values(btGame.players).forEach(p => { p.answered = false; p.lastCorrect = null; p.lastPoints = 0; });
+  btGame.currentTrack = {id: track.id, title: track.title, category: track.category, audioUrl: track.audioUrl};
+  btGame.options = options;
+  btGame.playStartedAt = Date.now();
+  btGame.status = 'playing';
+  btGame.round = (btGame.round||0) + 1;
+  await saveBtGame();
+  drawBt(inCreator);
+}
+
+async function submitBtAnswer(chosen, inCreator){
+  await loadBtGame();
+  const key = (viewerName||'').toLowerCase();
+  const me = btGame.players[key];
+  if(!me || me.answered || btGame.status !== 'playing'){ drawBt(inCreator); return; }
+  const elapsed = (Date.now() - btGame.playStartedAt) / 1000;
+  const correct = chosen === btGame.currentTrack.title;
+  let points = 0;
+  if(correct){
+    points = Math.max(20, Math.round(100 - elapsed*4));
+  }
+  me.answered = true;
+  me.lastCorrect = correct;
+  me.lastPoints = points;
+  me.score = (me.score||0) + points;
+  await saveBtGame();
+  if(points > 0) await addPoints(key, points);
+  drawBt(inCreator);
+}
+
+function revealBtRound(inCreator){
+  (async () => {
+    await loadBtGame();
+    btGame.status = 'revealed';
+    await saveBtGame();
+    drawBt(inCreator);
+  })();
 }
 
 /* ---------- ROUE DES FILMS ---------- */
@@ -3137,6 +3582,8 @@ async function processSession(){
   await loadWheel();
   await loadWheelState();
   await loadSoleil();
+  await loadBtTracks();
+  await loadBtGame();
 
   await processSession();
 
