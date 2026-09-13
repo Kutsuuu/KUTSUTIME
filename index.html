@@ -55,54 +55,34 @@
   .wrap{max-width:1800px;margin:0 auto;padding:0 clamp(20px,4vw,64px) 90px;}
   .wrap.narrow{max-width:440px;padding-top:60px;}
 
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-  .page{animation:fadeIn .3s cubic-bezier(.2,.8,.2,1);}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .page{animation:fadeIn .3s ease;}
 
-  /* ---------- navbar ---------- */
-  .navbar{
-    position:sticky;top:0;z-index:30;
-    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-    padding:16px 0;margin-bottom:26px;
-    background:var(--bg);
-    border-bottom:2px solid var(--border);
+  /* ---------- sidebar (rail façon YouTube / Twitch) ---------- */
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;width:220px;z-index:30;
+    background:var(--panel);border-right:2px solid var(--border);
+    display:flex;flex-direction:column;padding:22px 0;overflow-y:auto;
   }
-  .navbrand{cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;}
-  .navlogo{
-    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:1px;
-    color:var(--gold);
+  .sidebarLogo{
+    cursor:pointer;user-select:none;padding:0 22px 22px;margin-bottom:6px;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;line-height:1.15;
+    letter-spacing:0.5px;color:var(--gold);border-bottom:2px dashed var(--border);
   }
-  .navlinks{
-    display:flex;gap:18px;background:none;border:none;
-    border-radius:0;padding:0;
+  .sidebarNav{display:flex;flex-direction:column;gap:2px;flex:1;}
+  .sidebarLink{
+    display:flex;align-items:center;gap:14px;width:100%;
+    padding:12px 22px;border:none;background:none;border-left:3px solid transparent;
+    color:var(--text-dim);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;
+    cursor:pointer;white-space:nowrap;text-align:left;transition:.15s;
   }
-  .navlink{
-    padding:6px 0;border-radius:0;border:none;background:none;color:var(--text-dim);
-    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;
-    display:flex;align-items:center;gap:7px;transition:.15s;position:relative;
+  .sidebarLink .sIcon{font-size:17px;flex:0 0 auto;width:20px;text-align:center;}
+  .sidebarLink:hover{background:var(--panel-2);color:var(--text);}
+  .sidebarLink.active{background:var(--panel-2);color:var(--gold);border-left-color:var(--gold);}
+  .sidebarBottom{
+    display:flex;flex-direction:column;gap:2px;padding-top:14px;margin-top:10px;
+    border-top:2px dashed var(--border);
   }
-  .navlink.active{background:none;color:var(--mustard);box-shadow:none;}
-  .navlink.active::after{content:'';position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--mustard);}
-  .navlink:hover:not(.active){color:var(--text);background:none;}
-  .navright{display:flex;align-items:center;gap:8px;}
-
-  .navMore{position:relative;}
-  .navMore .chev{font-size:9px;opacity:0.7;}
-  .navMorePanel{
-    display:none;position:absolute;top:calc(100% + 8px);left:0;
-    background:var(--panel-2);border:1px solid var(--border);
-    border-radius:4px;padding:6px;min-width:180px;box-shadow:var(--shadow-lg);z-index:40;
-    flex-direction:column;gap:2px;
-  }
-  .navMorePanel.open{display:flex;}
-  .navMorePanel .navlink{width:100%;justify-content:flex-start;padding:10px 12px;}
-  .navMorePanel .navlink .lbl{display:inline;}
-
-  .iconBtn{
-    width:auto;height:auto;border-radius:0;background:none;
-    border:none;color:var(--text-dim);font-size:17px;cursor:pointer;padding:6px;
-    display:flex;align-items:center;justify-content:center;transition:.15s;
-  }
-  .iconBtn:hover{color:var(--gold);}
 
   .logo h1{
     font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(30px,7vw,44px);
@@ -760,34 +740,33 @@
   .badgeChip.earned{opacity:1;border-color:var(--gold-dim);color:var(--text);background:var(--panel-3);}
   .badgeChip .bicon{font-size:15px;}
 
-  @media(max-width:600px){
-    .navlink .lbl{display:none;}
-    .navlink{padding:10px 12px;}
-  }
+  /* Décale le contenu pour laisser la place au rail latéral (desktop) */
+  .wrap:has(.sidebar){padding-left:calc(220px + clamp(20px,4vw,64px));}
+
   @media(max-width:480px){
     .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:13px;}
   }
 
-  /* Barre latérale gauche en mode portrait / mobile */
-  @media(max-width:768px) and (orientation:portrait){
-    .wrap:has(.navbar){padding-left:78px;}
-    .navbar{
-      position:fixed;top:0;left:0;bottom:0;z-index:35;
-      flex-direction:column;justify-content:flex-start;
-      width:64px;padding:18px 0;margin-bottom:0;gap:18px;
-      background:var(--panel-2);
-      border-right:1px solid var(--border);backdrop-filter:none;
+  /* Barre de navigation en bas façon TikTok / Instagram en mobile */
+  @media(max-width:768px){
+    .wrap:has(.sidebar){padding-left:clamp(16px,4vw,64px);padding-bottom:86px;}
+    .sidebar{
+      position:fixed;left:0;right:0;top:auto;bottom:0;width:100%;height:64px;z-index:35;
+      flex-direction:row;align-items:center;padding:0;
+      background:var(--panel);border-right:none;border-top:2px solid var(--border);
+      overflow-x:auto;overflow-y:hidden;
     }
-    .navbrand{display:none;}
-    .navlinks{
-      flex-direction:column;background:none;border:none;padding:0;gap:8px;width:100%;align-items:center;
+    .sidebarLogo{display:none;}
+    .sidebarNav{flex-direction:row;flex:1;height:100%;}
+    .sidebarLink{
+      flex-direction:column;gap:3px;padding:8px 14px;height:100%;justify-content:center;
+      border-left:none;border-top:3px solid transparent;font-size:9.5px;
     }
-    .navlink{padding:11px;justify-content:center;}
-    .navlink .lbl{display:none;}
-    .navMorePanel{top:0;left:calc(100% + 10px);min-width:190px;}
-    .navright{flex-direction:column;margin-top:auto;gap:8px;align-items:center;padding:0 6px;}
-    .viewerTag{flex-direction:column;padding:6px 4px;border-radius:4px;font-size:9px;line-height:1.2;text-align:center;gap:3px;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    #navQuit{font-size:10px;padding:8px 6px;}
+    .sidebarLink.active{border-top-color:var(--gold);border-left-color:transparent;}
+    .sidebarLink .sIcon{font-size:19px;}
+    .sidebarBottom{
+      flex-direction:row;border-top:none;padding-top:0;margin-top:0;height:100%;
+    }
   }
 </style>
 </head>
@@ -1028,57 +1007,44 @@ function render(){
 /* ---------- shared navbar ---------- */
 function navHtml(activeKey, ctx){
   if(ctx === 'creator'){
-    const moreActive = ['viewers','stream','games','wheel','dashboard'].includes(activeKey);
     return `
-      <div class="navbar">
-        <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
-        <div class="navlinks">
-          <button class="navlink ${activeKey==='catalog'?'active':''}" data-go="creator">🎬 <span class="lbl">Catalogue</span></button>
-          <button class="navlink ${activeKey==='schedule'?'active':''}" data-go="schedule">📅 <span class="lbl">Calendrier</span></button>
-          <div class="navMore">
-            <button class="navlink ${moreActive?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
-            <div class="navMorePanel" id="navMorePanel">
-              <button class="navlink ${activeKey==='viewers'?'active':''}" data-go="viewers-list">👥 Viewers</button>
-              <button class="navlink ${activeKey==='dashboard'?'active':''}" data-go="dashboard">📊 Dashboard</button>
-              <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
-              <button class="navlink ${activeKey==='games'?'active':''}" data-go="games">🎮 Jeux</button>
-              <button class="navlink ${activeKey==='wheel'?'active':''}" data-go="wheel">🎡 Roue</button>
-            </div>
-          </div>
+      <div class="sidebar">
+        <div class="sidebarLogo" id="navBrand">KUTSU<br>TIME</div>
+        <div class="sidebarNav">
+          <button class="sidebarLink ${activeKey==='catalog'?'active':''}" data-go="creator"><span class="sIcon">🎬</span><span class="lbl">Catalogue</span></button>
+          <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule"><span class="sIcon">📅</span><span class="lbl">Calendrier</span></button>
+          <button class="sidebarLink ${activeKey==='viewers'?'active':''}" data-go="viewers-list"><span class="sIcon">👥</span><span class="lbl">Viewers</span></button>
+          <button class="sidebarLink ${activeKey==='dashboard'?'active':''}" data-go="dashboard"><span class="sIcon">📊</span><span class="lbl">Dashboard</span></button>
+          <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
+          <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
+          <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
         </div>
-        <div class="navright">
-          <button class="iconBtn" id="navSettings" title="Réglages">⚙️</button>
-          <button class="iconBtn" id="navSwitch" title="Voir en tant que viewer">🍿</button>
+        <div class="sidebarBottom">
+          <button class="sidebarLink" id="navSettings"><span class="sIcon">⚙️</span><span class="lbl">Réglages</span></button>
+          <button class="sidebarLink" id="navSwitch"><span class="sIcon">🍿</span><span class="lbl">Vue viewer</span></button>
         </div>
       </div>
     `;
   }
-  const moreActiveV = ['stream','games'].includes(activeKey);
   return `
-    <div class="navbar">
-      <div class="navbrand" id="navBrand"><span class="navlogo">KUTSU TIME</span></div>
-      <div class="navlinks">
-        <button class="navlink ${activeKey==='catalog'?'active':''}" data-go="viewer">🍿 <span class="lbl">Catalogue</span></button>
-        <button class="navlink ${activeKey==='schedule'?'active':''}" data-go="schedule-view">📅 <span class="lbl">Calendrier</span></button>
-        <div class="navMore">
-          <button class="navlink ${moreActiveV?'active':''}" id="navMoreBtn">✨ <span class="lbl">Plus</span> <span class="chev">▾</span></button>
-          <div class="navMorePanel" id="navMorePanel">
-            <button class="navlink ${activeKey==='stream'?'active':''}" data-go="stream-view">🔴 Stream</button>
-            <button class="navlink ${activeKey==='games'?'active':''}" data-go="games">🎮 Jeux</button>
-          </div>
-        </div>
+    <div class="sidebar">
+      <div class="sidebarLogo" id="navBrand">KUTSU<br>TIME</div>
+      <div class="sidebarNav">
+        <button class="sidebarLink ${activeKey==='catalog'?'active':''}" data-go="viewer"><span class="sIcon">🍿</span><span class="lbl">Catalogue</span></button>
+        <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule-view"><span class="sIcon">📅</span><span class="lbl">Calendrier</span></button>
+        <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
+        <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
+        ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="sIcon">🔒</span><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
-      <div class="navright">
-        ${isCreatorAccount ? `<button class="pill" id="navBackCreator" title="Retour espace créateur">🔒</button>` : ''}
-        <span class="viewerTag" id="navProfileTag" style="cursor:pointer;">${viewerAvatarHtml(viewerName, 18)} ${escapeHtml(viewerName||'')}</span>
-        <button class="pill" id="navQuit">Quitter</button>
+      <div class="sidebarBottom">
+        <button class="sidebarLink" id="navProfileTag">${viewerAvatarHtml(viewerName, 22)}<span class="lbl">${escapeHtml(viewerName||'')}</span></button>
+        <button class="sidebarLink" id="navQuit"><span class="sIcon">🚪</span><span class="lbl">Quitter</span></button>
       </div>
     </div>
   `;
 }
 function wireNav(ctx){
-  document.querySelectorAll('.navlink').forEach(b => {
-    if(b.id === 'navMoreBtn') return;
+  document.querySelectorAll('.sidebarLink[data-go]').forEach(b => {
     b.onclick = () => {
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
@@ -1088,14 +1054,6 @@ function wireNav(ctx){
   });
   const brand = document.getElementById('navBrand');
   if(brand) brand.onclick = () => setMode('select');
-  const moreBtn = document.getElementById('navMoreBtn');
-  const morePanel = document.getElementById('navMorePanel');
-  if(moreBtn && morePanel){
-    moreBtn.onclick = (e) => {
-      e.stopPropagation();
-      morePanel.classList.toggle('open');
-    };
-  }
   if(ctx === 'creator'){
     const sw = document.getElementById('navSwitch');
     if(sw) sw.onclick = () => setMode('viewer');
@@ -1116,13 +1074,6 @@ function wireNav(ctx){
     if(pt) pt.onclick = () => openMyProfileModal();
   }
 }
-document.addEventListener('click', (e) => {
-  const morePanel = document.getElementById('navMorePanel');
-  const moreBtn = document.getElementById('navMoreBtn');
-  if(morePanel && morePanel.classList.contains('open') && !morePanel.contains(e.target) && e.target !== moreBtn){
-    morePanel.classList.remove('open');
-  }
-});
 
 function viewerAvatarHtml(name, size){
   const key = (name||'').toLowerCase();
