@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -3254,9 +3254,13 @@ function drawBt(inCreator){
         timerEl.style.color = remaining <= 10 ? 'var(--rate-red)' : 'var(--gold)';
         if(remaining <= 0){
           clearInterval(btTimerTick);
-          const guessBox = document.getElementById('btGuessBox');
-          if(guessBox && !inCreator){
-            guessBox.outerHTML = '<div class="hint" style="color:var(--rate-red);">⏱️ Temps écoulé !</div>';
+          if(inCreator){
+            revealBtRound(inCreator);
+          } else {
+            const guessBox = document.getElementById('btGuessBox');
+            if(guessBox){
+              guessBox.outerHTML = '<div class="hint" style="color:var(--rate-red);">⏱️ Temps écoulé !</div>';
+            }
           }
         }
       }, 1000);
