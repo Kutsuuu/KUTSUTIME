@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -2906,8 +2906,8 @@ function renderBtAdmin(){
         <select class="selectBox" id="btCategory" style="width:100%;margin-bottom:14px;">
           ${BT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
         </select>
-        <label class="filebtn" for="btFile">📁 Choisir un fichier audio (mp3, wav...)</label>
-        <input type="file" id="btFile" accept="audio/*">
+        <label class="filebtn" for="btFile">📁 Choisir un fichier audio ou vidéo (mp3, wav, mp4...)</label>
+        <input type="file" id="btFile" accept="audio/*,video/mp4,video/*">
         <div class="hint" id="btUploadStatus" style="min-height:16px;"></div>
         <button class="btn primary" id="btAddBtn" style="width:100%;margin-top:10px;">+ Ajouter à la bibliothèque</button>
       </div>
@@ -2939,7 +2939,8 @@ function renderBtAdmin(){
     }
     const { data: urlData } = supabaseClient.storage.from(BT_BUCKET).getPublicUrl(path);
     await loadBtTracks();
-    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, category, audioUrl: urlData.publicUrl, path});
+    const mediaType = pendingFile.type.startsWith('video') ? 'video' : 'audio';
+    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, category, audioUrl: urlData.publicUrl, path, mediaType});
     await saveBtTracks();
     statusEl.style.color = 'var(--rate-green)';
     statusEl.textContent = '✓ Ajouté !';
@@ -2962,6 +2963,7 @@ function drawBtTrackList(){
   wrap.innerHTML = btTracks.map(t => `
     <div class="btTrackRow">
       <span class="cat">${escapeHtml(t.category)}</span>
+      ${t.mediaType === 'video' ? `<span title="Vidéo">🎬</span>` : `<span title="Audio">🎧</span>`}
       <span class="t">${escapeHtml(t.title)}</span>
       <button class="del" data-id="${t.id}">✕</button>
     </div>
@@ -2984,7 +2986,7 @@ function drawBtTrackList(){
 let btViewFromCreator = true;
 let btPollTimer = null;
 let btSoundUnlocked = false;
-let btAudioEl = null;
+let btMediaEl = null;
 
 function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer = null; } }
 
@@ -3025,7 +3027,7 @@ function btPlayerRows(){
 
 function drawBt(inCreator){
   const wrap = document.getElementById('btStageWrap');
-  if(!wrap){ stopBtPoll(); if(btAudioEl) btAudioEl.pause(); return; }
+  if(!wrap){ stopBtPoll(); if(btMediaEl) btMediaEl.pause(); return; }
   const g = btGame;
 
   if(g.status === 'idle'){
@@ -3108,7 +3110,7 @@ function drawBt(inCreator){
     wrap.innerHTML = `
       <div class="btPlayerBox">
         <div class="tag" style="margin-bottom:10px;">Round ${g.round} · ${answeredCount}/${totalPlayers} ont répondu</div>
-        <div class="btWaveform ${btSoundUnlocked || inCreator ? 'playing' : ''}">🎵</div>
+        <div class="btWaveform ${btSoundUnlocked || inCreator ? 'playing' : ''}" id="btMediaSlot">🎵</div>
         ${(!btSoundUnlocked && !inCreator) ? `<button class="btUnlockBtn" id="btUnlock">🔊 Activer le son</button>` : ''}
         ${inCreator ? `
           <div class="hint">Extrait en cours de lecture...</div>
@@ -3122,16 +3124,20 @@ function drawBt(inCreator){
       <div class="sectionLabel">Scores</div>
       <div id="btPlayers">${btPlayerRows()}</div>
     `;
-    if(!btAudioEl) btAudioEl = new Audio();
-    if(g.currentTrack && btAudioEl.dataset.trackId !== g.currentTrack.id){
-      btAudioEl.src = g.currentTrack.audioUrl;
-      btAudioEl.dataset.trackId = g.currentTrack.id;
-      if(btSoundUnlocked || inCreator) btAudioEl.play().catch(()=>{});
+    if(!btMediaEl){ btMediaEl = document.createElement('video'); btMediaEl.playsInline = true; }
+    btMediaEl.style.display = 'none';
+    btMediaEl.controls = false;
+    if(g.currentTrack && btMediaEl.dataset.trackId !== g.currentTrack.id){
+      btMediaEl.src = g.currentTrack.audioUrl;
+      btMediaEl.dataset.trackId = g.currentTrack.id;
+      if(btSoundUnlocked || inCreator) btMediaEl.play().catch(()=>{});
     }
+    const slot = document.getElementById('btMediaSlot');
+    if(slot && !slot.contains(btMediaEl)) slot.appendChild(btMediaEl);
     const unlockBtn = document.getElementById('btUnlock');
     if(unlockBtn) unlockBtn.onclick = () => {
       btSoundUnlocked = true;
-      btAudioEl.play().catch(()=>{});
+      btMediaEl.play().catch(()=>{});
       drawBt(inCreator);
     };
     if(inCreator){
@@ -3145,11 +3151,12 @@ function drawBt(inCreator){
   }
 
   if(g.status === 'revealed'){
-    if(btAudioEl) btAudioEl.pause();
     const hasMore = g.pool.length > 0;
+    const isVideo = g.currentTrack.mediaType === 'video';
     wrap.innerHTML = `
       <div class="winnerBanner" style="padding:24px 20px;">
-        <div class="wicon">🎶</div>
+        <div class="wicon">${isVideo ? '' : '🎶'}</div>
+        ${isVideo ? `<div id="btRevealVideoSlot" style="max-width:400px;margin:0 auto 14px;border-radius:4px;overflow:hidden;border:2px solid var(--border);"></div>` : ''}
         <div class="wname" style="font-size:18px;">${escapeHtml(g.currentTrack.title)}</div>
         <div class="tag" style="margin-top:4px;">${escapeHtml(g.currentTrack.category)}</div>
       </div>
@@ -3162,6 +3169,19 @@ function drawBt(inCreator){
         </div>
       ` : ''}
     `;
+    if(isVideo && btMediaEl){
+      const slot = document.getElementById('btRevealVideoSlot');
+      if(slot){
+        btMediaEl.style.display = 'block';
+        btMediaEl.style.width = '100%';
+        btMediaEl.controls = true;
+        btMediaEl.currentTime = 0;
+        slot.appendChild(btMediaEl);
+        btMediaEl.play().catch(()=>{});
+      }
+    } else if(btMediaEl){
+      btMediaEl.pause();
+    }
     if(inCreator){
       document.getElementById('btFinish').onclick = async () => {
         await loadBtGame();
@@ -3213,7 +3233,7 @@ async function startBtRound(inCreator){
   const options = [track.title, ...shuffledDecoys.map(t=>t.title)].sort(()=>Math.random()-0.5);
 
   Object.values(btGame.players).forEach(p => { p.answered = false; p.lastCorrect = null; p.lastPoints = 0; });
-  btGame.currentTrack = {id: track.id, title: track.title, category: track.category, audioUrl: track.audioUrl};
+  btGame.currentTrack = {id: track.id, title: track.title, category: track.category, audioUrl: track.audioUrl, mediaType: track.mediaType||'audio'};
   btGame.options = options;
   btGame.playStartedAt = Date.now();
   btGame.status = 'playing';
