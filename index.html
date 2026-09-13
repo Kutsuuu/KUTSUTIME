@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -1151,6 +1151,38 @@ function renderSelect(){
         <button class="btn twitch" id="twitchBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
           <span>📺</span> Se connecter avec Twitch
         </button>
+        <div class="hint" style="margin:14px 0;display:flex;align-items:center;gap:10px;">
+          <span style="flex:1;height:1px;background:var(--border);"></span>ou avec un compte email<span style="flex:1;height:1px;background:var(--border);"></span>
+        </div>
+
+        <div class="tabs" id="authTabs" style="margin-bottom:16px;">
+          <button class="tab active" data-t="login">Se connecter</button>
+          <button class="tab" data-t="signup">Créer un compte</button>
+        </div>
+
+        <div id="loginPane">
+          <label>Email</label>
+          <input type="text" id="loginEmail" placeholder="ton@email.com" autocomplete="username">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+          <div class="hint" id="loginError" style="color:var(--rate-red);min-height:16px;"></div>
+          <button class="btn primary" id="loginBtn" style="width:100%;">Se connecter</button>
+        </div>
+
+        <div id="signupPane" style="display:none;">
+          <label>Ton pseudo</label>
+          <input type="text" id="signupPseudo" placeholder="ex : monPseudo">
+          <label>Email</label>
+          <input type="text" id="signupEmail" placeholder="ton@email.com" autocomplete="username">
+          <label>Mot de passe</label>
+          <input type="password" id="signupPass" placeholder="••••••••" autocomplete="new-password">
+          <div class="hint" style="text-align:left;color:var(--rate-orange);margin-bottom:12px;">
+            ⚠️ Utilise un mot de passe que tu n'utilises sur aucun autre site. Ce compte sert uniquement à te reconnaître sur Kutsu Time, ce n'est pas une plateforme bancaire ou professionnelle.
+          </div>
+          <div class="hint" id="signupError" style="color:var(--rate-red);min-height:16px;"></div>
+          <button class="btn primary" id="signupBtn" style="width:100%;">Créer mon compte</button>
+        </div>
+
         <div class="hint" style="margin-top:14px;">
           Bienvenu sur KutsuTime !<br>Le site de notation communautaire du NEUIL
         </div>
@@ -1162,6 +1194,67 @@ function renderSelect(){
       provider: 'twitch',
       options: { redirectTo: window.location.origin + window.location.pathname }
     });
+  };
+
+  document.getElementById('authTabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if(!btn) return;
+    document.querySelectorAll('#authTabs .tab').forEach(t => t.classList.toggle('active', t===btn));
+    document.getElementById('loginPane').style.display = btn.dataset.t === 'login' ? 'block' : 'none';
+    document.getElementById('signupPane').style.display = btn.dataset.t === 'signup' ? 'block' : 'none';
+  });
+
+  const loginBtn = document.getElementById('loginBtn');
+  const loginErr = document.getElementById('loginError');
+  loginBtn.onclick = async () => {
+    loginErr.textContent = '';
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Connexion...';
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: document.getElementById('loginEmail').value.trim(),
+      password: document.getElementById('loginPass').value
+    });
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Se connecter';
+    if(error){
+      loginErr.textContent = 'Email ou mot de passe incorrect.';
+      return;
+    }
+    const ok = await processSession();
+    wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
+    render();
+  };
+
+  const signupBtn = document.getElementById('signupBtn');
+  const signupErr = document.getElementById('signupError');
+  signupBtn.onclick = async () => {
+    signupErr.textContent = '';
+    const pseudo = document.getElementById('signupPseudo').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPass').value;
+    if(!pseudo){ signupErr.textContent = 'Choisis un pseudo.'; return; }
+    if(!email || !password){ signupErr.textContent = 'Email et mot de passe requis.'; return; }
+    if(password.length < 6){ signupErr.textContent = 'Le mot de passe doit faire au moins 6 caractères.'; return; }
+    signupBtn.disabled = true;
+    signupBtn.textContent = 'Création...';
+    const { data, error } = await supabaseClient.auth.signUp({
+      email, password,
+      options: { data: { pseudo } }
+    });
+    signupBtn.disabled = false;
+    signupBtn.textContent = 'Créer mon compte';
+    if(error){
+      signupErr.textContent = error.message.includes('already registered') ? 'Un compte existe déjà avec cet email.' : 'Erreur : ' + error.message;
+      return;
+    }
+    if(!data.session){
+      signupErr.style.color = 'var(--rate-green)';
+      signupErr.textContent = '✓ Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.';
+      return;
+    }
+    const ok = await processSession();
+    wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
+    render();
   };
 }
 
@@ -3044,6 +3137,36 @@ function badgesRowHtml(key){
   `).join('')}</div>`;
 }
 
+async function processSession(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session) return false;
+
+  const meta = session.user.user_metadata || {};
+  const identNick = meta.nickname || meta.preferred_username || meta.full_name || meta.name || meta.pseudo || '';
+  const isCreator = session.user.id === CREATOR_UID;
+
+  if(identNick){
+    const key = identNick.toLowerCase();
+    const existing = viewerProfiles[key] || {};
+    const display = existing.display || identNick;
+    viewerName = display;
+    viewerProfiles[key] = {
+      display,
+      avatar: existing.avatar || meta.avatar_url || '',
+      bio: existing.bio || ''
+    };
+    await saveProfiles();
+  }
+
+  if(isCreator){
+    isCreatorAccount = true;
+    mode = 'creator';
+  } else if(identNick){
+    mode = 'viewer';
+  }
+  return true;
+}
+
 (async () => {
   if(SUPABASE_URL.includes('TON-PROJET') || SUPABASE_ANON_KEY.includes('TA_CLE')){
     document.getElementById('app').innerHTML = `
@@ -3068,33 +3191,7 @@ function badgesRowHtml(key){
   await loadWheelState();
   await loadSoleil();
 
-  // Session active (via Twitch, éventuellement fusionnée avec un compte email existant) ?
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if(session){
-    const meta = session.user.user_metadata || {};
-    const twitchNick = meta.nickname || meta.preferred_username || meta.full_name || meta.name || '';
-    const isCreator = session.user.id === CREATOR_UID;
-
-    if(twitchNick){
-      const key = twitchNick.toLowerCase();
-      const existing = viewerProfiles[key] || {};
-      const display = existing.display || twitchNick;
-      viewerName = display;
-      viewerProfiles[key] = {
-        display,
-        avatar: existing.avatar || meta.avatar_url || '',
-        bio: existing.bio || ''
-      };
-      await saveProfiles();
-    }
-
-    if(isCreator){
-      isCreatorAccount = true;
-      mode = 'creator';
-    } else if(twitchNick){
-      mode = 'viewer';
-    }
-  }
+  await processSession();
 
   wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
   render();
