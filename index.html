@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kutsu Time</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rubik+One&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#101a30; --panel:#16213d; --panel-2:#1c2a4a; --panel-3:#253458;
@@ -29,6 +29,29 @@
     overflow-x:hidden;
   }
   ::selection{background:rgba(200,64,42,0.4);}
+
+  .bgShapes{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+  .bgShapes span{
+    position:absolute;border-radius:50%;opacity:0.10;
+  }
+  .bgShapes .s1{width:340px;height:340px;top:-100px;left:-80px;background:var(--gold);animation:shapeDrift1 30s ease-in-out infinite;}
+  .bgShapes .s2{width:260px;height:260px;top:14%;right:-90px;background:var(--mustard);animation:shapeDrift2 36s ease-in-out infinite;}
+  .bgShapes .s3{width:300px;height:300px;bottom:-120px;left:22%;background:var(--twitch);opacity:0.07;animation:shapeDrift3 42s ease-in-out infinite;}
+  @keyframes shapeDrift1{
+    0%,100%{transform:translate(0,0);}
+    50%{transform:translate(90px,110px);}
+  }
+  @keyframes shapeDrift2{
+    0%,100%{transform:translate(0,0);}
+    50%{transform:translate(-100px,80px);}
+  }
+  @keyframes shapeDrift3{
+    0%,100%{transform:translate(0,0);}
+    50%{transform:translate(80px,-70px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bgShapes span{animation:none;}
+  }
   .wrap{max-width:1800px;margin:0 auto;padding:0 clamp(20px,4vw,64px) 90px;}
   .wrap.narrow{max-width:440px;padding-top:60px;}
 
@@ -45,9 +68,8 @@
   }
   .navbrand{cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;}
   .navlogo{
-    font-family:'Rubik One',sans-serif;font-weight:400;font-size:20px;letter-spacing:1px;
-    background:linear-gradient(180deg,var(--paper), var(--gold) 65%, var(--gold-dim));
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:1px;
+    color:var(--gold);
   }
   .navlinks{
     display:flex;gap:18px;background:none;border:none;
@@ -83,10 +105,9 @@
   .iconBtn:hover{color:var(--gold);}
 
   .logo h1{
-    font-family:'Rubik One',sans-serif;font-weight:400;font-size:clamp(30px,7vw,44px);
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(30px,7vw,44px);
     letter-spacing:1.5px;margin:0;
-    background:linear-gradient(180deg,#ffffff, var(--gold) 65%, var(--gold-dim));
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    color:var(--gold);
   }
   .logo .tag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2.5px;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
   .logo.center{text-align:center;}
@@ -113,12 +134,12 @@
   .search{
     flex:1;min-width:200px;
     display:flex;align-items:center;gap:10px;
-    background:#111111;border:1px solid var(--border);border-radius:4px;padding:12px 16px;
+    background:#111111;border:2px solid var(--border);border-radius:4px;padding:12px 16px;
     transition:border-color .15s;
   }
   .search:focus-within{border-color:var(--gold-dim);}
   .search input{
-    flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;
+    flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
   }
   .search .ic{color:var(--text-dim);}
 
@@ -129,11 +150,11 @@
     cursor:pointer;transition:.15s;position:relative;
   }
   .tab.active{background:none;color:var(--gold);}
-  .tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--gold);}
+  .tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-5px;height:3px;background:var(--gold);}
   .tab:hover:not(.active){color:var(--text);}
 
   .selectBox{
-    background:#0f0c17;border:1px solid var(--border);border-radius:4px;
+    background:#0f0c17;border:2px solid var(--border);border-radius:4px;
     padding:11px 14px;color:var(--text-dim);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
     cursor:pointer;outline:none;transition:border-color .15s;
   }
@@ -213,7 +234,7 @@
   .empty{
     text-align:center;padding:64px 22px;color:var(--text-dim);
     border:1px dashed var(--border);border-radius:6px;
-    background:radial-gradient(circle at 50% 0%, rgba(255,138,92,0.09), transparent 65%);
+    background:none;
   }
   .empty .ic{
     width:54px;height:54px;border-radius:50%;background:var(--panel-2);
@@ -236,7 +257,7 @@
     border:2px solid var(--border);border-radius:4px;padding:28px;max-width:460px;width:100%;
     box-shadow:var(--shadow-lg);animation:modalIn .2s cubic-bezier(.2,.8,.2,1);
   }
-  .modal h3{font-family:'Rubik One',sans-serif;font-weight:400;font-size:23px;color:var(--gold);margin:0 0 20px;letter-spacing:0.5px;}
+  .modal h3{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:23px;color:var(--gold);margin:0 0 20px;letter-spacing:0.5px;}
   label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:7px;}
   input[type=text], textarea{
     width:100%;background:#111111;border:1px solid var(--border);border-radius:4px;
@@ -279,12 +300,12 @@
   /* detail */
   .detailhead{display:flex;gap:18px;margin-bottom:18px;}
   .detailposter{width:120px;height:180px;border-radius:4px;background:#111111 center/cover no-repeat;border:1px solid var(--border);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--text-dim);box-shadow:var(--shadow-sm);}
-  .detailinfo h3{font-family:'Rubik One',sans-serif;font-weight:400;font-size:24px;color:var(--text);margin:0 0 6px;}
+  .detailinfo h3{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:var(--text);margin:0 0 6px;}
   .detailinfo .metaline{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:12px;}
   .ratebox{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
   .ratebox input{
     width:80px;background:#111111;border:1px solid var(--border);border-radius:4px;
-    padding:9px 10px;color:var(--gold);font-family:'Rubik One',sans-serif;font-size:20px;text-align:center;
+    padding:9px 10px;color:var(--gold);font-family:'Space Grotesk',sans-serif;font-size:20px;text-align:center;
     outline:none;margin-bottom:0;
   }
   .ratebox input:focus{border-color:var(--gold);}
@@ -303,7 +324,7 @@
     padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;
   }
   .pubbox .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
-  .pubbox .v{font-family:'Rubik One',sans-serif;font-size:22px;color:var(--twitch);}
+  .pubbox .v{font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--twitch);}
   .pubbox + .pubbox{margin-top:-4px;}
   .pubbox:last-of-type{margin-bottom:18px;}
 
@@ -322,7 +343,7 @@
     width:48px;height:48px;border-radius:4px;background:var(--panel-3);
     display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;
   }
-  .role-card .title{font-family:'Rubik One',sans-serif;font-size:19px;letter-spacing:1px;color:var(--gold);}
+  .role-card .title{font-family:'Space Grotesk',sans-serif;font-size:19px;letter-spacing:1px;color:var(--gold);}
   .role-card .desc{font-size:13px;color:var(--text-dim);margin-top:8px;line-height:1.55;}
 
   .twitchbox{
@@ -351,14 +372,14 @@
   .vrow:hover{border-color:var(--twitch);background:var(--panel-2);transform:translateX(3px);}
   .vavatar{
     width:42px;height:42px;border-radius:50%;flex:0 0 auto;
-    background:linear-gradient(135deg, var(--twitch), var(--twitch-dim));
+    background:var(--twitch);
     display:flex;align-items:center;justify-content:center;
-    font-family:'Rubik One',sans-serif;font-size:16px;color:#fff;
+    font-family:'Space Grotesk',sans-serif;font-size:16px;color:#fff;
   }
   .vinfo{flex:1;min-width:0;}
   .vinfo .vname{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--text);}
   .vinfo .vsub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:2px;}
-  .vavg{font-family:'Rubik One',sans-serif;font-size:20px;flex:0 0 auto;}
+  .vavg{font-family:'Space Grotesk',sans-serif;font-size:20px;flex:0 0 auto;}
 
   .mrow{
     display:flex;align-items:center;gap:12px;
@@ -370,7 +391,7 @@
     flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-dim);
   }
   .mrow .mtitle{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;color:var(--text);}
-  .mrow .mscore{font-family:'Rubik One',sans-serif;font-size:18px;flex:0 0 auto;}
+  .mrow .mscore{font-family:'Space Grotesk',sans-serif;font-size:18px;flex:0 0 auto;}
 
   .comment{
     background:#111111;border:1px solid var(--border);border-radius:4px;
@@ -420,7 +441,7 @@
   .dowName{
     font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;
   }
-  .dowDate{font-family:'Rubik One',sans-serif;font-size:16px;color:var(--gold);margin-top:3px;}
+  .dowDate{font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--gold);margin-top:3px;}
   .dayColBody{flex:1;display:flex;flex-direction:column;gap:8px;}
   .dayEmpty{
     flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-dim);
@@ -455,7 +476,7 @@
   .episodesBtn:hover{filter:brightness(1.1);}
   .seasonBlock{margin-bottom:16px;}
   .seasonHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-  .seasonTitle{font-family:'Rubik One',sans-serif;font-size:14px;color:var(--gold);letter-spacing:0.5px;}
+  .seasonTitle{font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--gold);letter-spacing:0.5px;}
   .seasonActions{display:flex;gap:6px;}
   .epRow{
     display:flex;align-items:center;gap:10px;
@@ -501,7 +522,7 @@
     flex:1;min-width:90px;background:#111111;border:1px solid var(--border);border-radius:4px;
     padding:12px;text-align:center;
   }
-  .statBox .n{font-family:'Rubik One',sans-serif;font-size:22px;color:var(--gold);}
+  .statBox .n{font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--gold);}
   .statBox .l{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-top:3px;}
 
   .bioText{
@@ -526,34 +547,34 @@
   }
   .gameCard:hover{transform:translateY(-4px);border-color:var(--gold-dim);box-shadow:var(--shadow-md);}
   .gameCard .gicon{font-size:30px;margin-bottom:10px;}
-  .gameCard .gtitle{font-family:'Rubik One',sans-serif;font-size:16px;color:var(--gold);margin-bottom:6px;}
+  .gameCard .gtitle{font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--gold);margin-bottom:6px;}
   .gameCard .gdesc{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
   .myPointsBox{
     display:flex;align-items:center;gap:14px;background:var(--panel-3);border:1px solid var(--gold-dim);
     border-radius:5px;padding:16px 20px;margin-bottom:26px;
   }
-  .myPointsBox .n{font-family:'Rubik One',sans-serif;font-size:30px;color:var(--gold);}
+  .myPointsBox .n{font-family:'Space Grotesk',sans-serif;font-size:30px;color:var(--gold);}
   .myPointsBox .l{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;}
   .lbRow{
     display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--border);
     border-radius:4px;padding:12px 16px;margin-bottom:8px;
   }
   .lbRow.me{border-color:var(--gold);}
-  .lbRank{width:26px;text-align:center;font-family:'Rubik One',sans-serif;font-size:14px;color:var(--text-dim);flex:0 0 auto;}
+  .lbRank{width:26px;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--text-dim);flex:0 0 auto;}
   .lbRank.top1{color:#ffd700;} .lbRank.top2{color:#c0c0c0;} .lbRank.top3{color:#cd7f32;}
   .lbName{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;}
-  .lbPts{font-family:'Rubik One',sans-serif;color:var(--gold);font-size:15px;}
+  .lbPts{font-family:'Space Grotesk',sans-serif;color:var(--gold);font-size:15px;}
 
   .gameStage{text-align:center;padding:10px 0;}
   .clickTarget{
     width:110px;height:110px;border-radius:50%;margin:20px auto;
-    background:radial-gradient(circle at 35% 30%, #f0d060, var(--gold-dim));
-    border:none;cursor:pointer;font-family:'Rubik One',sans-serif;font-size:16px;color:var(--ink);
+    background:var(--gold);
+    border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--ink);
     display:flex;align-items:center;justify-content:center;user-select:none;
     box-shadow:var(--shadow-md);transition:transform .06s;
   }
   .clickTarget:active{transform:scale(0.92);}
-  .gameTimer{font-family:'Rubik One',sans-serif;font-size:26px;color:var(--gold);margin-bottom:6px;}
+  .gameTimer{font-family:'Space Grotesk',sans-serif;font-size:26px;color:var(--gold);margin-bottom:6px;}
   .gameCount{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);}
   .quizOptions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;}
   .quizOpt{
@@ -569,13 +590,13 @@
   .soleilStage{text-align:center;padding:20px 0;}
   .lightIndicator{
     width:140px;height:140px;border-radius:50%;margin:0 auto 20px;
-    display:flex;align-items:center;justify-content:center;font-family:'Rubik One',sans-serif;font-size:22px;
+    display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:22px;
     transition:.3s;box-shadow:var(--shadow-lg);
   }
-  .lightIndicator.green{background:radial-gradient(circle at 35% 30%, #4ade80, #16a34a);color:#052e12;}
-  .lightIndicator.red{background:radial-gradient(circle at 35% 30%, #f87171, #b91c1c);color:#3f0a0a;}
+  .lightIndicator.green{background:#2fae52;color:#052e12;}
+  .lightIndicator.red{background:#d94848;color:#3f0a0a;}
   .toggleLightBtn{
-    background:none;border:none;font-family:'Rubik One',sans-serif;font-size:16px;cursor:pointer;
+    background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:16px;cursor:pointer;
     padding:14px 8px;transition:.15s;
   }
   .toggleLightBtn.green{color:var(--rate-green);}
@@ -583,8 +604,8 @@
   .toggleLightBtn:hover{filter:brightness(1.3);}
   .tapZone{
     width:180px;height:180px;border-radius:50%;margin:20px auto;border:none;cursor:pointer;
-    background:radial-gradient(circle at 35% 30%, #f0d060, var(--gold-dim));
-    color:var(--ink);font-family:'Rubik One',sans-serif;font-size:20px;
+    background:var(--gold);
+    color:var(--ink);font-family:'Space Grotesk',sans-serif;font-size:20px;
     display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);
     transition:transform .08s;user-select:none;
   }
@@ -597,22 +618,22 @@
   .playerRow.eliminated{opacity:0.4;}
   .playerRow .pname{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;flex:0 0 90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .playerRow .ptrack{flex:1;height:10px;background:#111;border-radius:6px;overflow:hidden;border:1px solid var(--border);}
-  .playerRow .pfill{height:100%;background:linear-gradient(90deg, var(--gold-dim), var(--gold));transition:width .3s ease;}
+  .playerRow .pfill{height:100%;background:var(--gold);transition:width .3s ease;}
   .playerRow .ppct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);flex:0 0 34px;text-align:right;}
   .winnerBanner{
     text-align:center;padding:40px 20px;
   }
   .winnerBanner .wicon{font-size:48px;margin-bottom:14px;}
-  .winnerBanner .wname{font-family:'Rubik One',sans-serif;font-size:26px;color:var(--gold);}
+  .winnerBanner .wname{font-family:'Space Grotesk',sans-serif;font-size:26px;color:var(--gold);}
 
   .raceTrack{
     position:relative;overflow:hidden;border-radius:6px;
     border:4px solid #4a7c1e;
     min-height:420px;
-    background:linear-gradient(180deg, #8fd3f4 0%, #a8e0f5 26%, #9bd66b 26%, #7dbf4a 55%, #6ba83a 100%);
+    background:#9bd66b;
     box-shadow:var(--shadow-lg);
   }
-  .raceSky{position:absolute;top:10px;left:0;right:0;height:24%;pointer-events:none;}
+  .raceSky{position:absolute;top:0;left:0;right:0;height:26%;background:#8fd3f4;pointer-events:none;}
   .raceSun{position:absolute;top:10px;right:26px;font-size:38px;filter:drop-shadow(0 0 10px rgba(255,220,120,0.7));}
   .raceCloud{position:absolute;font-size:26px;opacity:0.9;}
   .raceCloud.c1{top:6px;left:8%;}
@@ -691,13 +712,13 @@
   }
   .spinBtn{
     margin-top:22px;background:none;color:var(--gold);border:none;
-    border-radius:0;padding:14px 8px;font-family:'Rubik One',sans-serif;font-size:16px;cursor:pointer;
+    border-radius:0;padding:14px 8px;font-family:'Space Grotesk',sans-serif;font-size:16px;cursor:pointer;
     box-shadow:none;transition:.15s;
   }
   .spinBtn:hover{filter:brightness(1.3);}
   .spinBtn:disabled{opacity:0.5;cursor:not-allowed;}
   .wheelResult{
-    margin-top:16px;font-family:'Rubik One',sans-serif;font-size:20px;color:var(--gold);min-height:28px;
+    margin-top:16px;font-family:'Space Grotesk',sans-serif;font-size:20px;color:var(--gold);min-height:28px;
   }
   .wheelResultActions{display:flex;gap:8px;justify-content:center;margin-top:10px;}
   .wheelResultActions .btn{flex:0 0 auto;padding:9px 16px;font-size:12px;}
@@ -717,7 +738,7 @@
   .dashStat{
     background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:18px;text-align:center;
   }
-  .dashStat .n{font-family:'Rubik One',sans-serif;font-size:28px;color:var(--gold);}
+  .dashStat .n{font-family:'Space Grotesk',sans-serif;font-size:28px;color:var(--gold);}
   .dashStat .l{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
   .dashHighlight{
     display:flex;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--border);
@@ -727,7 +748,7 @@
   .dashHighlight .dinfo{flex:1;}
   .dashHighlight .dlabel{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
   .dashHighlight .dtitle{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
-  .dashHighlight .dvalue{font-family:'Rubik One',sans-serif;font-size:18px;color:var(--gold);flex:0 0 auto;}
+  .dashHighlight .dvalue{font-family:'Space Grotesk',sans-serif;font-size:18px;color:var(--gold);flex:0 0 auto;}
 
   /* Badges */
   .badgesRow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
@@ -771,6 +792,7 @@
 </style>
 </head>
 <body>
+<div class="bgShapes"><span class="s1"></span><span class="s2"></span><span class="s3"></span></div>
 <div class="wrap" id="wrap">
   <div id="app"></div>
 </div>
@@ -1415,7 +1437,7 @@ function renderViewerProfile(){
       <div class="mposter" style="${m.movie.poster ? `background-image:url('${m.movie.poster}')` : ''}">${m.movie.poster ? '' : '🎬'}</div>
       <div class="mtitle">
         ${escapeHtml(m.movie.title)}
-        ${m.comment ? `<div style="font-family:'Space Grotesk',sans-serif;font-weight:400;font-size:12px;color:var(--text-dim);margin-top:3px;">${escapeHtml(m.comment)}</div>` : ''}
+        ${m.comment ? `<div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text-dim);margin-top:3px;">${escapeHtml(m.comment)}</div>` : ''}
       </div>
       <div class="mscore" style="color:${ratingColor(m.score)}">${m.score % 1 === 0 ? m.score : m.score.toFixed(1)}/10</div>
     </div>
@@ -3146,7 +3168,7 @@ async function processSession(){
     document.getElementById('app').innerHTML = `
       <div class="page" style="text-align:center;padding:80px 20px;">
         <div style="font-size:40px;margin-bottom:16px;">⚙️</div>
-        <h1 style="font-family:'Rubik One',sans-serif;color:var(--gold);font-size:24px;">Configuration manquante</h1>
+        <h1 style="font-family:'Space Grotesk',sans-serif;color:var(--gold);font-size:24px;">Configuration manquante</h1>
         <p style="color:var(--text-dim);max-width:420px;margin:14px auto 0;line-height:1.6;">
           Ouvre ce fichier, cherche <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> tout en haut,
           et colle tes vraies valeurs récupérées dans Supabase (Settings → API).
