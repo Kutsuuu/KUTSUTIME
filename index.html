@@ -634,6 +634,13 @@
     background:var(--gold);color:var(--ink);border:none;border-radius:4px;
     padding:16px 26px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;cursor:pointer;
   }
+  .btVolumeRow{
+    display:flex;align-items:center;gap:10px;max-width:260px;margin:0 auto 14px;
+    font-size:15px;
+  }
+  .btVolumeRow input[type="range"]{
+    flex:1;accent-color:var(--gold);height:4px;cursor:pointer;margin:0;
+  }
   .btGuessBox{position:relative;max-width:400px;margin:0 auto;}
   .btGuessBox input{
     width:100%;background:#111111;border:2px solid var(--border);border-radius:4px;
@@ -3145,6 +3152,7 @@ function openBtEditTrack(id){
 let btViewFromCreator = true;
 let btPollTimer = null;
 let btSoundUnlocked = false;
+let btVolume = 1;
 let btTimerTick = null;
 let btLocalRoundTrackId = null;
 let btLocalRoundStartedAt = null;
@@ -3152,11 +3160,12 @@ let btMediaEl = null;
 
 function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer = null; } }
 
-function renderBlindtest(){
+async function renderBlindtest(){
   const inCreator = btViewFromCreator;
   stopBtPoll();
   btLocalRoundTrackId = null;
   btLocalRoundStartedAt = null;
+  await loadBtTracks();
   app.innerHTML = `
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
@@ -3173,6 +3182,7 @@ function renderBlindtest(){
     const active = document.activeElement;
     if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT') && document.getElementById('btStageWrap').contains(active)) return;
     await loadBtGame();
+    await loadBtTracks();
     drawBt(inCreator);
   }, 1200);
 }
@@ -3331,6 +3341,13 @@ function drawBt(inCreator){
           <div class="btBlackCover" id="btBlackCover">🎵</div>
         </div>
         ${(!btSoundUnlocked && !inCreator) ? `<button class="btUnlockBtn" id="btUnlock">🔊 Activer le son</button>` : ''}
+        ${(btSoundUnlocked && !inCreator) ? `
+          <div class="btVolumeRow">
+            <span>🔈</span>
+            <input type="range" id="btVolumeSlider" min="0" max="100" value="${Math.round(btVolume*100)}">
+            <span>🔊</span>
+          </div>
+        ` : ''}
         ${inCreator ? `
           <div class="hint">Extrait en cours de lecture...</div>
           <button class="btn ghost" id="btReveal" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Révéler la réponse</button>
@@ -3349,6 +3366,7 @@ function drawBt(inCreator){
     btMediaEl.style.height = '100%';
     btMediaEl.style.objectFit = 'cover';
     btMediaEl.controls = false;
+    btMediaEl.volume = btVolume;
     if(g.currentTrack && btMediaEl.dataset.trackId !== g.currentTrack.id){
       btMediaEl.src = g.currentTrack.audioUrl;
       btMediaEl.dataset.trackId = g.currentTrack.id;
@@ -3362,6 +3380,11 @@ function drawBt(inCreator){
       btMediaEl.play().catch(()=>{});
       drawBt(inCreator);
     };
+    const volumeSlider = document.getElementById('btVolumeSlider');
+    if(volumeSlider) volumeSlider.addEventListener('input', () => {
+      btVolume = volumeSlider.value / 100;
+      btMediaEl.volume = btVolume;
+    });
     if(inCreator){
       document.getElementById('btReveal').onclick = () => revealBtRound(inCreator);
     } else {
