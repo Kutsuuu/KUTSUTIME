@@ -3045,14 +3045,14 @@ function drawBtTrackList(){
       <span class="cat" style="color:${t.difficulty==='Facile'?'var(--rate-green)':t.difficulty==='Difficile'?'var(--rate-red)':'var(--mustard)'};border-color:currentColor;">${escapeHtml(t.difficulty||'Normal')}</span>
       ${t.mediaType === 'video' ? `<span title="Vidéo">🎬</span>` : `<span title="Audio">🎧</span>`}
       <span class="t">${escapeHtml(t.title)}</span>
-      <button class="del" id="edit-${t.id}" title="Modifier">✎</button>
+      <button class="del editIconBtn" id="edit-${t.id}" title="Modifier">✎</button>
       <button class="del" data-id="${t.id}">✕</button>
     </div>
   `).join('');
   wrap.querySelectorAll('[id^="edit-"]').forEach(b => {
     b.onclick = () => openBtEditTrack(b.id.replace('edit-', ''));
   });
-  wrap.querySelectorAll('.del').forEach(b => {
+  wrap.querySelectorAll('.del[data-id]').forEach(b => {
     b.onclick = async () => {
       await loadBtTracks();
       const track = btTracks.find(t => t.id === b.dataset.id);
