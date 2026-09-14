@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -954,6 +954,7 @@ async function loadSoleil(){ soleilGame = (await kvGet(SOLEIL_KEY)) || {status:'
 async function saveSoleil(){ await kvSet(SOLEIL_KEY, soleilGame); }
 
 const BT_CATEGORIES = ['Opening', 'Ending', 'OST Anime', 'Séries', 'Films'];
+const BT_DIFFICULTIES = ['Facile', 'Normal', 'Difficile'];
 
 async function loadBtTracks(){ btTracks = (await kvGet(BT_TRACKS_KEY)) || []; }
 async function saveBtTracks(){ await kvSet(BT_TRACKS_KEY, btTracks); }
@@ -2927,12 +2928,25 @@ function renderBtAdmin(){
       </div>
       <div class="twitchbox" style="max-width:480px;margin-bottom:24px;">
         <label>Titre à deviner</label>
-        <input type="text" id="btTitle" placeholder="ex : Attack on Titan - Guren no Yumiya">
-        <label>Catégorie</label>
-        <select class="selectBox" id="btCategory" style="width:100%;margin-bottom:14px;">
-          ${BT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
-        </select>
-        <label>Fichier audio ou vidéo</label>
+        <input type="text" id="btTitle" placeholder="ex : My Hero Academia - Odd Future">
+        <label>Raccourcis pour retrouver le titre (optionnel)</label>
+        <input type="text" id="btAliases" placeholder="ex : mha, my hero">
+        <div class="hint" style="text-align:left;margin-bottom:14px;">Sépare par des virgules. Ces mots comptent aussi comme bonne réponse (ex : « mha » → « My Hero Academia »).</div>
+        <div class="row2">
+          <div style="flex:1;">
+            <label>Catégorie</label>
+            <select class="selectBox" id="btCategory" style="width:100%;">
+              ${BT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label>Difficulté</label>
+            <select class="selectBox" id="btDifficulty" style="width:100%;">
+              ${BT_DIFFICULTIES.map(d => `<option value="${escapeHtml(d)}" ${d==='Normal'?'selected':''}>${escapeHtml(d)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <label style="margin-top:14px;">Fichier audio ou vidéo</label>
         <div class="btDropzone" id="btDropzone">
           <div class="btDropIcon">📁</div>
           <div id="btDropText">Glisse ton fichier ici<br><span style="opacity:0.6;">ou clique pour parcourir</span></div>
@@ -3001,11 +3015,14 @@ function renderBtAdmin(){
     const { data: urlData } = supabaseClient.storage.from(BT_BUCKET).getPublicUrl(path);
     await loadBtTracks();
     const mediaType = pendingFile.type.startsWith('video') ? 'video' : 'audio';
-    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, category, audioUrl: urlData.publicUrl, path, mediaType});
+    const aliases = document.getElementById('btAliases').value.split(',').map(a=>a.trim()).filter(Boolean);
+    const difficulty = document.getElementById('btDifficulty').value;
+    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, category, audioUrl: urlData.publicUrl, path, mediaType, aliases, difficulty});
     await saveBtTracks();
     statusEl.style.color = 'var(--rate-green)';
     statusEl.textContent = '✓ Ajouté !';
     document.getElementById('btTitle').value = '';
+    document.getElementById('btAliases').value = '';
     document.getElementById('btFile').value = '';
     pendingFile = null;
     dropText.innerHTML = 'Glisse ton fichier ici<br><span style="opacity:0.6;">ou clique pour parcourir</span>';
@@ -3025,11 +3042,16 @@ function drawBtTrackList(){
   wrap.innerHTML = btTracks.map(t => `
     <div class="btTrackRow">
       <span class="cat">${escapeHtml(t.category)}</span>
+      <span class="cat" style="color:${t.difficulty==='Facile'?'var(--rate-green)':t.difficulty==='Difficile'?'var(--rate-red)':'var(--mustard)'};border-color:currentColor;">${escapeHtml(t.difficulty||'Normal')}</span>
       ${t.mediaType === 'video' ? `<span title="Vidéo">🎬</span>` : `<span title="Audio">🎧</span>`}
       <span class="t">${escapeHtml(t.title)}</span>
+      <button class="del" id="edit-${t.id}" title="Modifier">✎</button>
       <button class="del" data-id="${t.id}">✕</button>
     </div>
   `).join('');
+  wrap.querySelectorAll('[id^="edit-"]').forEach(b => {
+    b.onclick = () => openBtEditTrack(b.id.replace('edit-', ''));
+  });
   wrap.querySelectorAll('.del').forEach(b => {
     b.onclick = async () => {
       await loadBtTracks();
@@ -3042,6 +3064,61 @@ function drawBtTrackList(){
       drawBtTrackList();
     };
   });
+}
+
+function openBtEditTrack(id){
+  const track = btTracks.find(t => t.id === id);
+  if(!track) return;
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>✎ Modifier la musique</h3>
+        <label>Titre à deviner</label>
+        <input type="text" id="editBtTitle" value="${escapeHtml(track.title)}">
+        <label>Raccourcis (optionnel)</label>
+        <input type="text" id="editBtAliases" value="${escapeHtml((track.aliases||[]).join(', '))}" placeholder="ex : mha, my hero">
+        <div class="row2">
+          <div style="flex:1;">
+            <label>Catégorie</label>
+            <select class="selectBox" id="editBtCategory" style="width:100%;">
+              ${BT_CATEGORIES.map(c => `<option value="${escapeHtml(c)}" ${track.category===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label>Difficulté</label>
+            <select class="selectBox" id="editBtDifficulty" style="width:100%;">
+              ${BT_DIFFICULTIES.map(d => `<option value="${escapeHtml(d)}" ${(track.difficulty||'Normal')===d?'selected':''}>${escapeHtml(d)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="modalbtns" style="margin-top:6px;">
+          <button class="btn ghost" id="cancelBtn">Annuler</button>
+          <button class="btn primary" id="saveBtEditBtn">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
+  document.getElementById('cancelBtn').onclick = closeModal;
+  document.getElementById('saveBtEditBtn').onclick = async () => {
+    const newTitle = document.getElementById('editBtTitle').value.trim();
+    if(!newTitle) return;
+    const aliases = document.getElementById('editBtAliases').value.split(',').map(a=>a.trim()).filter(Boolean);
+    const category = document.getElementById('editBtCategory').value;
+    const difficulty = document.getElementById('editBtDifficulty').value;
+    await loadBtTracks();
+    const fresh = btTracks.find(t => t.id === id);
+    if(fresh){
+      fresh.title = newTitle;
+      fresh.aliases = aliases;
+      fresh.category = category;
+      fresh.difficulty = difficulty;
+    }
+    await saveBtTracks();
+    closeModal();
+    drawBtTrackList();
+  };
 }
 
 /* ---------- BLIND TEST : la partie ---------- */
@@ -3105,24 +3182,64 @@ function drawBt(inCreator){
           return `<div class="btCatChip selected" data-cat="${escapeHtml(c)}">${escapeHtml(c)}<span class="n">${count} piste${count>1?'s':''}</span></div>`;
         }).join('')}
       </div>
+      <div class="sectionLabel">Difficulté</div>
+      <div class="btCatGrid" id="btDiffGrid">
+        ${BT_DIFFICULTIES.map(d => {
+          const count = btTracks.filter(t=>(t.difficulty||'Normal')===d).length;
+          return `<div class="btCatChip selected" data-diff="${escapeHtml(d)}">${escapeHtml(d)}<span class="n">${count} piste${count>1?'s':''}</span></div>`;
+        }).join('')}
+      </div>
+      <div class="row2" style="margin-top:14px;">
+        <div style="flex:1;">
+          <label>Nombre de rounds</label>
+          <input type="text" inputmode="numeric" id="btRoundsInput" value="8" placeholder="8">
+        </div>
+        <div style="flex:1;">
+          <label>Temps pour trouver (secondes)</label>
+          <input type="text" inputmode="numeric" id="btTimerInput" value="30" placeholder="30">
+        </div>
+      </div>
+      <div class="tag" id="btPoolCount" style="margin:10px 0 14px;"></div>
       <button class="btn primary" id="btCreateLobby" style="width:100%;" ${btTracks.length < 4 ? 'disabled' : ''}>Créer le lobby</button>
       ${btTracks.length < 4 ? `<div class="hint">Ajoute au moins 4 musiques dans la bibliothèque pour pouvoir jouer.</div>` : ''}
     ` : `<div class="empty"><div class="ic">🎵</div><div>Le créateur n'a pas encore ouvert de blind test.</div></div>`;
 
     if(inCreator){
       const selectedCats = new Set(BT_CATEGORIES);
-      wrap.querySelectorAll('.btCatChip').forEach(chip => {
+      const selectedDiffs = new Set(BT_DIFFICULTIES);
+      const updatePoolCount = () => {
+        const cats = Array.from(selectedCats);
+        const diffs = Array.from(selectedDiffs);
+        const pool = btTracks.filter(t => cats.includes(t.category) && diffs.includes(t.difficulty||'Normal'));
+        document.getElementById('btPoolCount').textContent = `${pool.length} piste${pool.length>1?'s':''} correspondent à cette sélection`;
+      };
+      wrap.querySelectorAll('#btCatGrid .btCatChip').forEach(chip => {
         chip.onclick = () => {
           const c = chip.dataset.cat;
           if(selectedCats.has(c)){ selectedCats.delete(c); chip.classList.remove('selected'); }
           else { selectedCats.add(c); chip.classList.add('selected'); }
+          updatePoolCount();
         };
       });
+      wrap.querySelectorAll('#btDiffGrid .btCatChip').forEach(chip => {
+        chip.onclick = () => {
+          const d = chip.dataset.diff;
+          if(selectedDiffs.has(d)){ selectedDiffs.delete(d); chip.classList.remove('selected'); }
+          else { selectedDiffs.add(d); chip.classList.add('selected'); }
+          updatePoolCount();
+        };
+      });
+      updatePoolCount();
       document.getElementById('btCreateLobby').onclick = async () => {
         const cats = Array.from(selectedCats);
-        const pool = btTracks.filter(t => cats.includes(t.category)).map(t=>t.id);
-        if(pool.length < 4){ alert('Pas assez de musiques dans les catégories choisies (4 minimum).'); return; }
-        btGame = {status:'lobby', categories:cats, pool, currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
+        const diffs = Array.from(selectedDiffs);
+        const fullPool = btTracks.filter(t => cats.includes(t.category) && diffs.includes(t.difficulty||'Normal'));
+        if(fullPool.length < 4){ alert('Pas assez de musiques pour cette sélection (4 minimum).'); return; }
+        const roundsWanted = Math.max(1, parseInt(document.getElementById('btRoundsInput').value, 10) || 8);
+        const timerWanted = Math.max(5, Math.min(120, parseInt(document.getElementById('btTimerInput').value, 10) || 30));
+        const shuffled = fullPool.slice().sort(()=>Math.random()-0.5);
+        const limited = shuffled.slice(0, Math.min(roundsWanted, shuffled.length)).map(t=>t.id);
+        btGame = {status:'lobby', categories:cats, difficulties:diffs, pool: limited, roundsTotal: limited.length, timerSeconds: timerWanted, currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
         await saveBtGame();
         drawBt(inCreator);
       };
@@ -3134,7 +3251,9 @@ function drawBt(inCreator){
     const key = (viewerName||'').toLowerCase();
     const joined = !inCreator && g.players[key];
     wrap.innerHTML = `
-      <div class="tag" style="margin-bottom:10px;">Catégories : ${g.categories.map(escapeHtml).join(', ')}</div>
+      <div class="tag" style="margin-bottom:4px;">Catégories : ${(g.categories||[]).map(escapeHtml).join(', ')}</div>
+      <div class="tag" style="margin-bottom:4px;">Difficulté : ${(g.difficulties||[]).map(escapeHtml).join(', ')}</div>
+      <div class="tag" style="margin-bottom:10px;">${g.roundsTotal||'?'} rounds · ${g.timerSeconds||30}s pour trouver</div>
       <div id="btPlayers">${btPlayerRows()}</div>
       ${inCreator ? `
         <div class="modalbtns" style="margin-top:16px;">
@@ -3174,11 +3293,11 @@ function drawBt(inCreator){
     const totalPlayers = Object.keys(g.players).length;
     const answeredCount = Object.values(g.players).filter(p=>p.answered).length;
     const elapsedNow = g.playStartedAt ? (Date.now() - g.playStartedAt)/1000 : 0;
-    const remainingNow = Math.max(0, Math.ceil(30 - elapsedNow));
+    const remainingNow = Math.max(0, Math.ceil((g.timerSeconds||30) - elapsedNow));
     const timedOut = remainingNow <= 0;
     wrap.innerHTML = `
       <div class="btPlayerBox">
-        <div class="tag" style="margin-bottom:6px;">Round ${g.round} · ${answeredCount}/${totalPlayers} ont répondu</div>
+        <div class="tag" style="margin-bottom:6px;">Round ${g.round}/${g.roundsTotal||'?'} · ${answeredCount}/${totalPlayers} ont répondu</div>
         <div class="btTimer" id="btTimerDisplay" style="color:${remainingNow<=10?'var(--rate-red)':'var(--gold)'};">⏱️ ${remainingNow}s</div>
         <div class="btMediaStage" id="btMediaSlot">
           <div class="btBlackCover" id="btBlackCover">🎵</div>
@@ -3221,12 +3340,25 @@ function drawBt(inCreator){
       const guessInput = document.getElementById('btGuessInput');
       const suggBox = document.getElementById('btSuggestions');
       if(guessInput){
-        const poolTitles = btTracks.filter(t => (g.categories||[]).includes(t.category)).map(t => t.title);
+        const poolTracks = btTracks.filter(t => (g.categories||[]).includes(t.category));
+        // entrées de recherche : le titre lui-même + chaque raccourci, tous pointant vers le vrai titre
+        const searchEntries = [];
+        poolTracks.forEach(t => {
+          searchEntries.push({match: t.title, title: t.title});
+          (t.aliases||[]).forEach(a => { if(a) searchEntries.push({match: a, title: t.title}); });
+        });
         guessInput.addEventListener('input', () => {
           const q = guessInput.value.trim().toLowerCase();
           if(!q){ suggBox.innerHTML = ''; return; }
-          const matches = poolTitles.filter(t => t.toLowerCase().includes(q)).slice(0,6);
-          suggBox.innerHTML = matches.map(t => `<div class="btSuggestItem" data-t="${escapeHtml(t)}">${escapeHtml(t)}</div>`).join('');
+          const seen = new Set();
+          const matches = [];
+          searchEntries.forEach(e => {
+            if(e.match.toLowerCase().includes(q) && !seen.has(e.title)){
+              seen.add(e.title);
+              matches.push(e.title);
+            }
+          });
+          suggBox.innerHTML = matches.slice(0,6).map(t => `<div class="btSuggestItem" data-t="${escapeHtml(t)}">${escapeHtml(t)}</div>`).join('');
           suggBox.querySelectorAll('.btSuggestItem').forEach(item => {
             item.onclick = () => submitBtAnswer(item.dataset.t, inCreator);
           });
@@ -3234,8 +3366,8 @@ function drawBt(inCreator){
         guessInput.addEventListener('keydown', (e) => {
           if(e.key === 'Enter'){
             const q = guessInput.value.trim().toLowerCase();
-            const exact = poolTitles.find(t => t.toLowerCase() === q);
-            if(exact) submitBtAnswer(exact, inCreator);
+            const exact = searchEntries.find(e => e.match.toLowerCase() === q);
+            if(exact) submitBtAnswer(exact.title, inCreator);
           }
         });
         guessInput.focus();
@@ -3249,7 +3381,7 @@ function drawBt(inCreator){
         const timerEl = document.getElementById('btTimerDisplay');
         if(!timerEl){ clearInterval(btTimerTick); return; }
         const elapsed = (Date.now() - startedAt) / 1000;
-        const remaining = Math.max(0, Math.ceil(30 - elapsed));
+        const remaining = Math.max(0, Math.ceil((g.timerSeconds||30) - elapsed));
         timerEl.textContent = `⏱️ ${remaining}s`;
         timerEl.style.color = remaining <= 10 ? 'var(--rate-red)' : 'var(--gold)';
         if(remaining <= 0){
@@ -3372,7 +3504,9 @@ async function submitBtAnswer(chosen, inCreator){
   const correct = chosen === btGame.currentTrack.title;
   let points = 0;
   if(correct){
-    points = Math.max(20, Math.round(100 - elapsed*4));
+    const timer = btGame.timerSeconds || 30;
+    const decayRate = 80 / timer;
+    points = Math.max(20, Math.round(100 - elapsed*decayRate));
   }
   me.answered = true;
   me.lastCorrect = correct;
