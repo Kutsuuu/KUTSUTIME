@@ -3146,6 +3146,8 @@ let btViewFromCreator = true;
 let btPollTimer = null;
 let btSoundUnlocked = false;
 let btTimerTick = null;
+let btLocalRoundTrackId = null;
+let btLocalRoundStartedAt = null;
 let btMediaEl = null;
 
 function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer = null; } }
@@ -3153,6 +3155,8 @@ function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer 
 function renderBlindtest(){
   const inCreator = btViewFromCreator;
   stopBtPoll();
+  btLocalRoundTrackId = null;
+  btLocalRoundStartedAt = null;
   app.innerHTML = `
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
@@ -3312,7 +3316,11 @@ function drawBt(inCreator){
     const me = g.players[key];
     const totalPlayers = Object.keys(g.players).length;
     const answeredCount = Object.values(g.players).filter(p=>p.answered).length;
-    const elapsedNow = g.playStartedAt ? (Date.now() - g.playStartedAt)/1000 : 0;
+    if(g.currentTrack && btLocalRoundTrackId !== g.currentTrack.id){
+      btLocalRoundTrackId = g.currentTrack.id;
+      btLocalRoundStartedAt = Date.now();
+    }
+    const elapsedNow = btLocalRoundStartedAt ? (Date.now() - btLocalRoundStartedAt)/1000 : 0;
     const remainingNow = Math.max(0, Math.ceil((g.timerSeconds||30) - elapsedNow));
     const timedOut = remainingNow <= 0;
     wrap.innerHTML = `
@@ -3410,8 +3418,8 @@ function drawBt(inCreator){
     }
 
     clearInterval(btTimerTick);
-    if(g.playStartedAt){
-      const startedAt = g.playStartedAt;
+    if(btLocalRoundStartedAt){
+      const startedAt = btLocalRoundStartedAt;
       btTimerTick = setInterval(() => {
         const timerEl = document.getElementById('btTimerDisplay');
         if(!timerEl){ clearInterval(btTimerTick); return; }
@@ -3531,7 +3539,7 @@ async function submitBtAnswer(chosen, tier, inCreator){
   const key = (viewerName||'').toLowerCase();
   const me = btGame.players[key];
   if(!me || me.answered || btGame.status !== 'playing'){ drawBt(inCreator); return; }
-  const elapsed = (Date.now() - btGame.playStartedAt) / 1000;
+  const elapsed = btLocalRoundStartedAt ? (Date.now() - btLocalRoundStartedAt) / 1000 : 0;
   const correct = chosen === btGame.currentTrack.title;
   let points = 0;
   if(correct){
