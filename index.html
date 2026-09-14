@@ -961,6 +961,10 @@ async function saveBtTracks(){ await kvSet(BT_TRACKS_KEY, btTracks); }
 async function loadBtGame(){ btGame = (await kvGet(BT_GAME_KEY)) || {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0}; }
 async function saveBtGame(){ await kvSet(BT_GAME_KEY, btGame); }
 
+function stripAccents(str){
+  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function escapeHtml(str){
   if(!str) return '';
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -3371,14 +3375,15 @@ function drawBt(inCreator){
             searchEntries.push({match: a + ' ' + t.category, title: t.title, tier: 'partial'});
           });
         });
+        searchEntries.forEach(e => { e.matchNorm = stripAccents(e.match.toLowerCase()); });
         guessInput.addEventListener('input', () => {
-          const q = guessInput.value.trim().toLowerCase();
+          const q = stripAccents(guessInput.value.trim().toLowerCase());
           if(!q){ suggBox.innerHTML = ''; return; }
           const seen = new Set();
           const matches = [];
           searchEntries.forEach(e => {
             const dedupeKey = e.title + '|' + e.tier;
-            if(e.match.toLowerCase().includes(q) && !seen.has(dedupeKey)){
+            if(e.matchNorm.includes(q) && !seen.has(dedupeKey)){
               seen.add(dedupeKey);
               matches.push(e);
             }
@@ -3395,9 +3400,9 @@ function drawBt(inCreator){
         });
         guessInput.addEventListener('keydown', (e) => {
           if(e.key === 'Enter'){
-            const q = guessInput.value.trim().toLowerCase();
-            const exactFull = searchEntries.find(e => e.tier === 'full' && e.match.toLowerCase() === q);
-            const exactPartial = searchEntries.find(e => e.tier === 'partial' && e.match.toLowerCase() === q);
+            const q = stripAccents(guessInput.value.trim().toLowerCase());
+            const exactFull = searchEntries.find(e => e.tier === 'full' && e.matchNorm === q);
+            const exactPartial = searchEntries.find(e => e.tier === 'partial' && e.matchNorm === q);
             const exact = exactFull || exactPartial;
             if(exact) submitBtAnswer(exact.title, exact.tier, inCreator);
           }
