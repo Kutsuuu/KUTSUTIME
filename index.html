@@ -3382,16 +3382,14 @@ function drawBt(inCreator){
           const seen = new Set();
           const matches = [];
           searchEntries.forEach(e => {
-            const dedupeKey = e.title + '|' + e.tier;
-            if(e.matchNorm.includes(q) && !seen.has(dedupeKey)){
-              seen.add(dedupeKey);
+            if(e.matchNorm.includes(q) && !seen.has(e.title)){
+              seen.add(e.title);
               matches.push(e);
             }
           });
           suggBox.innerHTML = matches.slice(0,6).map(e => `
             <div class="btSuggestItem" data-t="${escapeHtml(e.title)}" data-tier="${e.tier}">
               ${escapeHtml(e.title)}
-              ${e.tier === 'partial' ? `<span style="opacity:0.6;font-size:11px;"> — nom de l'anime (×0,5 pt)</span>` : ''}
             </div>
           `).join('');
           suggBox.querySelectorAll('.btSuggestItem').forEach(item => {
