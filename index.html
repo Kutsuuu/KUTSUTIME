@@ -2582,7 +2582,7 @@ function renderGames(){
         </div>
       </div>
       ${inCreator ? `<button class="addbtn" id="manageBtTracks" style="margin-bottom:10px;">🎼 Gérer la bibliothèque de musiques</button>` : ''}
-      <div class="sectionLabel">Classement</div>
+      <div class="sectionLabel">Classement${inCreator ? ` <button class="pill" id="resetLeaderboard" style="margin-left:10px;">🗑️ Reset</button>` : ''}</div>
       <div id="leaderboard"></div>
     </div>
   `;
@@ -2598,6 +2598,13 @@ function renderGames(){
   };
   const mbt = document.getElementById('manageBtTracks');
   if(mbt) mbt.onclick = () => setMode('blindtest-admin');
+  const rlb = document.getElementById('resetLeaderboard');
+  if(rlb) rlb.onclick = async () => {
+    if(!confirm('Remettre tous les points du classement général à zéro ?')) return;
+    gameScores = {};
+    await saveScores();
+    document.getElementById('leaderboard').innerHTML = leaderboardHtml();
+  };
 }
 
 /* ---------- 1, 2, 3 SOLEIL ---------- */
@@ -2927,11 +2934,14 @@ function renderBtAdmin(){
         <div class="tag">ajoute les musiques pour ton blind test</div>
       </div>
       <div class="twitchbox" style="max-width:480px;margin-bottom:24px;">
-        <label>Titre à deviner</label>
+        <label>Titre précis à deviner</label>
         <input type="text" id="btTitle" placeholder="ex : My Hero Academia - Odd Future">
-        <label>Raccourcis pour retrouver le titre (optionnel)</label>
+        <label>Nom de l'anime / série / film</label>
+        <input type="text" id="btAnimeName" placeholder="ex : My Hero Academia">
+        <div class="hint" style="text-align:left;margin-bottom:14px;">Deviner juste ce nom (sans le titre précis) rapporte ×0,5 point.</div>
+        <label>Raccourcis pour ce nom (optionnel)</label>
         <input type="text" id="btAliases" placeholder="ex : mha, my hero">
-        <div class="hint" style="text-align:left;margin-bottom:14px;">Sépare par des virgules. Ces mots comptent aussi comme bonne réponse (ex : « mha » → « My Hero Academia »).</div>
+        <div class="hint" style="text-align:left;margin-bottom:14px;">Sépare par des virgules. Comptent comme le nom de l'anime (×0,5 point) — tape aussi « mha opening » pour retrouver directement le titre précis.</div>
         <div class="row2">
           <div style="flex:1;">
             <label>Catégorie</label>
@@ -3015,13 +3025,15 @@ function renderBtAdmin(){
     const { data: urlData } = supabaseClient.storage.from(BT_BUCKET).getPublicUrl(path);
     await loadBtTracks();
     const mediaType = pendingFile.type.startsWith('video') ? 'video' : 'audio';
+    const animeName = document.getElementById('btAnimeName').value.trim();
     const aliases = document.getElementById('btAliases').value.split(',').map(a=>a.trim()).filter(Boolean);
     const difficulty = document.getElementById('btDifficulty').value;
-    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, category, audioUrl: urlData.publicUrl, path, mediaType, aliases, difficulty});
+    btTracks.push({id:'bt-'+Math.random().toString(36).slice(2,10), title, animeName, category, audioUrl: urlData.publicUrl, path, mediaType, aliases, difficulty});
     await saveBtTracks();
     statusEl.style.color = 'var(--rate-green)';
     statusEl.textContent = '✓ Ajouté !';
     document.getElementById('btTitle').value = '';
+    document.getElementById('btAnimeName').value = '';
     document.getElementById('btAliases').value = '';
     document.getElementById('btFile').value = '';
     pendingFile = null;
@@ -3074,8 +3086,10 @@ function openBtEditTrack(id){
     <div class="overlay" id="overlay">
       <div class="modal">
         <h3>✎ Modifier la musique</h3>
-        <label>Titre à deviner</label>
+        <label>Titre précis à deviner</label>
         <input type="text" id="editBtTitle" value="${escapeHtml(track.title)}">
+        <label>Nom de l'anime / série / film</label>
+        <input type="text" id="editBtAnimeName" value="${escapeHtml(track.animeName||'')}">
         <label>Raccourcis (optionnel)</label>
         <input type="text" id="editBtAliases" value="${escapeHtml((track.aliases||[]).join(', '))}" placeholder="ex : mha, my hero">
         <div class="row2">
@@ -3104,6 +3118,7 @@ function openBtEditTrack(id){
   document.getElementById('saveBtEditBtn').onclick = async () => {
     const newTitle = document.getElementById('editBtTitle').value.trim();
     if(!newTitle) return;
+    const animeName = document.getElementById('editBtAnimeName').value.trim();
     const aliases = document.getElementById('editBtAliases').value.split(',').map(a=>a.trim()).filter(Boolean);
     const category = document.getElementById('editBtCategory').value;
     const difficulty = document.getElementById('editBtDifficulty').value;
@@ -3111,6 +3126,7 @@ function openBtEditTrack(id){
     const fresh = btTracks.find(t => t.id === id);
     if(fresh){
       fresh.title = newTitle;
+      fresh.animeName = animeName;
       fresh.aliases = aliases;
       fresh.category = category;
       fresh.difficulty = difficulty;
@@ -3147,7 +3163,7 @@ function renderBlindtest(){
   drawBt(inCreator);
   btPollTimer = setInterval(async () => {
     const active = document.activeElement;
-    if(active && active.id === 'btGuessInput') return;
+    if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT') && document.getElementById('btStageWrap').contains(active)) return;
     await loadBtGame();
     drawBt(inCreator);
   }, 1200);
@@ -3341,11 +3357,19 @@ function drawBt(inCreator){
       const suggBox = document.getElementById('btSuggestions');
       if(guessInput){
         const poolTracks = btTracks.filter(t => (g.categories||[]).includes(t.category));
-        // entrées de recherche : le titre lui-même + chaque raccourci, tous pointant vers le vrai titre
+        // entrées de recherche : titre précis (plein tarif) + nom d'anime/raccourcis (x0.5)
         const searchEntries = [];
         poolTracks.forEach(t => {
-          searchEntries.push({match: t.title, title: t.title});
-          (t.aliases||[]).forEach(a => { if(a) searchEntries.push({match: a, title: t.title}); });
+          searchEntries.push({match: t.title, title: t.title, tier: 'full'});
+          if(t.animeName){
+            searchEntries.push({match: t.animeName, title: t.title, tier: 'partial'});
+            searchEntries.push({match: t.animeName + ' ' + t.category, title: t.title, tier: 'partial'});
+          }
+          (t.aliases||[]).forEach(a => {
+            if(!a) return;
+            searchEntries.push({match: a, title: t.title, tier: 'partial'});
+            searchEntries.push({match: a + ' ' + t.category, title: t.title, tier: 'partial'});
+          });
         });
         guessInput.addEventListener('input', () => {
           const q = guessInput.value.trim().toLowerCase();
@@ -3353,21 +3377,29 @@ function drawBt(inCreator){
           const seen = new Set();
           const matches = [];
           searchEntries.forEach(e => {
-            if(e.match.toLowerCase().includes(q) && !seen.has(e.title)){
-              seen.add(e.title);
-              matches.push(e.title);
+            const dedupeKey = e.title + '|' + e.tier;
+            if(e.match.toLowerCase().includes(q) && !seen.has(dedupeKey)){
+              seen.add(dedupeKey);
+              matches.push(e);
             }
           });
-          suggBox.innerHTML = matches.slice(0,6).map(t => `<div class="btSuggestItem" data-t="${escapeHtml(t)}">${escapeHtml(t)}</div>`).join('');
+          suggBox.innerHTML = matches.slice(0,6).map(e => `
+            <div class="btSuggestItem" data-t="${escapeHtml(e.title)}" data-tier="${e.tier}">
+              ${escapeHtml(e.title)}
+              ${e.tier === 'partial' ? `<span style="opacity:0.6;font-size:11px;"> — nom de l'anime (×0,5 pt)</span>` : ''}
+            </div>
+          `).join('');
           suggBox.querySelectorAll('.btSuggestItem').forEach(item => {
-            item.onclick = () => submitBtAnswer(item.dataset.t, inCreator);
+            item.onclick = () => submitBtAnswer(item.dataset.t, item.dataset.tier, inCreator);
           });
         });
         guessInput.addEventListener('keydown', (e) => {
           if(e.key === 'Enter'){
             const q = guessInput.value.trim().toLowerCase();
-            const exact = searchEntries.find(e => e.match.toLowerCase() === q);
-            if(exact) submitBtAnswer(exact.title, inCreator);
+            const exactFull = searchEntries.find(e => e.tier === 'full' && e.match.toLowerCase() === q);
+            const exactPartial = searchEntries.find(e => e.tier === 'partial' && e.match.toLowerCase() === q);
+            const exact = exactFull || exactPartial;
+            if(exact) submitBtAnswer(exact.title, exact.tier, inCreator);
           }
         });
         guessInput.focus();
@@ -3479,15 +3511,11 @@ async function startBtRound(inCreator){
   const track = btTracks.find(t => t.id === trackId);
   if(!track){ await saveBtGame(); drawBt(inCreator); return; }
 
-  const sameCat = btTracks.filter(t => t.category === track.category && t.id !== track.id);
-  const others = btTracks.filter(t => t.id !== track.id);
-  const decoysPool = sameCat.length >= 3 ? sameCat : others;
-  const shuffledDecoys = decoysPool.slice().sort(()=>Math.random()-0.5).slice(0,3);
-  const options = [track.title, ...shuffledDecoys.map(t=>t.title)].sort(()=>Math.random()-0.5);
-
   Object.values(btGame.players).forEach(p => { p.answered = false; p.lastCorrect = null; p.lastPoints = 0; });
-  btGame.currentTrack = {id: track.id, title: track.title, category: track.category, audioUrl: track.audioUrl, mediaType: track.mediaType||'audio'};
-  btGame.options = options;
+  btGame.currentTrack = {
+    id: track.id, title: track.title, animeName: track.animeName||'', category: track.category,
+    audioUrl: track.audioUrl, mediaType: track.mediaType||'audio', difficulty: track.difficulty||'Normal'
+  };
   btGame.playStartedAt = Date.now();
   btGame.status = 'playing';
   btGame.round = (btGame.round||0) + 1;
@@ -3495,7 +3523,7 @@ async function startBtRound(inCreator){
   drawBt(inCreator);
 }
 
-async function submitBtAnswer(chosen, inCreator){
+async function submitBtAnswer(chosen, tier, inCreator){
   await loadBtGame();
   const key = (viewerName||'').toLowerCase();
   const me = btGame.players[key];
@@ -3505,8 +3533,12 @@ async function submitBtAnswer(chosen, inCreator){
   let points = 0;
   if(correct){
     const timer = btGame.timerSeconds || 30;
-    const decayRate = 80 / timer;
-    points = Math.max(20, Math.round(100 - elapsed*decayRate));
+    const decayRate = 100 / timer;
+    const base = Math.max(0, 100 - elapsed*decayRate);
+    const diff = btGame.currentTrack.difficulty || 'Normal';
+    const diffMult = diff === 'Difficile' ? 1.75 : diff === 'Normal' ? 1.25 : 1;
+    const tierMult = tier === 'partial' ? 0.5 : 1;
+    points = Math.max(20, Math.round(base * diffMult * tierMult));
   }
   me.answered = true;
   me.lastCorrect = correct;
