@@ -3270,7 +3270,7 @@ function btPlayerRows(){
       <span class="n">${escapeHtml(p.display)}</span>
       <span class="st" style="color:${btGame.status==='revealed' && p.answered ? (p.lastCorrect ? 'var(--rate-green)' : 'var(--rate-red)') : 'var(--text-dim)'};">
         ${btGame.status==='playing'
-          ? (p.answered ? `« ${escapeHtml(p.lastAnswerText||'')} »` : '…')
+          ? (p.answered ? '✓ a répondu' : '…')
           : (btGame.status==='revealed' && p.answered ? `${p.lastCorrect ? '✓' : '✗'} « ${escapeHtml(p.lastAnswerText||'')} »${p.lastPoints ? ' +'+p.lastPoints+' pts' : ''}` : '')}
       </span>
       <span class="pts">${p.score||0} pts</span>
