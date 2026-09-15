@@ -1168,6 +1168,7 @@ function navHtml(activeKey, ctx){
         <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule-view"><span class="sIcon">📅</span><span class="lbl">Calendrier</span></button>
         <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
         <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
+        <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
         ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="sIcon">🔒</span><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
       <div class="sidebarBottom">
