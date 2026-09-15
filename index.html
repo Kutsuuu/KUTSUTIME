@@ -3243,9 +3243,11 @@ async function renderBlindtest(){
     const stageEl = document.getElementById('btStageWrap');
     const inStage = stageEl && stageEl.contains(active);
     if(active && inStage && (active.tagName === 'SELECT' || (active.tagName === 'INPUT' && btGame.status !== 'playing'))) return;
+    const scrollY = window.scrollY;
     await loadBtGame();
     await loadBtTracks();
     drawBt(inCreator);
+    window.scrollTo(0, scrollY);
   }, 1000);
 }
 
