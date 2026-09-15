@@ -987,6 +987,16 @@ function getBtPlaylistGroups(){
 async function loadBtGame(){ btGame = (await kvGet(BT_GAME_KEY)) || {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0}; }
 async function saveBtGame(){ await kvSet(BT_GAME_KEY, btGame); }
 
+function isYoutubeUrl(url){
+  try{
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase().replace(/^www\.|^m\./, '');
+    return host === 'youtube.com' || host === 'youtu.be';
+  }catch(e){
+    return false;
+  }
+}
+
 function stripAccents(str){
   return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -3424,6 +3434,7 @@ function drawBt(inCreator){
             <input type="text" id="btGuessInput" placeholder="Tape le titre que tu penses reconnaître..." autocomplete="off" value="${escapeHtml(btDraftAnswer)}">
             <div class="btSuggestions" id="btSuggestions"></div>
           </div>
+          <button class="btn primary" id="btValidateBtn" style="width:100%;max-width:260px;margin:10px auto 0;display:block;">Valider ma réponse</button>
         ` : me && me.answered ? `<div class="hint">✓ Réponse envoyée, en attente des autres...</div>` : (me && timedOut ? `<div class="hint" style="color:var(--rate-red);">⏱️ Temps écoulé !</div>` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`))}
       </div>
       <div class="sectionLabel">Scores</div>
@@ -3483,7 +3494,7 @@ function drawBt(inCreator){
             </div>
           `).join('');
           suggBox.querySelectorAll('.btSuggestItem').forEach(item => {
-            item.onclick = () => submitBtAnswer(item.dataset.t, item.dataset.tier, inCreator);
+            item.onclick = () => submitBtAnswer(item.dataset.t, inCreator);
           });
         };
         guessInput.addEventListener('input', () => {
@@ -3492,10 +3503,15 @@ function drawBt(inCreator){
         });
         guessInput.addEventListener('keydown', (e) => {
           if(e.key === 'Enter'){
-            const first = suggBox.querySelector('.btSuggestItem');
-            if(first) submitBtAnswer(first.dataset.t, first.dataset.tier, inCreator);
+            const val = guessInput.value.trim();
+            if(val) submitBtAnswer(val, inCreator);
           }
         });
+        const validateBtn = document.getElementById('btValidateBtn');
+        if(validateBtn) validateBtn.onclick = () => {
+          const val = guessInput.value.trim();
+          if(val) submitBtAnswer(val, inCreator);
+        };
         // restaure le brouillon (suggestions + position du curseur) après un rafraîchissement
         if(btDraftAnswer){
           renderSuggestions(stripAccents(btDraftAnswer.trim().toLowerCase()));
@@ -3623,19 +3639,30 @@ async function startBtRound(inCreator){
   drawBt(inCreator);
 }
 
-async function submitBtAnswer(chosen, tier, inCreator){
+async function submitBtAnswer(rawText, inCreator){
   await loadBtGame();
   const key = (viewerName||'').toLowerCase();
   const me = btGame.players[key];
   if(!me || me.answered || btGame.status !== 'playing'){ drawBt(inCreator); return; }
+  const track = btGame.currentTrack;
+  const trackFull = btTracks.find(t => t.id === track.id) || {};
+  const anime = impliedAnimeName(trackFull) || track.animeName || '';
+  const tokens = stripAccents((rawText||'').trim().toLowerCase()).split(/\s+/).filter(Boolean);
+  const fullText = stripAccents((track.title||'').toLowerCase());
+  const wideText = stripAccents([anime, ...(trackFull.aliases||[]), track.category, track.title].filter(Boolean).join(' ').toLowerCase());
+
+  let tier = null;
+  if(tokens.length && tokens.every(tok => fullText.includes(tok))) tier = 'full';
+  else if(tokens.length && tokens.every(tok => wideText.includes(tok))) tier = 'partial';
+  const correct = tier !== null;
+
   const elapsed = btLocalRoundStartedAt ? (Date.now() - btLocalRoundStartedAt) / 1000 : 0;
-  const correct = chosen === btGame.currentTrack.title;
   let points = 0;
   if(correct){
     const timer = btGame.timerSeconds || 30;
     const decayRate = 100 / timer;
     const base = Math.max(0, 100 - elapsed*decayRate);
-    const diff = btGame.currentTrack.difficulty || 'Normal';
+    const diff = track.difficulty || 'Normal';
     const diffMult = diff === 'Difficile' ? 1.75 : diff === 'Normal' ? 1.25 : 1;
     const tierMult = tier === 'partial' ? 0.5 : 1;
     points = Math.max(20, Math.round(base * diffMult * tierMult));
@@ -3643,7 +3670,7 @@ async function submitBtAnswer(chosen, tier, inCreator){
   me.answered = true;
   me.lastCorrect = correct;
   me.lastPoints = points;
-  me.lastAnswerText = chosen;
+  me.lastAnswerText = rawText;
   btDraftAnswer = '';
   me.score = (me.score||0) + points;
   await saveBtGame();
@@ -3738,8 +3765,8 @@ function renderWheel(){
             <div class="twitchbox" style="max-width:100%;">
               <label>Titre du film</label>
               <input type="text" id="wsTitle" placeholder="ex : Old Boy">
-              <label>Lien vers un trailer (optionnel)</label>
-              <input type="text" id="wsTrailer" placeholder="https://youtube.com/...">
+              <label>Lien vers un trailer YouTube (optionnel)</label>
+              <input type="text" id="wsTrailer" placeholder="https://youtube.com/... ou https://youtu.be/...">
               <div class="hint" id="wsStatus" style="min-height:16px;"></div>
               <button class="btn primary" id="wsSubmitBtn" style="width:100%;">Proposer au créateur</button>
             </div>
@@ -3796,6 +3823,11 @@ function renderWheel(){
       const title = document.getElementById('wsTitle').value.trim();
       const trailerUrl = document.getElementById('wsTrailer').value.trim();
       if(!title){ wsStatus.style.color = 'var(--rate-red)'; wsStatus.textContent = 'Ajoute un titre.'; return; }
+      if(trailerUrl && !isYoutubeUrl(trailerUrl)){
+        wsStatus.style.color = 'var(--rate-red)';
+        wsStatus.textContent = 'Le lien doit être un lien YouTube (youtube.com ou youtu.be).';
+        return;
+      }
       await loadWheelSuggestions();
       wheelSuggestions.push({
         id: 'ws-' + Math.random().toString(36).slice(2,10),
