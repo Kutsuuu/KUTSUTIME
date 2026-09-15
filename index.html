@@ -649,7 +649,8 @@
   .btGuessBox input:focus{border-color:var(--gold);}
   .btSuggestions{
     position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:10;
-    background:var(--panel-2);border:2px solid var(--border);border-radius:4px;overflow:hidden;
+    background:var(--panel-2);border:2px solid var(--border);border-radius:4px;
+    max-height:260px;overflow-y:auto;
   }
   .btSuggestItem{
     padding:12px 16px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;
@@ -891,8 +892,10 @@ const SETTINGS_KEY = 'creatorSettings';
 const SCORES_KEY = 'gameScores';
 const WHEEL_KEY = 'wheelItems';
 const WHEEL_STATE_KEY = 'wheelSpinState';
+const WHEEL_SUGGESTIONS_KEY = 'wheelSuggestions';
 const SOLEIL_KEY = 'soleilGame';
 const BT_TRACKS_KEY = 'blindtestTracks';
+const BT_PLAYLISTS_KEY = 'blindtestPlaylists';
 const BT_GAME_KEY = 'blindtestGame';
 const BT_BUCKET = 'blindtest-audio';
 
@@ -903,9 +906,11 @@ let viewerProfiles = {}; // { key(lowercase pseudo): {display, avatar} }
 let creatorSettings = {}; // { twitchChannel }
 let gameScores = {}; // { key(lowercase pseudo): points }
 let wheelItems = []; // [{id, label}]
+let wheelSuggestions = []; // [{id, title, trailerUrl, submittedBy, status}]
 let wheelState = {}; // {lastWinner, lastSpinAt}
 let soleilGame = {status:'idle', light:'green', target:100, players:{}, winner:null};
 let btTracks = [];
+let btPlaylists = {}; // { "Nom Anime": true/false }
 let btGame = {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
 let filter = 'all';
 let query = '';
@@ -955,6 +960,8 @@ async function addPoints(key, amount){
 }
 async function loadWheel(){ wheelItems = (await kvGet(WHEEL_KEY)) || []; }
 async function saveWheel(){ await kvSet(WHEEL_KEY, wheelItems); }
+async function loadWheelSuggestions(){ wheelSuggestions = (await kvGet(WHEEL_SUGGESTIONS_KEY)) || []; }
+async function saveWheelSuggestions(){ await kvSet(WHEEL_SUGGESTIONS_KEY, wheelSuggestions); }
 async function loadWheelState(){ wheelState = (await kvGet(WHEEL_STATE_KEY)) || {}; }
 async function saveWheelState(){ await kvSet(WHEEL_STATE_KEY, wheelState); }
 async function loadSoleil(){ soleilGame = (await kvGet(SOLEIL_KEY)) || {status:'idle', light:'green', target:100, players:{}, winner:null}; }
@@ -965,11 +972,29 @@ const BT_DIFFICULTIES = ['Facile', 'Normal', 'Difficile'];
 
 async function loadBtTracks(){ btTracks = (await kvGet(BT_TRACKS_KEY)) || []; }
 async function saveBtTracks(){ await kvSet(BT_TRACKS_KEY, btTracks); }
+async function loadBtPlaylists(){ btPlaylists = (await kvGet(BT_PLAYLISTS_KEY)) || {}; }
+async function saveBtPlaylists(){ await kvSet(BT_PLAYLISTS_KEY, btPlaylists); }
+function isPlaylistEnabled(name){ return btPlaylists[name] !== false; }
+function getBtPlaylistGroups(){
+  const map = {};
+  btTracks.forEach(t => {
+    const name = impliedAnimeName(t) || t.category || 'Autres';
+    if(!map[name]) map[name] = [];
+    map[name].push(t);
+  });
+  return Object.keys(map).sort((a,b) => a.localeCompare(b)).map(name => ({name, tracks: map[name]}));
+}
 async function loadBtGame(){ btGame = (await kvGet(BT_GAME_KEY)) || {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0}; }
 async function saveBtGame(){ await kvSet(BT_GAME_KEY, btGame); }
 
 function stripAccents(str){
   return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function impliedAnimeName(t){
+  if(t.animeName && t.animeName.trim()) return t.animeName.trim();
+  const parts = (t.title || '').split(/\s[-–—:]\s/);
+  return parts.length > 1 ? parts[0].trim() : '';
 }
 
 function escapeHtml(str){
@@ -2979,11 +3004,15 @@ function renderBtAdmin(){
       </div>
       <div class="sectionLabel" style="margin-top:0;">Musiques ajoutées (<span id="btCount">${btTracks.length}</span>)</div>
       <div class="btTrackList" id="btTrackList"></div>
+      <div class="sectionLabel">Playlists par anime/série/film</div>
+      <div class="hint" style="margin-bottom:10px;">Chaque anime détecté forme automatiquement une playlist. Désactive celles que tu ne veux pas proposer dans tes parties.</div>
+      <div id="btPlaylistList"></div>
     </div>
   `;
   wireNav('creator');
   document.getElementById('backBt').onclick = () => setMode('games');
   drawBtTrackList();
+  drawBtPlaylistList();
 
   const MAX_BT_SIZE = 50 * 1024 * 1024; // 50 Mo (limite du plan gratuit Supabase)
   let pendingFile = null;
@@ -3089,6 +3118,34 @@ function drawBtTrackList(){
   });
 }
 
+function drawBtPlaylistList(){
+  const wrap = document.getElementById('btPlaylistList');
+  if(!wrap) return;
+  const groups = getBtPlaylistGroups();
+  if(groups.length === 0){
+    wrap.innerHTML = `<div class="empty" style="padding:20px 14px;"><div class="ic">🎧</div><div>Ajoute des musiques pour voir apparaître des playlists.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = groups.map(g => {
+    const enabled = isPlaylistEnabled(g.name);
+    return `
+      <div class="btTrackRow">
+        <span class="t">${escapeHtml(g.name)} <span style="color:var(--text-dim);font-size:11px;">— ${g.tracks.length} piste${g.tracks.length>1?'s':''}</span></span>
+        <button class="pill" id="plToggle-${escapeHtml(g.name)}" style="color:${enabled?'var(--rate-green)':'var(--text-dim)'};">${enabled ? '✓ Activée' : '✕ Désactivée'}</button>
+      </div>
+    `;
+  }).join('');
+  groups.forEach(g => {
+    const btn = document.getElementById(`plToggle-${g.name}`);
+    if(btn) btn.onclick = async () => {
+      await loadBtPlaylists();
+      btPlaylists[g.name] = !isPlaylistEnabled(g.name);
+      await saveBtPlaylists();
+      drawBtPlaylistList();
+    };
+  });
+}
+
 function openBtEditTrack(id){
   const track = btTracks.find(t => t.id === id);
   if(!track) return;
@@ -3156,6 +3213,7 @@ let btVolume = 1;
 let btTimerTick = null;
 let btLocalRoundTrackId = null;
 let btLocalRoundStartedAt = null;
+let btDraftAnswer = '';
 let btMediaEl = null;
 
 function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer = null; } }
@@ -3165,7 +3223,9 @@ async function renderBlindtest(){
   stopBtPoll();
   btLocalRoundTrackId = null;
   btLocalRoundStartedAt = null;
+  btDraftAnswer = '';
   await loadBtTracks();
+  await loadBtPlaylists();
   app.innerHTML = `
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
@@ -3180,11 +3240,13 @@ async function renderBlindtest(){
   drawBt(inCreator);
   btPollTimer = setInterval(async () => {
     const active = document.activeElement;
-    if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT') && document.getElementById('btStageWrap').contains(active)) return;
+    const stageEl = document.getElementById('btStageWrap');
+    const inStage = stageEl && stageEl.contains(active);
+    if(active && inStage && (active.tagName === 'SELECT' || (active.tagName === 'INPUT' && btGame.status !== 'playing'))) return;
     await loadBtGame();
     await loadBtTracks();
     drawBt(inCreator);
-  }, 1200);
+  }, 1000);
 }
 
 function btPlayerRows(){
@@ -3193,8 +3255,10 @@ function btPlayerRows(){
   return list.map(([key,p]) => `
     <div class="btRoundPlayerRow">
       <span class="n">${escapeHtml(p.display)}</span>
-      <span class="st" style="color:${p.answered ? (p.lastCorrect ? 'var(--rate-green)' : 'var(--rate-red)') : 'var(--text-dim)'};">
-        ${btGame.status==='playing' ? (p.answered ? '✓ a répondu' : '…') : (btGame.status==='revealed' && p.lastPoints ? '+'+p.lastPoints+' pts' : '')}
+      <span class="st" style="color:${btGame.status==='revealed' && p.answered ? (p.lastCorrect ? 'var(--rate-green)' : 'var(--rate-red)') : 'var(--text-dim)'};">
+        ${btGame.status==='playing'
+          ? (p.answered ? `« ${escapeHtml(p.lastAnswerText||'')} »` : '…')
+          : (btGame.status==='revealed' && p.answered ? `${p.lastCorrect ? '✓' : '✗'} « ${escapeHtml(p.lastAnswerText||'')} »${p.lastPoints ? ' +'+p.lastPoints+' pts' : ''}` : '')}
       </span>
       <span class="pts">${p.score||0} pts</span>
     </div>
@@ -3244,7 +3308,7 @@ function drawBt(inCreator){
       const updatePoolCount = () => {
         const cats = Array.from(selectedCats);
         const diffs = Array.from(selectedDiffs);
-        const pool = btTracks.filter(t => cats.includes(t.category) && diffs.includes(t.difficulty||'Normal'));
+        const pool = btTracks.filter(t => cats.includes(t.category) && diffs.includes(t.difficulty||'Normal') && isPlaylistEnabled(impliedAnimeName(t) || t.category || 'Autres'));
         document.getElementById('btPoolCount').textContent = `${pool.length} piste${pool.length>1?'s':''} correspondent à cette sélection`;
       };
       wrap.querySelectorAll('#btCatGrid .btCatChip').forEach(chip => {
@@ -3267,7 +3331,7 @@ function drawBt(inCreator){
       document.getElementById('btCreateLobby').onclick = async () => {
         const cats = Array.from(selectedCats);
         const diffs = Array.from(selectedDiffs);
-        const fullPool = btTracks.filter(t => cats.includes(t.category) && diffs.includes(t.difficulty||'Normal'));
+        const fullPool = btTracks.filter(t => cats.includes(t.category) && diffs.includes(t.difficulty||'Normal') && isPlaylistEnabled(impliedAnimeName(t) || t.category || 'Autres'));
         if(fullPool.length < 4){ alert('Pas assez de musiques pour cette sélection (4 minimum).'); return; }
         const roundsWanted = Math.max(1, parseInt(document.getElementById('btRoundsInput').value, 10) || 8);
         const timerWanted = Math.max(5, Math.min(120, parseInt(document.getElementById('btTimerInput').value, 10) || 30));
@@ -3329,6 +3393,7 @@ function drawBt(inCreator){
     if(g.currentTrack && btLocalRoundTrackId !== g.currentTrack.id){
       btLocalRoundTrackId = g.currentTrack.id;
       btLocalRoundStartedAt = Date.now();
+      btDraftAnswer = '';
     }
     const elapsedNow = btLocalRoundStartedAt ? (Date.now() - btLocalRoundStartedAt)/1000 : 0;
     const remainingNow = Math.max(0, Math.ceil((g.timerSeconds||30) - elapsedNow));
@@ -3353,7 +3418,7 @@ function drawBt(inCreator){
           <button class="btn ghost" id="btReveal" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Révéler la réponse</button>
         ` : (me && !me.answered && !timedOut ? `
           <div class="btGuessBox" id="btGuessBox">
-            <input type="text" id="btGuessInput" placeholder="Tape le titre que tu penses reconnaître..." autocomplete="off">
+            <input type="text" id="btGuessInput" placeholder="Tape le titre que tu penses reconnaître..." autocomplete="off" value="${escapeHtml(btDraftAnswer)}">
             <div class="btSuggestions" id="btSuggestions"></div>
           </div>
         ` : me && me.answered ? `<div class="hint">✓ Réponse envoyée, en attente des autres...</div>` : (me && timedOut ? `<div class="hint" style="color:var(--rate-red);">⏱️ Temps écoulé !</div>` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`))}
@@ -3392,51 +3457,49 @@ function drawBt(inCreator){
       const suggBox = document.getElementById('btSuggestions');
       if(guessInput){
         const poolTracks = btTracks.filter(t => (g.categories||[]).includes(t.category));
-        // entrées de recherche : titre précis (plein tarif) + nom d'anime/raccourcis (x0.5)
-        const searchEntries = [];
-        poolTracks.forEach(t => {
-          searchEntries.push({match: t.title, title: t.title, tier: 'full'});
-          if(t.animeName){
-            searchEntries.push({match: t.animeName, title: t.title, tier: 'partial'});
-            searchEntries.push({match: t.animeName + ' ' + t.category, title: t.title, tier: 'partial'});
-          }
-          (t.aliases||[]).forEach(a => {
-            if(!a) return;
-            searchEntries.push({match: a, title: t.title, tier: 'partial'});
-            searchEntries.push({match: a + ' ' + t.category, title: t.title, tier: 'partial'});
-          });
+        // une seule entrée par piste : texte "titre" (plein tarif) + texte "large" (nom d'anime/raccourcis/catégorie, x0.5)
+        const trackEntries = poolTracks.map(t => {
+          const anime = impliedAnimeName(t);
+          const fullText = stripAccents((t.title||'').toLowerCase());
+          const wideText = stripAccents([anime, ...(t.aliases||[]), t.category, t.title].filter(Boolean).join(' ').toLowerCase());
+          return {title: t.title, fullText, wideText};
         });
-        searchEntries.forEach(e => { e.matchNorm = stripAccents(e.match.toLowerCase()); });
-        guessInput.addEventListener('input', () => {
-          const q = stripAccents(guessInput.value.trim().toLowerCase());
+        const renderSuggestions = (q) => {
           if(!q){ suggBox.innerHTML = ''; return; }
-          const seen = new Set();
-          const matches = [];
-          searchEntries.forEach(e => {
-            if(e.matchNorm.includes(q) && !seen.has(e.title)){
-              seen.add(e.title);
-              matches.push(e);
-            }
+          const tokens = q.split(/\s+/).filter(Boolean);
+          const results = [];
+          trackEntries.forEach(e => {
+            const inFull = tokens.every(tok => e.fullText.includes(tok));
+            const inWide = tokens.every(tok => e.wideText.includes(tok));
+            if(inFull) results.push({title: e.title, tier: 'full'});
+            else if(inWide) results.push({title: e.title, tier: 'partial'});
           });
-          suggBox.innerHTML = matches.slice(0,6).map(e => `
-            <div class="btSuggestItem" data-t="${escapeHtml(e.title)}" data-tier="${e.tier}">
-              ${escapeHtml(e.title)}
+          suggBox.innerHTML = results.slice(0,20).map(r => `
+            <div class="btSuggestItem" data-t="${escapeHtml(r.title)}" data-tier="${r.tier}">
+              ${escapeHtml(r.title)}
             </div>
           `).join('');
           suggBox.querySelectorAll('.btSuggestItem').forEach(item => {
             item.onclick = () => submitBtAnswer(item.dataset.t, item.dataset.tier, inCreator);
           });
+        };
+        guessInput.addEventListener('input', () => {
+          btDraftAnswer = guessInput.value;
+          renderSuggestions(stripAccents(guessInput.value.trim().toLowerCase()));
         });
         guessInput.addEventListener('keydown', (e) => {
           if(e.key === 'Enter'){
-            const q = stripAccents(guessInput.value.trim().toLowerCase());
-            const exactFull = searchEntries.find(e => e.tier === 'full' && e.matchNorm === q);
-            const exactPartial = searchEntries.find(e => e.tier === 'partial' && e.matchNorm === q);
-            const exact = exactFull || exactPartial;
-            if(exact) submitBtAnswer(exact.title, exact.tier, inCreator);
+            const first = suggBox.querySelector('.btSuggestItem');
+            if(first) submitBtAnswer(first.dataset.t, first.dataset.tier, inCreator);
           }
         });
+        // restaure le brouillon (suggestions + position du curseur) après un rafraîchissement
+        if(btDraftAnswer){
+          renderSuggestions(stripAccents(btDraftAnswer.trim().toLowerCase()));
+        }
         guessInput.focus();
+        const len = guessInput.value.length;
+        guessInput.setSelectionRange(len, len);
       }
     }
 
@@ -3577,6 +3640,8 @@ async function submitBtAnswer(chosen, tier, inCreator){
   me.answered = true;
   me.lastCorrect = correct;
   me.lastPoints = points;
+  me.lastAnswerText = chosen;
+  btDraftAnswer = '';
   me.score = (me.score||0) + points;
   await saveBtGame();
   if(points > 0) await addPoints(key, points);
@@ -3659,11 +3724,22 @@ function renderWheel(){
               <button class="addbtn" id="wheelAddBtn">+ Ajouter</button>
             </div>
             <div id="wheelList"></div>
+            <div class="sectionLabel">Propositions des viewers (<span id="wsCount">${wheelSuggestions.filter(s=>s.status==='pending').length}</span>)</div>
+            <div id="wheelSuggList"></div>
           </div>
         ` : `
           <div class="wheelManage">
             <div class="sectionLabel" style="margin-top:0;">Titres sur la roue</div>
             <div id="wheelList"></div>
+            <div class="sectionLabel">Proposer un film</div>
+            <div class="twitchbox" style="max-width:100%;">
+              <label>Titre du film</label>
+              <input type="text" id="wsTitle" placeholder="ex : Old Boy">
+              <label>Lien vers un trailer (optionnel)</label>
+              <input type="text" id="wsTrailer" placeholder="https://youtube.com/...">
+              <div class="hint" id="wsStatus" style="min-height:16px;"></div>
+              <button class="btn primary" id="wsSubmitBtn" style="width:100%;">Proposer au créateur</button>
+            </div>
           </div>
         `}
       </div>
@@ -3708,7 +3784,68 @@ function renderWheel(){
 
     const spinBtn = document.getElementById('spinBtn');
     if(spinBtn) spinBtn.onclick = () => spinTheWheel();
+
+    drawWheelSuggestions();
+  } else {
+    const wsBtn = document.getElementById('wsSubmitBtn');
+    const wsStatus = document.getElementById('wsStatus');
+    wsBtn.onclick = async () => {
+      const title = document.getElementById('wsTitle').value.trim();
+      const trailerUrl = document.getElementById('wsTrailer').value.trim();
+      if(!title){ wsStatus.style.color = 'var(--rate-red)'; wsStatus.textContent = 'Ajoute un titre.'; return; }
+      await loadWheelSuggestions();
+      wheelSuggestions.push({
+        id: 'ws-' + Math.random().toString(36).slice(2,10),
+        title, trailerUrl, submittedBy: viewerName || '?', status: 'pending', submittedAt: Date.now()
+      });
+      await saveWheelSuggestions();
+      wsStatus.style.color = 'var(--rate-green)';
+      wsStatus.textContent = '✓ Proposition envoyée, le créateur va la regarder !';
+      document.getElementById('wsTitle').value = '';
+      document.getElementById('wsTrailer').value = '';
+    };
   }
+}
+
+function drawWheelSuggestions(){
+  const wrap = document.getElementById('wheelSuggList');
+  if(!wrap) return;
+  const pending = wheelSuggestions.filter(s => s.status === 'pending');
+  if(pending.length === 0){
+    wrap.innerHTML = `<div class="empty" style="padding:20px 14px;"><div class="ic">📭</div><div>Aucune proposition en attente.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = pending.map(s => `
+    <div class="btTrackRow">
+      <span class="t">${escapeHtml(s.title)} <span style="color:var(--text-dim);font-size:11px;">— par ${escapeHtml(s.submittedBy)}</span></span>
+      ${s.trailerUrl ? `<a href="${escapeHtml(s.trailerUrl)}" target="_blank" rel="noopener" class="pill" style="text-decoration:none;">▶️ Trailer</a>` : ''}
+      <button class="del" id="wsApprove-${s.id}" title="Ajouter à la roue">✓</button>
+      <button class="del" id="wsReject-${s.id}" title="Refuser">✕</button>
+    </div>
+  `).join('');
+  pending.forEach(s => {
+    const app_ = document.getElementById(`wsApprove-${s.id}`);
+    if(app_) app_.onclick = async () => {
+      await loadWheel();
+      await loadWheelSuggestions();
+      wheelItems.push({id: 'w-' + Math.random().toString(36).slice(2,9), label: s.title});
+      await saveWheel();
+      const fresh = wheelSuggestions.find(x => x.id === s.id);
+      if(fresh) fresh.status = 'approved';
+      await saveWheelSuggestions();
+      renderWheel();
+    };
+    const rej = document.getElementById(`wsReject-${s.id}`);
+    if(rej) rej.onclick = async () => {
+      await loadWheelSuggestions();
+      const fresh = wheelSuggestions.find(x => x.id === s.id);
+      if(fresh) fresh.status = 'rejected';
+      await saveWheelSuggestions();
+      drawWheelSuggestions();
+      const countEl = document.getElementById('wsCount');
+      if(countEl) countEl.textContent = wheelSuggestions.filter(x=>x.status==='pending').length;
+    };
+  });
 }
 
 function spinTheWheel(){
@@ -3921,9 +4058,11 @@ async function processSession(){
   await loadSettings();
   await loadScores();
   await loadWheel();
+  await loadWheelSuggestions();
   await loadWheelState();
   await loadSoleil();
   await loadBtTracks();
+  await loadBtPlaylists();
   await loadBtGame();
 
   await processSession();
