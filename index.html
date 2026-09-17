@@ -386,6 +386,15 @@
     font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;
     color:var(--text-dim);margin:18px 0 10px;
   }
+  .ratersList{max-height:220px;overflow-y:auto;margin-bottom:6px;}
+  .raterRow{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 0;border-bottom:1px solid var(--border);
+    font-family:'Space Grotesk',sans-serif;font-size:13px;
+  }
+  .raterRow:last-child{border-bottom:none;}
+  .raterName{font-weight:600;color:var(--text);}
+  .raterScore{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap;}
 
   .schbtn{
     background:none;border:none;color:var(--text-dim);
@@ -896,6 +905,7 @@ const WHEEL_SUGGESTIONS_KEY = 'wheelSuggestions';
 const SOLEIL_KEY = 'soleilGame';
 const BT_TRACKS_KEY = 'blindtestTracks';
 const BT_PLAYLISTS_KEY = 'blindtestPlaylists';
+const CURRENCY_KEY = 'viewerCurrency';
 const BT_GAME_KEY = 'blindtestGame';
 const BT_BUCKET = 'blindtest-audio';
 
@@ -911,6 +921,7 @@ let wheelState = {}; // {lastWinner, lastSpinAt}
 let soleilGame = {status:'idle', light:'green', target:100, players:{}, winner:null};
 let btTracks = [];
 let btPlaylists = {}; // { "Nom Anime": true/false }
+let viewerCurrency = {}; // { key: solde }
 let btGame = {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
 let filter = 'all';
 let query = '';
@@ -918,7 +929,7 @@ let genreFilter = 'all';
 let sagaFilter = 'all';
 let selectedSaga = null;
 let sortBy = 'recent';
-let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games | soleil | blindtest-admin | blindtest
+let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games | soleil | blindtest-admin | blindtest | currency
 let viewerName = null;
 let isCreatorAccount = false;
 let selectedViewerKey = null;
@@ -974,6 +985,16 @@ async function loadBtTracks(){ btTracks = (await kvGet(BT_TRACKS_KEY)) || []; }
 async function saveBtTracks(){ await kvSet(BT_TRACKS_KEY, btTracks); }
 async function loadBtPlaylists(){ btPlaylists = (await kvGet(BT_PLAYLISTS_KEY)) || {}; }
 async function saveBtPlaylists(){ await kvSet(BT_PLAYLISTS_KEY, btPlaylists); }
+async function loadCurrency(){ viewerCurrency = (await kvGet(CURRENCY_KEY)) || {}; }
+async function saveCurrency(){ await kvSet(CURRENCY_KEY, viewerCurrency); }
+function currencyName(){ return (creatorSettings && creatorSettings.currencyName) || 'Pièces'; }
+function currencyRate(){ return (creatorSettings && creatorSettings.currencyRate) || 10; }
+async function addCurrency(key, amount){
+  await loadCurrency();
+  viewerCurrency[key] = Math.max(0, (viewerCurrency[key] || 0) + amount);
+  await saveCurrency();
+  return viewerCurrency[key];
+}
 function isPlaylistEnabled(name){ return btPlaylists[name] !== false; }
 function getBtPlaylistGroups(){
   const map = {};
@@ -1010,6 +1031,42 @@ function impliedAnimeName(t){
 function escapeHtml(str){
   if(!str) return '';
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function getAllRatersFor(it){
+  if(isEpisodic(it.type)){
+    const map = {};
+    (it.seasons||[]).forEach(s => (s.episodes||[]).forEach(e => {
+      (viewerRatings[episodeKey(it.id, s.number, e.number)] || []).forEach(r => {
+        const k = r.who.toLowerCase();
+        if(!map[k]) map[k] = {display: r.who, scores: []};
+        map[k].scores.push(r.score);
+      });
+    }));
+    return Object.values(map)
+      .map(v => ({display: v.display, avg: v.scores.reduce((a,b)=>a+b,0)/v.scores.length, count: v.scores.length}))
+      .sort((a,b) => b.avg - a.avg);
+  }
+  return (viewerRatings[it.id] || [])
+    .slice()
+    .sort((a,b) => (b.score||0) - (a.score||0))
+    .map(r => ({display: r.who, avg: r.score, count: 1}));
+}
+
+function ratersListHtml(it){
+  const raters = getAllRatersFor(it);
+  if(raters.length === 0) return '';
+  return `
+    <div class="commentsTitle">Notes des viewers (${raters.length})</div>
+    <div class="ratersList">
+      ${raters.map(r => `
+        <div class="raterRow">
+          <span class="raterName">${escapeHtml(r.display)}</span>
+          <span class="raterScore" style="color:${ratingColor(r.avg)}">${r.avg % 1 === 0 ? r.avg : r.avg.toFixed(1)}/10${r.count>1 ? ` <span style="opacity:0.6;">(${r.count} ép.)</span>` : ''}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function ratingColor(v){
@@ -1144,6 +1201,7 @@ function render(){
   if(mode === 'soleil') return renderSoleil();
   if(mode === 'blindtest-admin') return renderBtAdmin();
   if(mode === 'blindtest') return renderBlindtest();
+  if(mode === 'currency') return renderCurrency();
   if(mode === 'wheel') return renderWheel();
   if(mode === 'dashboard') return renderDashboard();
 }
@@ -1162,6 +1220,7 @@ function navHtml(activeKey, ctx){
           <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
           <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
           <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
+          <button class="sidebarLink ${activeKey==='currency'?'active':''}" data-go="currency"><span class="sIcon">💰</span><span class="lbl">Monnaie</span></button>
         </div>
         <div class="sidebarBottom">
           <button class="sidebarLink" id="navSettings"><span class="sIcon">⚙️</span><span class="lbl">Réglages</span></button>
@@ -1179,6 +1238,7 @@ function navHtml(activeKey, ctx){
         <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
         <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
         <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
+        <button class="sidebarLink ${activeKey==='currency'?'active':''}" data-go="currency"><span class="sIcon">💰</span><span class="lbl">Monnaie</span></button>
         ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="sIcon">🔒</span><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
       <div class="sidebarBottom">
@@ -1194,6 +1254,7 @@ function wireNav(ctx){
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'wheel') wheelViewFromCreator = (ctx === 'creator');
+      if(b.dataset.go === 'currency') currencyViewFromCreator = (ctx === 'creator');
       setMode(b.dataset.go);
     };
   });
@@ -2113,6 +2174,7 @@ function openDetail(id){
             </div>
           `).join('')}
         ` : ''}
+        ${ratersListHtml(it)}
         <div class="modalbtns">
           <button class="btn danger" id="delBtn">Supprimer</button>
           <button class="btn ghost" id="editBtn">Modifier</button>
@@ -2195,6 +2257,16 @@ function openViewerRate(id){
         <textarea id="commentInput" placeholder="Ce que tu en as pensé...">${escapeHtml(mine && mine.comment ? mine.comment : '')}</textarea>
         ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
         ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="rediffLink">▶ Voir la rediff</a>` : ''}
+        ${(viewerRatings[id]||[]).some(r=>r.comment) ? `
+          <div class="commentsTitle">Avis des viewers</div>
+          ${(viewerRatings[id]||[]).filter(r=>r.comment).slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).map(r => `
+            <div class="comment">
+              <div class="who"><span>📺 ${escapeHtml(r.who)}</span><span style="color:${ratingColor(r.score)}">${r.score % 1 === 0 ? r.score : r.score.toFixed(1)}/10</span></div>
+              <div class="txt">${escapeHtml(r.comment)}</div>
+            </div>
+          `).join('')}
+        ` : ''}
+        ${ratersListHtml(it)}
         <div class="modalbtns">
           <button class="btn ghost" id="closeBtn">Fermer</button>
           <button class="btn primary" id="submitBtn">${mine ? 'Mettre à jour ma note' : 'Envoyer ma note'}</button>
@@ -2518,6 +2590,13 @@ function openCreatorSettings(){
         <div class="hint" style="text-align:left;margin-bottom:16px;">
           C'est le nom de chaîne utilisé pour afficher ton stream en direct dans l'onglet « Stream » du site.
         </div>
+        <label>Nom de ta monnaie virtuelle</label>
+        <input type="text" id="sCurrencyName" value="${escapeHtml(creatorSettings.currencyName||'Pièces')}" placeholder="ex : Noisettes">
+        <label>Taux de conversion (points de jeu pour 1 pièce)</label>
+        <input type="text" inputmode="numeric" id="sCurrencyRate" value="${creatorSettings.currencyRate||10}" placeholder="10">
+        <div class="hint" style="text-align:left;margin-bottom:16px;">
+          Les viewers convertissent leurs points de mini-jeux en monnaie à ce taux.
+        </div>
         <div class="modalbtns">
           <button class="btn ghost" id="cancelBtn">Annuler</button>
           <button class="btn primary" id="saveBtn">Enregistrer</button>
@@ -2537,6 +2616,8 @@ function openCreatorSettings(){
   };
   document.getElementById('saveBtn').onclick = async () => {
     creatorSettings.twitchChannel = document.getElementById('sChannel').value.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i,'');
+    creatorSettings.currencyName = document.getElementById('sCurrencyName').value.trim() || 'Pièces';
+    creatorSettings.currencyRate = Math.max(1, parseInt(document.getElementById('sCurrencyRate').value, 10) || 10);
     await saveSettings();
     closeModal();
     if(mode === 'stream-view') render();
@@ -3254,9 +3335,9 @@ async function renderBlindtest(){
     const stageEl = document.getElementById('btStageWrap');
     const inStage = stageEl && stageEl.contains(active);
     if(active && inStage && (active.tagName === 'SELECT' || (active.tagName === 'INPUT' && btGame.status !== 'playing'))) return;
-    const scrollY = window.scrollY;
     await loadBtGame();
     await loadBtTracks();
+    const scrollY = window.scrollY;
     drawBt(inCreator);
     window.scrollTo(0, scrollY);
   }, 1000);
@@ -3516,9 +3597,11 @@ function drawBt(inCreator){
         if(btDraftAnswer){
           renderSuggestions(stripAccents(btDraftAnswer.trim().toLowerCase()));
         }
-        guessInput.focus();
-        const len = guessInput.value.length;
-        guessInput.setSelectionRange(len, len);
+        if(document.activeElement !== guessInput){
+          guessInput.focus();
+          const len = guessInput.value.length;
+          guessInput.setSelectionRange(len, len);
+        }
       }
     }
 
@@ -3639,43 +3722,51 @@ async function startBtRound(inCreator){
   drawBt(inCreator);
 }
 
+let btSubmitLock = false;
 async function submitBtAnswer(rawText, inCreator){
-  await loadBtGame();
-  const key = (viewerName||'').toLowerCase();
-  const me = btGame.players[key];
-  if(!me || me.answered || btGame.status !== 'playing'){ drawBt(inCreator); return; }
-  const track = btGame.currentTrack;
-  const trackFull = btTracks.find(t => t.id === track.id) || {};
-  const anime = impliedAnimeName(trackFull) || track.animeName || '';
-  const tokens = stripAccents((rawText||'').trim().toLowerCase()).split(/\s+/).filter(Boolean);
-  const fullText = stripAccents((track.title||'').toLowerCase());
-  const wideText = stripAccents([anime, ...(trackFull.aliases||[]), track.category, track.title].filter(Boolean).join(' ').toLowerCase());
+  if(btSubmitLock) return;
+  if(!rawText || !rawText.trim()) return;
+  btSubmitLock = true;
+  try{
+    await loadBtGame();
+    const key = (viewerName||'').toLowerCase();
+    const me = btGame.players[key];
+    if(!me || me.answered || btGame.status !== 'playing'){ drawBt(inCreator); return; }
+    const track = btGame.currentTrack;
+    const trackFull = btTracks.find(t => t.id === track.id) || {};
+    const anime = impliedAnimeName(trackFull) || track.animeName || '';
+    const tokens = stripAccents((rawText||'').trim().toLowerCase()).split(/\s+/).filter(Boolean);
+    const fullText = stripAccents((track.title||'').toLowerCase());
+    const wideText = stripAccents([anime, ...(trackFull.aliases||[]), track.category, track.title].filter(Boolean).join(' ').toLowerCase());
 
-  let tier = null;
-  if(tokens.length && tokens.every(tok => fullText.includes(tok))) tier = 'full';
-  else if(tokens.length && tokens.every(tok => wideText.includes(tok))) tier = 'partial';
-  const correct = tier !== null;
+    let tier = null;
+    if(tokens.length && tokens.every(tok => fullText.includes(tok))) tier = 'full';
+    else if(tokens.length && tokens.every(tok => wideText.includes(tok))) tier = 'partial';
+    const correct = tier !== null;
 
-  const elapsed = btLocalRoundStartedAt ? (Date.now() - btLocalRoundStartedAt) / 1000 : 0;
-  let points = 0;
-  if(correct){
-    const timer = btGame.timerSeconds || 30;
-    const decayRate = 100 / timer;
-    const base = Math.max(0, 100 - elapsed*decayRate);
-    const diff = track.difficulty || 'Normal';
-    const diffMult = diff === 'Difficile' ? 1.75 : diff === 'Normal' ? 1.25 : 1;
-    const tierMult = tier === 'partial' ? 0.5 : 1;
-    points = Math.max(20, Math.round(base * diffMult * tierMult));
-  }
-  me.answered = true;
-  me.lastCorrect = correct;
-  me.lastPoints = points;
+    const elapsed = btLocalRoundStartedAt ? (Date.now() - btLocalRoundStartedAt) / 1000 : 0;
+    let points = 0;
+    if(correct){
+      const timer = btGame.timerSeconds || 30;
+      const decayRate = 100 / timer;
+      const base = Math.max(0, 100 - elapsed*decayRate);
+      const diff = track.difficulty || 'Normal';
+      const diffMult = diff === 'Difficile' ? 1.75 : diff === 'Normal' ? 1.25 : 1;
+      const tierMult = tier === 'partial' ? 0.5 : 1;
+      points = Math.max(20, Math.round(base * diffMult * tierMult));
+    }
+    me.answered = true;
+    me.lastCorrect = correct;
+    me.lastPoints = points;
   me.lastAnswerText = rawText;
   btDraftAnswer = '';
-  me.score = (me.score||0) + points;
-  await saveBtGame();
-  if(points > 0) await addPoints(key, points);
-  drawBt(inCreator);
+    me.score = (me.score||0) + points;
+    await saveBtGame();
+    if(points > 0) await addPoints(key, points);
+    drawBt(inCreator);
+  } finally {
+    btSubmitLock = false;
+  }
 }
 
 function revealBtRound(inCreator){
@@ -3721,7 +3812,6 @@ function buildWheelSVG(wItems){
   });
   return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${paths}${texts}</svg>`;
 }
-
 function renderWheel(){
   const inCreator = wheelViewFromCreator;
   app.innerHTML = `
@@ -3932,6 +4022,131 @@ function spinTheWheel(){
   }, 4300);
 }
 
+/* ---------- MONNAIE VIRTUELLE ---------- */
+let currencyViewFromCreator = true;
+
+function renderCurrency(){
+  const inCreator = currencyViewFromCreator;
+  const name = currencyName();
+  const rate = currencyRate();
+
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('currency', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">💰 ${escapeHtml(name.toUpperCase())}</h1>
+        <div class="tag">${inCreator ? 'gère les soldes de tes viewers' : `1 ${escapeHtml(name)} = ${rate} points de mini-jeux`}</div>
+      </div>
+      <div id="currencyWrap"></div>
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+
+  if(inCreator){
+    drawCurrencyAdmin();
+  } else {
+    drawCurrencyViewer();
+  }
+}
+
+function drawCurrencyViewer(){
+  const wrap = document.getElementById('currencyWrap');
+  const key = (viewerName||'').toLowerCase();
+  const points = gameScores[key] || 0;
+  const balance = viewerCurrency[key] || 0;
+  const rate = currencyRate();
+  const name = currencyName();
+
+  wrap.innerHTML = `
+    <div class="myPointsBox">
+      <div class="n">${balance}</div>
+      <div class="l">${escapeHtml(name)}</div>
+    </div>
+    <div class="tag" style="text-align:center;margin:10px 0 20px;">${points} points de mini-jeux disponibles</div>
+    <div class="twitchbox" style="max-width:420px;margin:0 auto;">
+      <label>Convertir des points en ${escapeHtml(name)}</label>
+      <input type="text" inputmode="numeric" id="curConvertInput" placeholder="ex : 100">
+      <div class="hint" id="curConvertPreview">→ 0 ${escapeHtml(name)} (taux : ${rate} points = 1 ${escapeHtml(name)})</div>
+      <div class="hint" id="curConvertStatus" style="min-height:16px;"></div>
+      <button class="btn primary" id="curConvertBtn" style="width:100%;margin-top:10px;">Convertir</button>
+    </div>
+  `;
+
+  const input = document.getElementById('curConvertInput');
+  const preview = document.getElementById('curConvertPreview');
+  input.addEventListener('input', () => {
+    const amt = Math.max(0, parseInt(input.value, 10) || 0);
+    const result = Math.floor(amt / rate);
+    preview.textContent = `→ ${result} ${name} (taux : ${rate} points = 1 ${name})`;
+  });
+
+  document.getElementById('curConvertBtn').onclick = async () => {
+    const status = document.getElementById('curConvertStatus');
+    const amt = Math.max(0, parseInt(input.value, 10) || 0);
+    const result = Math.floor(amt / rate);
+    if(result <= 0){
+      status.style.color = 'var(--rate-red)';
+      status.textContent = `Il faut au moins ${rate} points pour convertir.`;
+      return;
+    }
+    await loadScores();
+    const currentPoints = gameScores[key] || 0;
+    if(amt > currentPoints){
+      status.style.color = 'var(--rate-red)';
+      status.textContent = `Tu n'as que ${currentPoints} points disponibles.`;
+      return;
+    }
+    const spent = result * rate;
+    gameScores[key] = currentPoints - spent;
+    await saveScores();
+    await addCurrency(key, result);
+    status.style.color = 'var(--rate-green)';
+    status.textContent = `✓ ${spent} points convertis en ${result} ${name} !`;
+    input.value = '';
+    drawCurrencyViewer();
+  };
+}
+
+function drawCurrencyAdmin(){
+  const wrap = document.getElementById('currencyWrap');
+  const name = currencyName();
+  const keys = Array.from(new Set([...Object.keys(viewerProfiles), ...Object.keys(viewerCurrency)]));
+  const rows = keys
+    .map(key => ({key, display: (viewerProfiles[key] && viewerProfiles[key].display) || key, balance: viewerCurrency[key] || 0}))
+    .sort((a,b) => b.balance - a.balance);
+
+  wrap.innerHTML = `
+    <div class="hint" style="margin-bottom:16px;">
+      Utilise « Ajuster » pour créditer manuellement quelqu'un (ex : échange de points de chaîne Twitch validé à la main).
+    </div>
+    <div id="curAdminList"></div>
+  `;
+
+  const listEl = document.getElementById('curAdminList');
+  if(rows.length === 0){
+    listEl.innerHTML = `<div class="empty"><div class="ic">💰</div><div>Aucun viewer pour l'instant.</div></div>`;
+    return;
+  }
+  listEl.innerHTML = rows.map(r => `
+    <div class="btRoundPlayerRow">
+      <span class="n">${escapeHtml(r.display)}</span>
+      <span class="pts">${r.balance} ${escapeHtml(name)}</span>
+      <button class="pill" id="adj-${escapeHtml(r.key)}">Ajuster</button>
+    </div>
+  `).join('');
+  rows.forEach(r => {
+    const btn = document.getElementById(`adj-${r.key}`);
+    if(btn) btn.onclick = async () => {
+      const raw = prompt(`Ajouter (ou retirer avec un -) combien de ${name} pour ${r.display} ?`, '0');
+      if(raw === null) return;
+      const delta = parseInt(raw, 10);
+      if(!delta || isNaN(delta)) return;
+      await addCurrency(r.key, delta);
+      drawCurrencyAdmin();
+    };
+  });
+}
+
 /* ---------- DASHBOARD (créateur) ---------- */
 function computeDashboardStats(){
   let best = null, bestVal = 0;
@@ -4092,6 +4307,7 @@ async function processSession(){
   await loadProfiles();
   await loadSettings();
   await loadScores();
+  await loadCurrency();
   await loadWheel();
   await loadWheelSuggestions();
   await loadWheelState();
