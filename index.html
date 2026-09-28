@@ -905,9 +905,9 @@ const WHEEL_SUGGESTIONS_KEY = 'wheelSuggestions';
 const SOLEIL_KEY = 'soleilGame';
 const BT_TRACKS_KEY = 'blindtestTracks';
 const BT_PLAYLISTS_KEY = 'blindtestPlaylists';
-const CURRENCY_KEY = 'viewerCurrency';
 const BT_GAME_KEY = 'blindtestGame';
 const BT_BUCKET = 'blindtest-audio';
+const UC_KEY = 'undercoverGame';
 
 let items = [];
 let viewerRatings = {}; // { movieId: [{who, score, comment, ts}] }
@@ -921,15 +921,15 @@ let wheelState = {}; // {lastWinner, lastSpinAt}
 let soleilGame = {status:'idle', light:'green', target:100, players:{}, winner:null};
 let btTracks = [];
 let btPlaylists = {}; // { "Nom Anime": true/false }
-let viewerCurrency = {}; // { key: solde }
 let btGame = {status:'idle', categories:[], pool:[], currentTrack:null, options:null, playStartedAt:null, players:{}, round:0};
+let ucGame = {status:'idle', targetPlayers:6, numUndercover:1, includeMrWhite:false, civilianWord:'', undercoverWord:'', players:{}, round:0, votes:{}, eliminatedHistory:[], winner:null};
 let filter = 'all';
 let query = '';
 let genreFilter = 'all';
 let sagaFilter = 'all';
 let selectedSaga = null;
 let sortBy = 'recent';
-let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games | soleil | blindtest-admin | blindtest | currency
+let mode = 'select'; // select | creator | viewer | viewers-list | viewer-profile | schedule | schedule-view | viewer-login | stream-view | games | soleil | blindtest-admin | blindtest
 let viewerName = null;
 let isCreatorAccount = false;
 let selectedViewerKey = null;
@@ -985,17 +985,17 @@ async function loadBtTracks(){ btTracks = (await kvGet(BT_TRACKS_KEY)) || []; }
 async function saveBtTracks(){ await kvSet(BT_TRACKS_KEY, btTracks); }
 async function loadBtPlaylists(){ btPlaylists = (await kvGet(BT_PLAYLISTS_KEY)) || {}; }
 async function saveBtPlaylists(){ await kvSet(BT_PLAYLISTS_KEY, btPlaylists); }
-async function loadCurrency(){ viewerCurrency = (await kvGet(CURRENCY_KEY)) || {}; }
-async function saveCurrency(){ await kvSet(CURRENCY_KEY, viewerCurrency); }
-function currencyName(){ return (creatorSettings && creatorSettings.currencyName) || 'Pièces'; }
-function currencyRate(){ return (creatorSettings && creatorSettings.currencyRate) || 10; }
-async function addCurrency(key, amount){
-  await loadCurrency();
-  viewerCurrency[key] = Math.max(0, (viewerCurrency[key] || 0) + amount);
-  await saveCurrency();
-  return viewerCurrency[key];
-}
 function isPlaylistEnabled(name){ return btPlaylists[name] !== false; }
+const UC_DEFAULT = {status:'idle', targetPlayers:6, numUndercover:1, includeMrWhite:false, civilianWord:'', undercoverWord:'', players:{}, round:0, votes:{}, eliminatedHistory:[], winner:null};
+async function loadUc(){ ucGame = (await kvGet(UC_KEY)) || {...UC_DEFAULT}; }
+async function saveUc(){ await kvSet(UC_KEY, ucGame); }
+const UC_WORD_BANK = [
+  ['Plage','Désert'], ['Chat','Chien'], ['Café','Thé'], ['Pizza','Burger'], ['Piscine','Mer'],
+  ['Voiture','Moto'], ['Hôpital','École'], ['Pomme','Poire'], ['Guitare','Piano'], ['Netflix','YouTube'],
+  ['Docteur','Infirmier'], ['Pilote','Steward'], ['Vampire','Zombie'], ['Ninja','Pirate'], ['Hiver','Été'],
+  ['Montagne','Colline'], ['Robot','Alien'], ['Roi','Président'], ['Sorcière','Fée'], ['Twitch','YouTube'],
+  ['Fourchette','Baguette'], ['Sushi','Ramen'], ['Batman','Superman'], ['Île','Continent'], ['Pluie','Neige']
+];
 function getBtPlaylistGroups(){
   const map = {};
   btTracks.forEach(t => {
@@ -1201,7 +1201,7 @@ function render(){
   if(mode === 'soleil') return renderSoleil();
   if(mode === 'blindtest-admin') return renderBtAdmin();
   if(mode === 'blindtest') return renderBlindtest();
-  if(mode === 'currency') return renderCurrency();
+  if(mode === 'undercover') return renderUndercover();
   if(mode === 'wheel') return renderWheel();
   if(mode === 'dashboard') return renderDashboard();
 }
@@ -1220,7 +1220,6 @@ function navHtml(activeKey, ctx){
           <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
           <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
           <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
-          <button class="sidebarLink ${activeKey==='currency'?'active':''}" data-go="currency"><span class="sIcon">💰</span><span class="lbl">Monnaie</span></button>
         </div>
         <div class="sidebarBottom">
           <button class="sidebarLink" id="navSettings"><span class="sIcon">⚙️</span><span class="lbl">Réglages</span></button>
@@ -1238,7 +1237,6 @@ function navHtml(activeKey, ctx){
         <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
         <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
         <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
-        <button class="sidebarLink ${activeKey==='currency'?'active':''}" data-go="currency"><span class="sIcon">💰</span><span class="lbl">Monnaie</span></button>
         ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="sIcon">🔒</span><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
       <div class="sidebarBottom">
@@ -1254,7 +1252,6 @@ function wireNav(ctx){
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'wheel') wheelViewFromCreator = (ctx === 'creator');
-      if(b.dataset.go === 'currency') currencyViewFromCreator = (ctx === 'creator');
       setMode(b.dataset.go);
     };
   });
@@ -2590,13 +2587,6 @@ function openCreatorSettings(){
         <div class="hint" style="text-align:left;margin-bottom:16px;">
           C'est le nom de chaîne utilisé pour afficher ton stream en direct dans l'onglet « Stream » du site.
         </div>
-        <label>Nom de ta monnaie virtuelle</label>
-        <input type="text" id="sCurrencyName" value="${escapeHtml(creatorSettings.currencyName||'Pièces')}" placeholder="ex : Noisettes">
-        <label>Taux de conversion (points de jeu pour 1 pièce)</label>
-        <input type="text" inputmode="numeric" id="sCurrencyRate" value="${creatorSettings.currencyRate||10}" placeholder="10">
-        <div class="hint" style="text-align:left;margin-bottom:16px;">
-          Les viewers convertissent leurs points de mini-jeux en monnaie à ce taux.
-        </div>
         <div class="modalbtns">
           <button class="btn ghost" id="cancelBtn">Annuler</button>
           <button class="btn primary" id="saveBtn">Enregistrer</button>
@@ -2616,8 +2606,6 @@ function openCreatorSettings(){
   };
   document.getElementById('saveBtn').onclick = async () => {
     creatorSettings.twitchChannel = document.getElementById('sChannel').value.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i,'');
-    creatorSettings.currencyName = document.getElementById('sCurrencyName').value.trim() || 'Pièces';
-    creatorSettings.currencyRate = Math.max(1, parseInt(document.getElementById('sCurrencyRate').value, 10) || 10);
     await saveSettings();
     closeModal();
     if(mode === 'stream-view') render();
@@ -2708,6 +2696,11 @@ function renderGames(){
           <div class="gtitle">Blind Test</div>
           <div class="gdesc">${inCreator ? "Choisis tes catégories (opening, ending, OST...), lance la partie, les viewers devinent en direct." : "Écoute l'extrait et devine le titre avant les autres pour marquer plus de points !"}</div>
         </div>
+        <div class="gameCard" id="gameUndercover">
+          <div class="gicon">🕵️</div>
+          <div class="gtitle">Undercover</div>
+          <div class="gdesc">${inCreator ? "Choisis le nombre de joueurs et d'infiltrés, lance la partie, chacun reçoit son mot en secret." : "Reçois ton mot en secret, décris-le sans te faire démasquer !"}</div>
+        </div>
       </div>
       ${inCreator ? `<button class="addbtn" id="manageBtTracks" style="margin-bottom:10px;">🎼 Gérer la bibliothèque de musiques</button>` : ''}
       <div class="sectionLabel">Classement${inCreator ? ` <button class="pill" id="resetLeaderboard" style="margin-left:10px;">🗑️ Reset</button>` : ''}</div>
@@ -2723,6 +2716,10 @@ function renderGames(){
   document.getElementById('gameBlindtest').onclick = () => {
     btViewFromCreator = inCreator;
     setMode('blindtest');
+  };
+  document.getElementById('gameUndercover').onclick = () => {
+    ucViewFromCreator = inCreator;
+    setMode('undercover');
   };
   const mbt = document.getElementById('manageBtTracks');
   if(mbt) mbt.onclick = () => setMode('blindtest-admin');
@@ -3812,6 +3809,312 @@ function buildWheelSVG(wItems){
   });
   return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">${paths}${texts}</svg>`;
 }
+/* ---------- UNDERCOVER ---------- */
+let ucViewFromCreator = true;
+let ucPollTimer = null;
+
+function stopUcPoll(){ if(ucPollTimer){ clearInterval(ucPollTimer); ucPollTimer = null; } }
+
+function renderUndercover(){
+  const inCreator = ucViewFromCreator;
+  stopUcPoll();
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('games', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">🕵️ UNDERCOVER</h1>
+        <div class="tag">${inCreator ? 'configure la partie et modère les votes' : 'décris ton mot sans te faire démasquer'}</div>
+      </div>
+      <div id="ucStageWrap"></div>
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+  drawUc(inCreator);
+  ucPollTimer = setInterval(async () => {
+    const active = document.activeElement;
+    const stageEl = document.getElementById('ucStageWrap');
+    const inStage = stageEl && stageEl.contains(active);
+    if(active && inStage && (active.tagName === 'INPUT' || active.tagName === 'SELECT')) return;
+    await loadUc();
+    const scrollY = window.scrollY;
+    drawUc(inCreator);
+    window.scrollTo(0, scrollY);
+  }, 1500);
+}
+
+function ucAlivePlayers(){ return Object.entries(ucGame.players||{}).filter(([,p]) => p.alive); }
+function ucRoleLabel(role){ return role === 'undercover' ? '🕶️ Undercover' : role === 'mrwhite' ? '❓ Mr White' : '👤 Civil'; }
+
+function drawUc(inCreator){
+  const wrap = document.getElementById('ucStageWrap');
+  if(!wrap){ stopUcPoll(); return; }
+  const g = ucGame;
+  const key = (viewerName||'').toLowerCase();
+
+  if(g.status === 'idle'){
+    wrap.innerHTML = inCreator ? `
+      <div class="twitchbox" style="max-width:480px;">
+        <label>Nombre de joueurs visé</label>
+        <input type="text" inputmode="numeric" id="ucTarget" value="6">
+        <label>Nombre d'infiltrés (Undercover)</label>
+        <input type="text" inputmode="numeric" id="ucNumUndercover" value="1">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+          <input type="checkbox" id="ucMrWhite" style="width:auto;"> Inclure un Mr White (aucun mot, doit bluffer)
+        </label>
+        <label style="margin-top:14px;">Mot des civils</label>
+        <input type="text" id="ucCivilWord" placeholder="ex : Plage">
+        <label>Mot des undercover</label>
+        <input type="text" id="ucUndercoverWord" placeholder="ex : Désert">
+        <button class="addbtn" id="ucRandomWordBtn" style="margin:6px 0 4px;">🎲 Paire de mots aléatoire</button>
+        <div class="hint" id="ucCreateStatus" style="min-height:16px;"></div>
+        <button class="btn primary" id="ucCreateBtn" style="width:100%;margin-top:8px;">Créer le lobby</button>
+      </div>
+    ` : `<div class="empty"><div class="ic">🕵️</div><div>Aucune partie d'Undercover en cours.</div></div>`;
+
+    if(inCreator){
+      document.getElementById('ucRandomWordBtn').onclick = () => {
+        const pair = UC_WORD_BANK[Math.floor(Math.random()*UC_WORD_BANK.length)];
+        document.getElementById('ucCivilWord').value = pair[0];
+        document.getElementById('ucUndercoverWord').value = pair[1];
+      };
+      document.getElementById('ucCreateBtn').onclick = async () => {
+        const statusEl = document.getElementById('ucCreateStatus');
+        const targetPlayers = Math.max(3, parseInt(document.getElementById('ucTarget').value, 10) || 6);
+        const numUndercover = Math.max(1, parseInt(document.getElementById('ucNumUndercover').value, 10) || 1);
+        const includeMrWhite = document.getElementById('ucMrWhite').checked;
+        const civilianWord = document.getElementById('ucCivilWord').value.trim();
+        const undercoverWord = document.getElementById('ucUndercoverWord').value.trim();
+        if(!civilianWord || !undercoverWord){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = 'Renseigne les deux mots (ou clique sur 🎲).'; return; }
+        if(numUndercover + (includeMrWhite?1:0) >= targetPlayers){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = "Trop d'infiltrés par rapport au nombre de joueurs."; return; }
+        ucGame = {status:'lobby', targetPlayers, numUndercover, includeMrWhite, civilianWord, undercoverWord, players:{}, round:0, votes:{}, eliminatedHistory:[], winner:null, lastElimination:null};
+        await saveUc();
+        drawUc(inCreator);
+      };
+    }
+    return;
+  }
+
+  if(g.status === 'lobby'){
+    const joined = Object.keys(g.players||{}).length;
+    const meJoined = !!g.players[key];
+    wrap.innerHTML = `
+      <div class="tag" style="margin-bottom:4px;">${joined} / ${g.targetPlayers} joueurs · ${g.numUndercover} infiltré${g.numUndercover>1?'s':''}${g.includeMrWhite ? ' · 1 Mr White' : ''}</div>
+      <div id="ucPlayersList"></div>
+      ${inCreator ? `
+        <div class="modalbtns" style="margin-top:16px;">
+          <button class="btn ghost" id="ucCloseLobby">✕ Fermer le lobby</button>
+          <button class="btn primary" id="ucStartBtn" ${joined < 3 ? 'disabled' : ''}>▶️ Lancer la partie (${joined} joueurs)</button>
+        </div>
+        ${joined < 3 ? `<div class="hint">Il faut au moins 3 joueurs.</div>` : ''}
+      ` : (meJoined ? `<div class="hint">Tu es dans le lobby ! En attente du lancement...</div>` : `
+        <button class="btn primary" id="ucJoinBtn" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">🎮 Rejoindre le lobby</button>
+      `)}
+    `;
+    document.getElementById('ucPlayersList').innerHTML = Object.values(g.players||{}).map(p => `
+      <div class="btRoundPlayerRow"><span class="n">${escapeHtml(p.display)}</span></div>
+    `).join('') || `<div class="empty" style="padding:20px 14px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+
+    if(inCreator){
+      document.getElementById('ucCloseLobby').onclick = async () => {
+        ucGame = {...UC_DEFAULT};
+        await saveUc();
+        drawUc(inCreator);
+      };
+      const sb = document.getElementById('ucStartBtn');
+      if(sb) sb.onclick = () => startUcGame(inCreator);
+    } else {
+      const jb = document.getElementById('ucJoinBtn');
+      if(jb) jb.onclick = async () => {
+        await loadUc();
+        if(ucGame.status !== 'lobby'){ drawUc(inCreator); return; }
+        const profile = viewerProfiles[key] || {};
+        ucGame.players[key] = {display: viewerName, avatar: profile.avatar||'', role:null, word:'', alive:true};
+        await saveUc();
+        drawUc(inCreator);
+      };
+    }
+    return;
+  }
+
+  if(g.status === 'playing' || g.status === 'voting'){
+    const me = g.players[key];
+    const alive = ucAlivePlayers();
+    const civAlive = alive.filter(([,p]) => p.role === 'civilian').length;
+    const badAlive = alive.filter(([,p]) => p.role !== 'civilian').length;
+
+    let content = '';
+    if(inCreator){
+      content = `
+        <div class="tag" style="margin-bottom:10px;">Round ${g.round} · Mot civils : <b style="color:var(--text);">${escapeHtml(g.civilianWord)}</b> · Mot undercover : <b style="color:var(--rate-red);">${escapeHtml(g.undercoverWord)}</b></div>
+        ${g.lastElimination ? `<div class="hint" style="color:var(--gold);margin-bottom:10px;">Dernière élimination : ${escapeHtml(g.lastElimination.display)} (${ucRoleLabel(g.lastElimination.role)})</div>` : ''}
+        <div class="sectionLabel" style="margin-top:0;">Joueurs (${alive.length} en vie)</div>
+        <div id="ucRolesList"></div>
+      `;
+    } else if(me){
+      if(!me.alive){
+        content = `<div class="hint" style="color:var(--rate-red);">❌ Tu as été éliminé. Ton rôle était : ${ucRoleLabel(me.role)}${me.word ? ` (mot : ${escapeHtml(me.word)})` : ''}</div>`;
+      } else if(me.role === 'mrwhite'){
+        content = `<div class="winnerBanner" style="padding:20px;"><div class="wicon">❓</div><div class="wname" style="font-size:18px;">Tu es Mr White</div><div class="hint">Tu n'as aucun mot — improvise en écoutant les autres, et essaie de ne pas te faire repérer !</div></div>`;
+      } else {
+        content = `<div class="winnerBanner" style="padding:20px;"><div class="wicon">${me.role==='undercover'?'🕶️':'👤'}</div><div class="wname" style="font-size:22px;">${escapeHtml(me.word)}</div><div class="hint">${me.role==='undercover' ? "Tu es Undercover — ton mot ressemble à celui des autres, mais n'est pas identique." : "Tu es Civil."}</div></div>`;
+      }
+    } else {
+      content = `<div class="empty"><div class="ic">🕵️</div><div>Tu n'as pas rejoint cette partie.</div></div>`;
+    }
+
+    if(g.status === 'voting'){
+      const votedCount = Object.keys(g.votes||{}).length;
+      content += `<div class="sectionLabel">Vote en cours (${votedCount}/${alive.length} ont voté)</div>`;
+      if(inCreator){
+        content += `<button class="btn primary" id="ucCloseVoteBtn" style="width:100%;max-width:280px;">Clore le vote et éliminer</button>`;
+      } else if(me && me.alive){
+        const myVote = (g.votes||{})[key];
+        content += `<div class="btOptions" id="ucVoteOptions" style="grid-template-columns:1fr 1fr;">
+          ${alive.filter(([k]) => k !== key).map(([k,p]) => `<button class="btOpt ${myVote===k?'correct':''}" data-vote="${escapeHtml(k)}">${escapeHtml(p.display)}</button>`).join('')}
+        </div>`;
+      }
+    } else if(inCreator){
+      content += `<button class="btn primary" id="ucOpenVoteBtn" style="width:100%;max-width:280px;">🗳️ Passer au vote</button>`;
+    }
+
+    wrap.innerHTML = content;
+
+    if(inCreator){
+      const rolesEl = document.getElementById('ucRolesList');
+      if(rolesEl){
+        rolesEl.innerHTML = Object.entries(g.players||{}).map(([k,p]) => `
+          <div class="btRoundPlayerRow ${!p.alive?'eliminated':''}">
+            <span class="n">${p.alive?'':'💀 '}${escapeHtml(p.display)}</span>
+            <span class="st" style="color:var(--text-dim);">${ucRoleLabel(p.role)}${p.word ? ' — '+escapeHtml(p.word) : ''}</span>
+          </div>
+        `).join('');
+      }
+      const openVoteBtn = document.getElementById('ucOpenVoteBtn');
+      if(openVoteBtn) openVoteBtn.onclick = async () => {
+        await loadUc();
+        ucGame.status = 'voting';
+        ucGame.votes = {};
+        await saveUc();
+        drawUc(inCreator);
+      };
+      const closeVoteBtn = document.getElementById('ucCloseVoteBtn');
+      if(closeVoteBtn) closeVoteBtn.onclick = () => closeUcVote(inCreator);
+    } else {
+      wrap.querySelectorAll('[data-vote]').forEach(b => {
+        b.onclick = () => castUcVote(b.dataset.vote, inCreator);
+      });
+    }
+    return;
+  }
+
+  if(g.status === 'ended'){
+    const winnerLabel = g.winner === 'civilians' ? '👤 Les Civils gagnent !' : g.winner === 'undercover' ? '🕶️ Les Undercover gagnent !' : '❓ Mr White gagne !';
+    wrap.innerHTML = `
+      <div class="winnerBanner">
+        <div class="wicon">🏆</div>
+        <div class="wname" style="font-size:20px;">${winnerLabel}</div>
+      </div>
+      <div class="sectionLabel" style="margin-top:0;">Tous les rôles</div>
+      <div id="ucFinalRoles"></div>
+      ${inCreator ? `<button class="btn primary" id="ucNewGameBtn" style="width:100%;margin-top:16px;">🔄 Nouvelle partie</button>` : ''}
+    `;
+    document.getElementById('ucFinalRoles').innerHTML = Object.values(g.players||{}).map(p => `
+      <div class="btRoundPlayerRow ${!p.alive?'eliminated':''}">
+        <span class="n">${p.alive?'':'💀 '}${escapeHtml(p.display)}</span>
+        <span class="st" style="color:var(--text-dim);">${ucRoleLabel(p.role)}${p.word ? ' — '+escapeHtml(p.word) : ''}</span>
+      </div>
+    `).join('');
+    if(inCreator){
+      document.getElementById('ucNewGameBtn').onclick = async () => {
+        ucGame = {...UC_DEFAULT};
+        await saveUc();
+        drawUc(inCreator);
+      };
+    }
+  }
+}
+
+async function startUcGame(inCreator){
+  await loadUc();
+  const keys = Object.keys(ucGame.players);
+  const shuffled = keys.slice().sort(() => Math.random()-0.5);
+  const numUndercover = Math.min(ucGame.numUndercover, Math.max(1, Math.floor(shuffled.length/3)));
+  const mrWhiteKey = ucGame.includeMrWhite ? shuffled[0] : null;
+  const undercoverKeys = shuffled.slice(mrWhiteKey ? 1 : 0, (mrWhiteKey?1:0) + numUndercover);
+
+  shuffled.forEach(k => {
+    const p = ucGame.players[k];
+    if(k === mrWhiteKey){ p.role = 'mrwhite'; p.word = ''; }
+    else if(undercoverKeys.includes(k)){ p.role = 'undercover'; p.word = ucGame.undercoverWord; }
+    else { p.role = 'civilian'; p.word = ucGame.civilianWord; }
+    p.alive = true;
+  });
+
+  ucGame.status = 'playing';
+  ucGame.round = 1;
+  ucGame.votes = {};
+  ucGame.lastElimination = null;
+  await saveUc();
+  drawUc(inCreator);
+}
+
+async function castUcVote(targetKey, inCreator){
+  await loadUc();
+  const key = (viewerName||'').toLowerCase();
+  const me = ucGame.players[key];
+  if(!me || !me.alive || ucGame.status !== 'voting') { drawUc(inCreator); return; }
+  if(!ucGame.votes) ucGame.votes = {};
+  ucGame.votes[key] = targetKey;
+  await saveUc();
+  drawUc(inCreator);
+}
+
+function ucCheckWinner(){
+  const alive = ucAlivePlayers();
+  const civ = alive.filter(([,p]) => p.role === 'civilian').length;
+  const bad = alive.filter(([,p]) => p.role !== 'civilian').length;
+  if(bad === 0) return 'civilians';
+  if(bad >= civ) return 'undercover';
+  return null;
+}
+
+async function closeUcVote(inCreator){
+  await loadUc();
+  const tally = {};
+  Object.values(ucGame.votes||{}).forEach(v => { tally[v] = (tally[v]||0) + 1; });
+  let topKey = null, topCount = -1;
+  Object.entries(tally).forEach(([k,c]) => { if(c > topCount){ topCount = c; topKey = k; } });
+  if(!topKey){ ucGame.status = 'playing'; await saveUc(); drawUc(inCreator); return; }
+
+  const eliminated = ucGame.players[topKey];
+  eliminated.alive = false;
+  ucGame.eliminatedHistory.push({key:topKey, display:eliminated.display, role:eliminated.role});
+  ucGame.lastElimination = {display:eliminated.display, role:eliminated.role};
+
+  if(eliminated.role === 'mrwhite'){
+    const guessed = confirm(`${eliminated.display} était Mr White. A-t-il/elle deviné le mot des civils (« ${ucGame.civilianWord} ») ?`);
+    if(guessed){
+      ucGame.status = 'ended';
+      ucGame.winner = 'mrwhite';
+      await saveUc();
+      drawUc(inCreator);
+      return;
+    }
+  }
+
+  const winner = ucCheckWinner();
+  if(winner){
+    ucGame.status = 'ended';
+    ucGame.winner = winner;
+  } else {
+    ucGame.status = 'playing';
+    ucGame.round += 1;
+    ucGame.votes = {};
+  }
+  await saveUc();
+  drawUc(inCreator);
+}
+
 function renderWheel(){
   const inCreator = wheelViewFromCreator;
   app.innerHTML = `
@@ -4022,131 +4325,6 @@ function spinTheWheel(){
   }, 4300);
 }
 
-/* ---------- MONNAIE VIRTUELLE ---------- */
-let currencyViewFromCreator = true;
-
-function renderCurrency(){
-  const inCreator = currencyViewFromCreator;
-  const name = currencyName();
-  const rate = currencyRate();
-
-  app.innerHTML = `
-    <div class="page">
-      ${navHtml('currency', inCreator ? 'creator' : 'viewer')}
-      <div class="logo" style="margin-bottom:20px;">
-        <h1 style="font-size:28px;">💰 ${escapeHtml(name.toUpperCase())}</h1>
-        <div class="tag">${inCreator ? 'gère les soldes de tes viewers' : `1 ${escapeHtml(name)} = ${rate} points de mini-jeux`}</div>
-      </div>
-      <div id="currencyWrap"></div>
-    </div>
-  `;
-  wireNav(inCreator ? 'creator' : 'viewer');
-
-  if(inCreator){
-    drawCurrencyAdmin();
-  } else {
-    drawCurrencyViewer();
-  }
-}
-
-function drawCurrencyViewer(){
-  const wrap = document.getElementById('currencyWrap');
-  const key = (viewerName||'').toLowerCase();
-  const points = gameScores[key] || 0;
-  const balance = viewerCurrency[key] || 0;
-  const rate = currencyRate();
-  const name = currencyName();
-
-  wrap.innerHTML = `
-    <div class="myPointsBox">
-      <div class="n">${balance}</div>
-      <div class="l">${escapeHtml(name)}</div>
-    </div>
-    <div class="tag" style="text-align:center;margin:10px 0 20px;">${points} points de mini-jeux disponibles</div>
-    <div class="twitchbox" style="max-width:420px;margin:0 auto;">
-      <label>Convertir des points en ${escapeHtml(name)}</label>
-      <input type="text" inputmode="numeric" id="curConvertInput" placeholder="ex : 100">
-      <div class="hint" id="curConvertPreview">→ 0 ${escapeHtml(name)} (taux : ${rate} points = 1 ${escapeHtml(name)})</div>
-      <div class="hint" id="curConvertStatus" style="min-height:16px;"></div>
-      <button class="btn primary" id="curConvertBtn" style="width:100%;margin-top:10px;">Convertir</button>
-    </div>
-  `;
-
-  const input = document.getElementById('curConvertInput');
-  const preview = document.getElementById('curConvertPreview');
-  input.addEventListener('input', () => {
-    const amt = Math.max(0, parseInt(input.value, 10) || 0);
-    const result = Math.floor(amt / rate);
-    preview.textContent = `→ ${result} ${name} (taux : ${rate} points = 1 ${name})`;
-  });
-
-  document.getElementById('curConvertBtn').onclick = async () => {
-    const status = document.getElementById('curConvertStatus');
-    const amt = Math.max(0, parseInt(input.value, 10) || 0);
-    const result = Math.floor(amt / rate);
-    if(result <= 0){
-      status.style.color = 'var(--rate-red)';
-      status.textContent = `Il faut au moins ${rate} points pour convertir.`;
-      return;
-    }
-    await loadScores();
-    const currentPoints = gameScores[key] || 0;
-    if(amt > currentPoints){
-      status.style.color = 'var(--rate-red)';
-      status.textContent = `Tu n'as que ${currentPoints} points disponibles.`;
-      return;
-    }
-    const spent = result * rate;
-    gameScores[key] = currentPoints - spent;
-    await saveScores();
-    await addCurrency(key, result);
-    status.style.color = 'var(--rate-green)';
-    status.textContent = `✓ ${spent} points convertis en ${result} ${name} !`;
-    input.value = '';
-    drawCurrencyViewer();
-  };
-}
-
-function drawCurrencyAdmin(){
-  const wrap = document.getElementById('currencyWrap');
-  const name = currencyName();
-  const keys = Array.from(new Set([...Object.keys(viewerProfiles), ...Object.keys(viewerCurrency)]));
-  const rows = keys
-    .map(key => ({key, display: (viewerProfiles[key] && viewerProfiles[key].display) || key, balance: viewerCurrency[key] || 0}))
-    .sort((a,b) => b.balance - a.balance);
-
-  wrap.innerHTML = `
-    <div class="hint" style="margin-bottom:16px;">
-      Utilise « Ajuster » pour créditer manuellement quelqu'un (ex : échange de points de chaîne Twitch validé à la main).
-    </div>
-    <div id="curAdminList"></div>
-  `;
-
-  const listEl = document.getElementById('curAdminList');
-  if(rows.length === 0){
-    listEl.innerHTML = `<div class="empty"><div class="ic">💰</div><div>Aucun viewer pour l'instant.</div></div>`;
-    return;
-  }
-  listEl.innerHTML = rows.map(r => `
-    <div class="btRoundPlayerRow">
-      <span class="n">${escapeHtml(r.display)}</span>
-      <span class="pts">${r.balance} ${escapeHtml(name)}</span>
-      <button class="pill" id="adj-${escapeHtml(r.key)}">Ajuster</button>
-    </div>
-  `).join('');
-  rows.forEach(r => {
-    const btn = document.getElementById(`adj-${r.key}`);
-    if(btn) btn.onclick = async () => {
-      const raw = prompt(`Ajouter (ou retirer avec un -) combien de ${name} pour ${r.display} ?`, '0');
-      if(raw === null) return;
-      const delta = parseInt(raw, 10);
-      if(!delta || isNaN(delta)) return;
-      await addCurrency(r.key, delta);
-      drawCurrencyAdmin();
-    };
-  });
-}
-
 /* ---------- DASHBOARD (créateur) ---------- */
 function computeDashboardStats(){
   let best = null, bestVal = 0;
@@ -4307,7 +4485,6 @@ async function processSession(){
   await loadProfiles();
   await loadSettings();
   await loadScores();
-  await loadCurrency();
   await loadWheel();
   await loadWheelSuggestions();
   await loadWheelState();
@@ -4315,6 +4492,7 @@ async function processSession(){
   await loadBtTracks();
   await loadBtPlaylists();
   await loadBtGame();
+  await loadUc();
 
   await processSession();
 
