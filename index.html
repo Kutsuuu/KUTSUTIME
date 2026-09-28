@@ -990,11 +990,15 @@ const UC_DEFAULT = {status:'idle', targetPlayers:6, numUndercover:1, includeMrWh
 async function loadUc(){ ucGame = (await kvGet(UC_KEY)) || {...UC_DEFAULT}; }
 async function saveUc(){ await kvSet(UC_KEY, ucGame); }
 const UC_WORD_BANK = [
-  ['Plage','Désert'], ['Chat','Chien'], ['Café','Thé'], ['Pizza','Burger'], ['Piscine','Mer'],
-  ['Voiture','Moto'], ['Hôpital','École'], ['Pomme','Poire'], ['Guitare','Piano'], ['Netflix','YouTube'],
-  ['Docteur','Infirmier'], ['Pilote','Steward'], ['Vampire','Zombie'], ['Ninja','Pirate'], ['Hiver','Été'],
-  ['Montagne','Colline'], ['Robot','Alien'], ['Roi','Président'], ['Sorcière','Fée'], ['Twitch','YouTube'],
-  ['Fourchette','Baguette'], ['Sushi','Ramen'], ['Batman','Superman'], ['Île','Continent'], ['Pluie','Neige']
+  ['Naruto','Boruto'], ['Goku','Vegeta'], ['Sasuke','Itachi'], ['One Piece','Fairy Tail'],
+  ['Attack on Titan','Demon Slayer'], ['Tanjiro','Zenitsu'], ['Luffy','Ace'], ['Pikachu','Charizard'],
+  ['Death Note','Code Geass'], ['Light Yagami','L'], ['My Hero Academia','One Punch Man'],
+  ['Deku','Bakugo'], ['Eren','Levi'], ['Dragon Ball','One Piece'], ['Stranger Things','Dark'],
+  ['Breaking Bad','Better Call Saul'], ['Game of Thrones','House of the Dragon'],
+  ['Friends','How I Met Your Mother'], ['The Office','Brooklyn 99'], ['Marvel','DC'],
+  ['Iron Man','Batman'], ['Spider-Man','Miles Morales'], ['Naruto','One Piece'],
+  ['Hunter x Hunter','Yu Yu Hakusho'], ['Gon','Killua'], ['Blue Lock','Haikyuu'],
+  ['Twitch','YouTube'], ['Netflix','Prime Video'], ['Pokémon','Digimon']
 ];
 function getBtPlaylistGroups(){
   const map = {};
@@ -3811,6 +3815,7 @@ function buildWheelSVG(wItems){
 }
 /* ---------- UNDERCOVER ---------- */
 let ucViewFromCreator = true;
+let ucRevealAnswers = false;
 let ucPollTimer = null;
 
 function stopUcPoll(){ if(ucPollTimer){ clearInterval(ucPollTimer); ucPollTimer = null; } }
@@ -3818,6 +3823,7 @@ function stopUcPoll(){ if(ucPollTimer){ clearInterval(ucPollTimer); ucPollTimer 
 function renderUndercover(){
   const inCreator = ucViewFromCreator;
   stopUcPoll();
+  ucRevealAnswers = false;
   app.innerHTML = `
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
@@ -3831,6 +3837,7 @@ function renderUndercover(){
   wireNav(inCreator ? 'creator' : 'viewer');
   drawUc(inCreator);
   ucPollTimer = setInterval(async () => {
+    if(ucGame.status === 'idle') return;
     const active = document.activeElement;
     const stageEl = document.getElementById('ucStageWrap');
     const inStage = stageEl && stageEl.contains(active);
@@ -3901,11 +3908,13 @@ function drawUc(inCreator){
       <div class="tag" style="margin-bottom:4px;">${joined} / ${g.targetPlayers} joueurs · ${g.numUndercover} infiltré${g.numUndercover>1?'s':''}${g.includeMrWhite ? ' · 1 Mr White' : ''}</div>
       <div id="ucPlayersList"></div>
       ${inCreator ? `
-        <div class="modalbtns" style="margin-top:16px;">
+        <div class="modalbtns" style="margin-top:16px;flex-wrap:wrap;">
           <button class="btn ghost" id="ucCloseLobby">✕ Fermer le lobby</button>
+          ${!meJoined ? `<button class="btn ghost" id="ucJoinAsCreatorBtn">🎮 Je participe aussi</button>` : `<span class="hint" style="align-self:center;">Tu participes à cette partie</span>`}
           <button class="btn primary" id="ucStartBtn" ${joined < 3 ? 'disabled' : ''}>▶️ Lancer la partie (${joined} joueurs)</button>
         </div>
         ${joined < 3 ? `<div class="hint">Il faut au moins 3 joueurs.</div>` : ''}
+        ${meJoined ? `<div class="hint">En participant, les mots et rôles seront cachés pour toi aussi une fois la partie lancée (un bouton "Voir la solution" restera dispo si besoin).</div>` : ''}
       ` : (meJoined ? `<div class="hint">Tu es dans le lobby ! En attente du lancement...</div>` : `
         <button class="btn primary" id="ucJoinBtn" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">🎮 Rejoindre le lobby</button>
       `)}
@@ -3917,6 +3926,15 @@ function drawUc(inCreator){
     if(inCreator){
       document.getElementById('ucCloseLobby').onclick = async () => {
         ucGame = {...UC_DEFAULT};
+        await saveUc();
+        drawUc(inCreator);
+      };
+      const jac = document.getElementById('ucJoinAsCreatorBtn');
+      if(jac) jac.onclick = async () => {
+        await loadUc();
+        if(ucGame.status !== 'lobby'){ drawUc(inCreator); return; }
+        const profile = viewerProfiles[key] || {};
+        ucGame.players[key] = {display: viewerName, avatar: profile.avatar||'', role:null, word:'', alive:true};
         await saveUc();
         drawUc(inCreator);
       };
@@ -3941,22 +3959,28 @@ function drawUc(inCreator){
     const alive = ucAlivePlayers();
     const civAlive = alive.filter(([,p]) => p.role === 'civilian').length;
     const badAlive = alive.filter(([,p]) => p.role !== 'civilian').length;
+    const creatorIsPlaying = inCreator && !!me;
+    const showSpoilers = inCreator && (!creatorIsPlaying || ucRevealAnswers);
 
     let content = '';
-    if(inCreator){
+    if(showSpoilers){
       content = `
+        ${creatorIsPlaying ? `<button class="pill" id="ucHideAnswersBtn" style="margin-bottom:10px;">🙈 Cacher la solution (jouer normalement)</button>` : ''}
         <div class="tag" style="margin-bottom:10px;">Round ${g.round} · Mot civils : <b style="color:var(--text);">${escapeHtml(g.civilianWord)}</b> · Mot undercover : <b style="color:var(--rate-red);">${escapeHtml(g.undercoverWord)}</b></div>
         ${g.lastElimination ? `<div class="hint" style="color:var(--gold);margin-bottom:10px;">Dernière élimination : ${escapeHtml(g.lastElimination.display)} (${ucRoleLabel(g.lastElimination.role)})</div>` : ''}
         <div class="sectionLabel" style="margin-top:0;">Joueurs (${alive.length} en vie)</div>
         <div id="ucRolesList"></div>
       `;
     } else if(me){
+      if(creatorIsPlaying){
+        content += `<button class="pill" id="ucRevealAnswersBtn" style="margin-bottom:10px;">👁️ Voir la solution (triche)</button>`;
+      }
       if(!me.alive){
-        content = `<div class="hint" style="color:var(--rate-red);">❌ Tu as été éliminé. Ton rôle était : ${ucRoleLabel(me.role)}${me.word ? ` (mot : ${escapeHtml(me.word)})` : ''}</div>`;
+        content += `<div class="hint" style="color:var(--rate-red);">❌ Tu as été éliminé. Ton rôle était : ${ucRoleLabel(me.role)}${me.word ? ` (mot : ${escapeHtml(me.word)})` : ''}</div>`;
       } else if(me.role === 'mrwhite'){
-        content = `<div class="winnerBanner" style="padding:20px;"><div class="wicon">❓</div><div class="wname" style="font-size:18px;">Tu es Mr White</div><div class="hint">Tu n'as aucun mot — improvise en écoutant les autres, et essaie de ne pas te faire repérer !</div></div>`;
+        content += `<div class="winnerBanner" style="padding:20px;"><div class="wicon">❓</div><div class="wname" style="font-size:18px;">Tu es Mr White</div><div class="hint">Tu n'as aucun mot — improvise en écoutant les autres, et essaie de ne pas te faire repérer !</div></div>`;
       } else {
-        content = `<div class="winnerBanner" style="padding:20px;"><div class="wicon">${me.role==='undercover'?'🕶️':'👤'}</div><div class="wname" style="font-size:22px;">${escapeHtml(me.word)}</div><div class="hint">${me.role==='undercover' ? "Tu es Undercover — ton mot ressemble à celui des autres, mais n'est pas identique." : "Tu es Civil."}</div></div>`;
+        content += `<div class="winnerBanner" style="padding:20px;"><div class="wicon">${me.role==='undercover'?'🕶️':'👤'}</div><div class="wname" style="font-size:22px;">${escapeHtml(me.word)}</div><div class="hint">${me.role==='undercover' ? "Tu es Undercover — ton mot ressemble à celui des autres, mais n'est pas identique." : "Tu es Civil."}</div></div>`;
       }
     } else {
       content = `<div class="empty"><div class="ic">🕵️</div><div>Tu n'as pas rejoint cette partie.</div></div>`;
@@ -3965,21 +3989,27 @@ function drawUc(inCreator){
     if(g.status === 'voting'){
       const votedCount = Object.keys(g.votes||{}).length;
       content += `<div class="sectionLabel">Vote en cours (${votedCount}/${alive.length} ont voté)</div>`;
-      if(inCreator){
+      if(inCreator && showSpoilers){
         content += `<button class="btn primary" id="ucCloseVoteBtn" style="width:100%;max-width:280px;">Clore le vote et éliminer</button>`;
-      } else if(me && me.alive){
+      }
+      if((!inCreator || creatorIsPlaying) && me && me.alive){
         const myVote = (g.votes||{})[key];
         content += `<div class="btOptions" id="ucVoteOptions" style="grid-template-columns:1fr 1fr;">
           ${alive.filter(([k]) => k !== key).map(([k,p]) => `<button class="btOpt ${myVote===k?'correct':''}" data-vote="${escapeHtml(k)}">${escapeHtml(p.display)}</button>`).join('')}
         </div>`;
       }
-    } else if(inCreator){
+    } else if(inCreator && showSpoilers){
       content += `<button class="btn primary" id="ucOpenVoteBtn" style="width:100%;max-width:280px;">🗳️ Passer au vote</button>`;
     }
 
     wrap.innerHTML = content;
 
-    if(inCreator){
+    const hideBtn = document.getElementById('ucHideAnswersBtn');
+    if(hideBtn) hideBtn.onclick = () => { ucRevealAnswers = false; drawUc(inCreator); };
+    const revealBtn = document.getElementById('ucRevealAnswersBtn');
+    if(revealBtn) revealBtn.onclick = () => { ucRevealAnswers = true; drawUc(inCreator); };
+
+    if(showSpoilers){
       const rolesEl = document.getElementById('ucRolesList');
       if(rolesEl){
         rolesEl.innerHTML = Object.entries(g.players||{}).map(([k,p]) => `
