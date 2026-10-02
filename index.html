@@ -330,6 +330,12 @@
     background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:28px;
     box-shadow:var(--shadow-sm);
   }
+  .loginCountdownBox{
+    background:var(--panel-2);border:2px solid var(--gold-dim);border-radius:6px;padding:18px;text-align:center;
+  }
+  .loginCountdownValue{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:19px;color:var(--gold);letter-spacing:1px;
+  }
   .hint{font-size:12px;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.6;}
   .back{
     background:none;border:none;color:var(--text-dim);
@@ -1291,7 +1297,9 @@ function viewerAvatarHtml(name, size){
   return '📺';
 }
 
+let loginCountdownTick = null;
 function renderSelect(){
+  if(loginCountdownTick){ clearInterval(loginCountdownTick); loginCountdownTick = null; }
   app.innerHTML = `
     <div class="page">
       <div class="hero">
@@ -1299,6 +1307,10 @@ function renderSelect(){
           <h1>KUTSU TIME</h1>
           <div class="tag">ta collection, tes affiches, tes viewers</div>
         </div>
+      </div>
+      <div class="loginCountdownBox" style="max-width:420px;margin:0 auto 20px;">
+        <div class="hint" style="margin-bottom:8px;">⏱️ Compte à rebours</div>
+        <div id="loginCountdown" class="loginCountdownValue">--j --h --m --s</div>
       </div>
       <div class="twitchbox" style="max-width:420px;margin:0 auto;">
         <div style="text-align:center;font-size:34px;margin-bottom:14px;">📺</div>
@@ -1410,6 +1422,21 @@ function renderSelect(){
     wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
     render();
   };
+
+  const target = new Date();
+  target.setMonth(10, 30); // mois 10 = novembre (0-indexé)
+  target.setHours(21, 0, 0, 0);
+  if(target.getTime() <= Date.now()) target.setFullYear(target.getFullYear() + 1);
+  const updateLoginCountdown = () => {
+    const el = document.getElementById('loginCountdown');
+    if(!el){ clearInterval(loginCountdownTick); loginCountdownTick = null; return; }
+    const ms = target.getTime() - Date.now();
+    if(ms <= 0){ el.textContent = "C'est l'heure !"; clearInterval(loginCountdownTick); loginCountdownTick = null; return; }
+    const d = Math.floor(ms/86400000), h = Math.floor(ms%86400000/3600000), m = Math.floor(ms%3600000/60000), s = Math.floor(ms%60000/1000);
+    el.textContent = `${d}j ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+  };
+  updateLoginCountdown();
+  loginCountdownTick = setInterval(updateLoginCountdown, 1000);
 }
 
 /* ---------- CREATOR ---------- */
