@@ -58,6 +58,8 @@
   .sidebarLink .sIcon{font-size:17px;flex:0 0 auto;width:20px;text-align:center;}
   .sidebarLink:hover{background:var(--panel-2);color:var(--text);}
   .sidebarLink.active{background:var(--panel-3);color:var(--gold);}
+  .sidebarLogin{background:var(--gold);color:#fff;font-weight:700;justify-content:center;}
+  .sidebarLogin:hover{background:var(--gold);color:#fff;filter:brightness(1.12);}
   .sidebarBottom{
     display:flex;flex-direction:column;gap:2px;padding-top:14px;margin-top:10px;
     border-top:1px solid var(--border);
@@ -737,6 +739,8 @@
     .sidebarBottom{
       flex-direction:row;border-top:none;padding-top:0;margin-top:0;height:100%;
     }
+    .sidebar:has(.sidebarLogin) .sidebarBottom{order:-1;}
+    .sidebarLogin{white-space:nowrap;}
   }
 </style>
 </head>
@@ -1111,8 +1115,12 @@ function navHtml(activeKey, ctx){
         ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
       <div class="sidebarBottom">
-        <button class="sidebarLink" id="navProfileTag">${viewerAvatarHtml(viewerName, 22)}<span class="lbl">${escapeHtml(viewerName||'')}</span></button>
+        ${viewerName ? `
+        <button class="sidebarLink" id="navProfileTag">${viewerAvatarHtml(viewerName, 22)}<span class="lbl">${escapeHtml(viewerName)}</span></button>
         <button class="sidebarLink" id="navQuit"><span class="lbl">Quitter</span></button>
+        ` : `
+        <button class="sidebarLink sidebarLogin" id="navLogin"><span class="lbl">Se connecter</span></button>
+        `}
       </div>
     </div>
   `;
@@ -1127,7 +1135,7 @@ function wireNav(ctx){
     };
   });
   const brand = document.getElementById('navBrand');
-  if(brand) brand.onclick = () => setMode('select');
+  if(brand) brand.onclick = () => setMode(ctx === 'creator' ? 'creator' : 'viewer');
   if(ctx === 'creator'){
     const sw = document.getElementById('navSwitch');
     if(sw) sw.onclick = () => setMode('viewer');
@@ -1142,8 +1150,10 @@ function wireNav(ctx){
       if(session) await supabaseClient.auth.signOut();
       viewerName = null;
       isCreatorAccount = false;
-      setMode('select');
+      setMode('viewer');
     };
+    const nl = document.getElementById('navLogin');
+    if(nl) nl.onclick = () => setMode('select');
     const pt = document.getElementById('navProfileTag');
     if(pt) pt.onclick = () => openMyProfileModal();
   }
@@ -1164,6 +1174,7 @@ function renderSelect(){
   if(loginCountdownTick){ clearInterval(loginCountdownTick); loginCountdownTick = null; }
   app.innerHTML = `
     <div class="page">
+      <button class="back" id="backToSite">← Retour au site</button>
       <div class="hero">
         <div class="logo center">
           <h1>KUTSU TIME</h1>
@@ -1220,6 +1231,8 @@ function renderSelect(){
       options: { redirectTo: window.location.origin + window.location.pathname }
     });
   };
+
+  document.getElementById('backToSite').onclick = () => setMode('viewer');
 
   document.getElementById('authTabs').addEventListener('click', (e) => {
     const btn = e.target.closest('.tab');
@@ -1734,6 +1747,7 @@ async function toggleFavorite(it, ctx){
     if(fresh) fresh.favorite = !fresh.favorite;
     await saveCatalog();
   } else {
+    if(!viewerName){ setMode('select'); return; }
     const key = (viewerName||'').toLowerCase();
     if(!viewerProfiles[key]) viewerProfiles[key] = {display: viewerName, avatar:'', bio:'', favorites: []};
     if(!viewerProfiles[key].favorites) viewerProfiles[key].favorites = [];
@@ -1786,6 +1800,7 @@ function renderSagaCards(grid, ctx){
 
 function renderGrid(ctx){
   const grid = document.getElementById('grid');
+  if(!grid) return;
 
   if(filter === 'sagas' && !selectedSaga){
     renderSagaCards(grid, ctx);
@@ -1849,7 +1864,7 @@ function renderGrid(ctx){
     const episodic = isEpisodic(it.type);
     const creatorStat = creatorRatingStat(it);
     const pub = episodic ? seriesPublicStats(it) : publicStats(it.id);
-    const mineStat = ctx === 'viewer'
+    const mineStat = (ctx === 'viewer' && viewerName)
       ? (episodic ? seriesViewerOwnAvg(it, viewerName) : {avg: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase())?.score || 0, count: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase()) ? 1 : 0})
       : null;
     const fav = isFavorite(it, ctx);
@@ -1866,7 +1881,7 @@ function renderGrid(ctx){
         ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
         <div class="ratingsRow">
           <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">Créa ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
-          ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">Toi ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>` : ''}
+          ${mineStat ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">Toi ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>` : ''}
           <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+')' : ''}">Moy ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
         </div>
       </div>
@@ -2119,7 +2134,8 @@ function openViewerRate(id){
   const episodic = isEpisodic(it.type);
   const pub = episodic ? seriesPublicStats(it) : publicStats(id);
   const creatorStat = creatorRatingStat(it);
-  const mine = (viewerRatings[id] || []).find(r => r.who.toLowerCase() === viewerName.toLowerCase());
+  const guest = !viewerName;
+  const mine = guest ? null : (viewerRatings[id] || []).find(r => r.who.toLowerCase() === viewerName.toLowerCase());
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="overlay" id="overlay">
@@ -2129,18 +2145,18 @@ function openViewerRate(id){
           <div class="detailinfo">
             <h3>${escapeHtml(it.title)}</h3>
             <div class="metaline">${typeLabel(it.type)}${it.year ? ' · '+escapeHtml(it.year):''}${it.genre ? ' · '+escapeHtml(it.genre):''}</div>
-            <label>Ta note</label>
+            ${guest ? '' : `<label>Ta note</label>
             <div class="ratebox viewer">
               <input type="text" inputmode="decimal" id="rateInput" style="color:${ratingColor(mine ? mine.score : 0)}" value="${mine ? mine.score : ''}" placeholder="—">
               <span class="outof">/ 10</span>
-            </div>
+            </div>`}
           </div>
         </div>
         <div class="pubbox"><span class="l">Note du créateur</span><span class="v" style="color:${ratingColor(creatorStat.avg)}">${creatorStat.count ? (creatorStat.avg % 1 === 0 ? creatorStat.avg : creatorStat.avg.toFixed(1))+'/10' : '—'}</span></div>
         <div class="pubbox"><span class="l">Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
-        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">Noter les saisons & épisodes</button>` : ''}
-        <label>Ton avis (optionnel)</label>
-        <textarea id="commentInput" placeholder="Ce que tu en as pensé...">${escapeHtml(mine && mine.comment ? mine.comment : '')}</textarea>
+        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">${guest ? 'Voir les saisons & épisodes' : 'Noter les saisons & épisodes'}</button>` : ''}
+        ${guest ? '' : `<label>Ton avis (optionnel)</label>
+        <textarea id="commentInput" placeholder="Ce que tu en as pensé...">${escapeHtml(mine && mine.comment ? mine.comment : '')}</textarea>`}
         ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
         ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="rediffLink">▶ Voir la rediff</a>` : ''}
         ${(viewerRatings[id]||[]).some(r=>r.comment) ? `
@@ -2155,7 +2171,7 @@ function openViewerRate(id){
         ${ratersListHtml(it)}
         <div class="modalbtns">
           <button class="btn ghost" id="closeBtn">Fermer</button>
-          <button class="btn primary" id="submitBtn">${mine ? 'Mettre à jour ma note' : 'Envoyer ma note'}</button>
+          ${guest ? `<button class="btn primary" id="loginToRateBtn">Se connecter pour noter</button>` : `<button class="btn primary" id="submitBtn">${mine ? 'Mettre à jour ma note' : 'Envoyer ma note'}</button>`}
         </div>
       </div>
     </div>
@@ -2165,11 +2181,14 @@ function openViewerRate(id){
   const epsBtn = document.getElementById('epsBtn');
   if(epsBtn) epsBtn.onclick = () => openViewerEpisodes(it);
   const vRateInput = document.getElementById('rateInput');
-  vRateInput.addEventListener('input', () => {
+  if(vRateInput) vRateInput.addEventListener('input', () => {
     const v = parseFloat(vRateInput.value.replace(',', '.'));
     vRateInput.style.color = ratingColor(isNaN(v) ? 0 : v);
   });
-  document.getElementById('submitBtn').onclick = async () => {
+  const loginToRate = document.getElementById('loginToRateBtn');
+  if(loginToRate) loginToRate.onclick = () => { closeModal(); setMode('select'); };
+  const submitBtnEl = document.getElementById('submitBtn');
+  if(submitBtnEl) submitBtnEl.onclick = async () => {
     const rateInput = document.getElementById('rateInput');
     const raw = rateInput.value.replace(',', '.').trim();
     let val = parseFloat(raw);
@@ -2347,13 +2366,13 @@ function openViewerEpisodes(it){
         ${(s.episodes||[]).map(e => {
           const key = episodeKey(it.id, s.number, e.number);
           const list = viewerRatings[key] || [];
-          const mine = list.find(r => r.who.toLowerCase() === viewerName.toLowerCase());
+          const mine = viewerName ? list.find(r => r.who.toLowerCase() === viewerName.toLowerCase()) : null;
           return `
             <div class="epRow">
               <span class="epNum">E${e.number}</span>
               <span class="epLabel">Épisode ${e.number}${e.rating ? ` · ${e.rating}/10` : ''}</span>
-              <input type="text" inputmode="decimal" class="epInput" data-season="${s.number}" data-ep="${e.number}"
-                style="color:${ratingColor(mine ? mine.score : 0)}" value="${mine ? mine.score : ''}" placeholder="—">
+              ${viewerName ? `<input type="text" inputmode="decimal" class="epInput" data-season="${s.number}" data-ep="${e.number}"
+                style="color:${ratingColor(mine ? mine.score : 0)}" value="${mine ? mine.score : ''}" placeholder="—">` : ''}
             </div>
           `;
         }).join('')}
@@ -2488,7 +2507,7 @@ function openCreatorSettings(){
     isCreatorAccount = false;
     viewerName = null;
     closeModal();
-    setMode('select');
+    setMode('viewer');
   };
   document.getElementById('saveBtn').onclick = async () => {
     creatorSettings.twitchChannel = document.getElementById('sChannel').value.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i,'');
@@ -2559,10 +2578,16 @@ function renderGames(){
       <div class="logo" style="margin-bottom:20px;">
         <h1 style="font-size:28px;">MINI-JEUX</h1>
       </div>
-      ${!inCreator ? `
+      ${!inCreator && viewerName ? `
         <div class="myPointsBox">
           <div class="n">${myPoints}</div>
           <div class="l">Tes points</div>
+        </div>
+      ` : ''}
+      ${!inCreator && !viewerName ? `
+        <div class="myPointsBox" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+          <div class="l">Connecte-toi pour jouer et gagner des points</div>
+          <button class="btn primary" id="guestLoginBtn" style="flex:none;">Se connecter</button>
         </div>
       ` : ''}
       <div class="gamesGrid">
@@ -2588,6 +2613,8 @@ function renderGames(){
     ucViewFromCreator = inCreator;
     setMode('undercover');
   };
+  const gl = document.getElementById('guestLoginBtn');
+  if(gl) gl.onclick = () => setMode('select');
   const mbt = document.getElementById('manageBtTracks');
   if(mbt) mbt.onclick = () => setMode('blindtest-admin');
   const rlb = document.getElementById('resetLeaderboard');
@@ -2854,6 +2881,7 @@ function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer 
 
 async function renderBlindtest(){
   const inCreator = btViewFromCreator;
+  if(!inCreator && !viewerName){ renderGuestGate('BLIND TEST'); return; }
   stopBtPoll();
   btLocalRoundTrackId = null;
   btLocalRoundStartedAt = null;
@@ -3358,8 +3386,26 @@ let ucPollTimer = null;
 
 function stopUcPoll(){ if(ucPollTimer){ clearInterval(ucPollTimer); ucPollTimer = null; } }
 
+function renderGuestGate(title){
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('games', 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">${title}</h1>
+      </div>
+      <div class="empty">
+        <div>Connecte-toi pour participer.</div>
+        <button class="btn2" id="gateLoginBtn">Se connecter</button>
+      </div>
+    </div>
+  `;
+  wireNav('viewer');
+  document.getElementById('gateLoginBtn').onclick = () => setMode('select');
+}
+
 function renderUndercover(){
   const inCreator = ucViewFromCreator;
+  if(!inCreator && !viewerName){ renderGuestGate('UNDERCOVER'); return; }
   stopUcPoll();
   ucRevealAnswers = false;
   app.innerHTML = `
@@ -3719,6 +3765,7 @@ function renderWheel(){
             <div class="sectionLabel" style="margin-top:0;">Titres sur la roue</div>
             <div id="wheelList"></div>
             <div class="sectionLabel">Proposer un film</div>
+            ${!viewerName ? `<div class="empty" style="padding:28px 18px;"><div>Connecte-toi pour proposer un film.</div><button class="btn2" id="wheelLoginBtn">Se connecter</button></div>` : `
             <div class="twitchbox" style="max-width:100%;">
               <label>Titre du film</label>
               <input type="text" id="wsTitle" placeholder="ex : Old Boy">
@@ -3726,7 +3773,7 @@ function renderWheel(){
               <input type="text" id="wsTrailer" placeholder="https://youtube.com/... ou https://youtu.be/...">
               <div class="hint" id="wsStatus" style="min-height:16px;"></div>
               <button class="btn primary" id="wsSubmitBtn" style="width:100%;">Proposer au créateur</button>
-            </div>
+            </div>`}
           </div>
         `}
       </div>
@@ -3774,9 +3821,11 @@ function renderWheel(){
 
     drawWheelSuggestions();
   } else {
+    const wl = document.getElementById('wheelLoginBtn');
+    if(wl) wl.onclick = () => setMode('select');
     const wsBtn = document.getElementById('wsSubmitBtn');
     const wsStatus = document.getElementById('wsStatus');
-    wsBtn.onclick = async () => {
+    if(wsBtn) wsBtn.onclick = async () => {
       const title = document.getElementById('wsTitle').value.trim();
       const trailerUrl = document.getElementById('wsTrailer').value.trim();
       if(!title){ wsStatus.style.color = 'var(--rate-red)'; wsStatus.textContent = 'Ajoute un titre.'; return; }
@@ -4056,6 +4105,7 @@ async function processSession(){
   await loadUc();
 
   await processSession();
+  if(mode === 'select') mode = 'viewer';
 
   wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
   render();
