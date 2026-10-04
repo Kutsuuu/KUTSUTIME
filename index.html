@@ -506,6 +506,31 @@
     aspect-ratio:16/9;
   }
   .twitchEmbedWrap iframe{width:100%;height:100%;border:none;display:block;}
+  .streamLayout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:stretch;}
+  .streamChat{
+    position:relative;min-height:440px;border-radius:var(--r-lg);overflow:hidden;
+    border:1px solid var(--border);background:#0e0e10;box-shadow:var(--shadow-md);
+  }
+  .streamChat iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
+  @media(max-width:900px){
+    .streamLayout{grid-template-columns:1fr;}
+    .streamChat{min-height:460px;}
+  }
+  .watchBar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:14px 18px;margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
+  }
+  .watchMine{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .watchMine .n{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:30px;color:var(--gold);}
+  .watchMine .l{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+  .watchMine .m{font-size:12.5px;color:var(--text-dim);}
+  .watchStatus{
+    padding:7px 14px;border-radius:var(--r-pill);background:var(--panel-3);color:var(--text-dim);
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
+  }
+  .watchStatus.on{background:rgba(63,174,92,0.15);color:var(--rate-green);}
+  .watchCreator{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .watchCreator input[type=text]{width:80px;margin:0;}
   .streamOfflineCard{
     text-align:center;padding:70px 24px;border:1px solid var(--border);border-radius:var(--r-lg);color:var(--text-dim);
   }
@@ -782,6 +807,8 @@ const BT_PLAYLISTS_KEY = 'blindtestPlaylists';
 const BT_GAME_KEY = 'blindtestGame';
 const BT_BUCKET = 'blindtest-audio';
 const UC_KEY = 'undercoverGame';
+const WATCH_CURRENCY = 'Ryos';
+const WATCH_PREFIX = 'watch:';
 
 let items = [];
 let viewerRatings = {}; // { movieId: [{who, score, comment, ts}] }
@@ -1071,6 +1098,7 @@ function goHome(){
 }
 
 function render(){
+  stopWatchTimer();
   if(mode === 'select') return renderSelect();
   if(mode === 'creator') return renderCreator();
   if(mode === 'viewer') return renderViewer();
@@ -2522,11 +2550,136 @@ function openCreatorSettings(){
 /* ---------- STREAM (lecteur Twitch intégré) ---------- */
 let streamViewFromCreator = true;
 
+let watchTimer = null;
+let watchLastAttempt = 0;
+let watchLoopCount = 0;
+let watchMine = null;
+let watchBoard = [];
+
+function stopWatchTimer(){
+  if(watchTimer){ clearInterval(watchTimer); watchTimer = null; }
+}
+
+async function loadWatchMine(){
+  watchMine = viewerName ? await kvGet(WATCH_PREFIX + viewerName.toLowerCase()) : null;
+}
+
+async function loadWatchBoard(){
+  try{
+    const { data, error } = await supabaseClient.from('app_data').select('key,value').like('key', WATCH_PREFIX + '%');
+    if(error){ console.error('loadWatchBoard', error); return; }
+    watchBoard = (data || []).map(r => {
+      const k = r.key.slice(WATCH_PREFIX.length);
+      const v = r.value || {};
+      return {key: k, display: v.display || k, points: v.points || 0, minutes: v.minutes || 0};
+    }).filter(r => r.points > 0).sort((x, y) => y.points - x.points).slice(0, 10);
+  }catch(e){ console.error('loadWatchBoard failed', e); }
+}
+
+function watchRate(){ return Math.max(1, parseInt(creatorSettings.earnRate, 10) || 5); }
+
+function drawWatchPanel(){
+  const barEl = document.getElementById('watchBar');
+  const boardEl = document.getElementById('watchBoard');
+  if(!barEl || !boardEl) return;
+  if(document.activeElement && document.activeElement.id === 'watchRateInput') return;
+  const inCreator = streamViewFromCreator;
+  const on = !!creatorSettings.earningOn;
+  const status = `<span class="watchStatus ${on ? 'on' : ''}">${on ? `Gains actifs · +${watchRate()} ${WATCH_CURRENCY} par minute` : 'Gains en pause'}</span>`;
+  let left;
+  if(inCreator){
+    left = `
+      <div class="watchCreator">
+        <button class="btn primary" id="watchToggleBtn" style="flex:none;">${on ? 'Arrêter les gains' : 'Activer les gains'}</button>
+        <input type="text" inputmode="numeric" id="watchRateInput" value="${watchRate()}" title="${WATCH_CURRENCY} par minute">
+        <button class="addbtn" id="watchRateSave">Enregistrer</button>
+      </div>`;
+  } else if(viewerName){
+    left = `
+      <div class="watchMine">
+        <div class="n">${watchMine ? watchMine.points : 0}</div>
+        <div class="l">${WATCH_CURRENCY}</div>
+        <div class="m">${watchMine ? watchMine.minutes : 0} min regardées</div>
+      </div>`;
+  } else {
+    left = `
+      <div class="watchMine">
+        <div class="l">Connecte-toi pour gagner des ${WATCH_CURRENCY}</div>
+        <button class="btn primary" id="watchLoginBtn" style="flex:none;">Se connecter</button>
+      </div>`;
+  }
+  const me = viewerName ? viewerName.toLowerCase() : null;
+  const board = watchBoard.length ? watchBoard.map((r, i) => `
+    <div class="lbRow ${me && r.key === me ? 'me' : ''}">
+      <div class="lbRank ${['top1','top2','top3'][i] || ''}">${i + 1}</div>
+      <div class="lbName">${escapeHtml(r.display)}</div>
+      <div class="lbPts">${r.points} ${WATCH_CURRENCY}</div>
+    </div>`).join('') : `<div class="empty" style="padding:24px 16px;"><div>Personne n'a encore de ${WATCH_CURRENCY}.</div></div>`;
+
+  barEl.innerHTML = `<div class="watchBar">${left}${status}</div>`;
+  boardEl.innerHTML = `
+    <div class="sectionLabel">Classement ${WATCH_CURRENCY}</div>
+    ${board}
+  `;
+
+  const tb = document.getElementById('watchToggleBtn');
+  if(tb) tb.onclick = async () => {
+    await loadSettings();
+    creatorSettings.earningOn = !creatorSettings.earningOn;
+    await saveSettings();
+    drawWatchPanel();
+  };
+  const rs = document.getElementById('watchRateSave');
+  if(rs) rs.onclick = async () => {
+    const v = Math.max(1, parseInt(document.getElementById('watchRateInput').value, 10) || 5);
+    await loadSettings();
+    creatorSettings.earnRate = v;
+    await saveSettings();
+    drawWatchPanel();
+  };
+  const wl = document.getElementById('watchLoginBtn');
+  if(wl) wl.onclick = () => setMode('select');
+}
+
+async function watchLoop(){
+  if(mode !== 'stream-view'){ stopWatchTimer(); return; }
+  if(!streamViewFromCreator) await loadSettings();
+  if(mode !== 'stream-view'){ stopWatchTimer(); return; }
+  const on = !!creatorSettings.earningOn;
+  if(viewerName && !isCreatorAccount && on && document.visibilityState === 'visible' && Date.now() - watchLastAttempt >= 55000){
+    watchLastAttempt = Date.now();
+    const key = WATCH_PREFIX + viewerName.toLowerCase();
+    const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
+    if(Date.now() - (rec.lastTick || 0) >= 50000){
+      rec.display = viewerName;
+      rec.points = (rec.points || 0) + watchRate();
+      rec.minutes = (rec.minutes || 0) + 1;
+      rec.lastTick = Date.now();
+      await kvSet(key, rec);
+    }
+    watchMine = rec;
+  }
+  watchLoopCount++;
+  if(watchLoopCount % 4 === 1) await loadWatchBoard();
+  drawWatchPanel();
+}
+
+async function startWatchTimer(){
+  stopWatchTimer();
+  watchLastAttempt = 0;
+  watchLoopCount = 0;
+  await loadWatchMine();
+  watchTimer = setInterval(watchLoop, 30000);
+  watchLoop();
+}
+
 function renderStreamView(){
   const inCreator = streamViewFromCreator;
   const channel = (creatorSettings.twitchChannel || '').trim();
   const parent = window.location.hostname || 'localhost';
   const src = channel ? `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(parent)}&muted=false` : '';
+  const chatSrc = channel ? `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${encodeURIComponent(parent)}&darkpopout` : '';
+  const ch = encodeURIComponent(channel);
 
   app.innerHTML = `
     <div class="page">
@@ -2539,14 +2692,28 @@ function renderStreamView(){
           <div>${inCreator ? "Ajoute ta chaîne Twitch dans les Réglages pour l'afficher ici." : "Le créateur n'a pas encore configuré sa chaîne Twitch."}</div>
         </div>
       ` : `
-        <div class="twitchEmbedWrap">
-          <iframe src="${src}" allowfullscreen scrolling="no"></iframe>
+        <div class="streamLayout">
+          <div class="streamMain">
+            <div class="twitchEmbedWrap">
+              <iframe src="${src}" allowfullscreen scrolling="no"></iframe>
+            </div>
+            <div class="hint" style="text-align:left;">
+              <a href="https://twitch.tv/${ch}" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">Ouvrir sur Twitch</a>
+              &nbsp;·&nbsp;
+              <a href="https://www.twitch.tv/popout/${ch}/chat?popout=" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">Ouvrir le chat dans Twitch</a>
+            </div>
+            <div id="watchBar"></div>
+          </div>
+          <div class="streamChat">
+            <iframe src="${chatSrc}" title="Chat Twitch"></iframe>
+          </div>
         </div>
-        <div class="hint"><a href="https://twitch.tv/${encodeURIComponent(channel)}" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">Ouvrir sur Twitch</a></div>
+        <div id="watchBoard"></div>
       `}
     </div>
   `;
   wireNav(inCreator ? 'creator' : 'viewer');
+  if(channel) startWatchTimer();
 }
 
 /* ---------- MINI-JEUX & CLASSEMENT ---------- */
