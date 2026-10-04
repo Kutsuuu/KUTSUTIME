@@ -8,13 +8,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#101a30; --panel:#16213d; --panel-2:#1c2a4a; --panel-3:#253458;
+    --bg:#0e0e0e; --panel:#161616; --panel-2:#1c1c1c; --panel-3:#262626;
     --paper:#f0e4c3; --ink:#1b1206;
     --gold:#c8402a; --gold-dim:#7a2718; --mustard:#d9a52c;
     --red:#e0455f;
     --twitch:#9146ff; --twitch-dim:#5c2ea6;
     --rate-red:#e5484d; --rate-orange:#f5a524; --rate-blue:#3b82f6; --rate-green:#3fae5c;
-    --text:#f3ead2; --text-dim:#8f97b5; --border:rgba(217,165,44,0.28);
+    --text:#f4f4f4; --text-dim:#9a9a9a; --border:rgba(255,255,255,0.12);
     --shadow-sm:3px 3px 0 rgba(0,0,0,0.35);
     --shadow-md:5px 5px 0 rgba(0,0,0,0.4);
     --shadow-lg:7px 7px 0 rgba(0,0,0,0.45);
@@ -134,7 +134,7 @@
   .tab:hover:not(.active){color:var(--text);}
 
   .selectBox{
-    background:#0f0c17;border:2px solid var(--border);border-radius:4px;
+    background:#111111;border:2px solid var(--border);border-radius:4px;
     padding:11px 14px;color:var(--text-dim);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
     cursor:pointer;outline:none;transition:border-color .15s;
   }
@@ -334,7 +334,7 @@
     background:var(--panel-2);border:2px solid var(--gold-dim);border-radius:6px;padding:18px;text-align:center;
   }
   .loginCountdownValue{
-    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:19px;color:var(--gold);letter-spacing:1px;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(26px,6vw,36px);color:var(--gold);letter-spacing:1px;
   }
   .hint{font-size:12px;color:var(--text-dim);text-align:center;margin-top:10px;line-height:1.6;}
   .back{
@@ -865,7 +865,7 @@
     .sidebarNav{flex-direction:row;flex:1;height:100%;}
     .sidebarLink{
       flex-direction:column;gap:3px;padding:8px 14px;height:100%;justify-content:center;
-      border-left:none;border-top:3px solid transparent;font-size:9.5px;
+      border-left:none;border-top:3px solid transparent;font-size:11px;
     }
     .sidebarLink.active{border-top-color:var(--gold);border-left-color:transparent;}
     .sidebarLink .sIcon{font-size:19px;}
@@ -1037,6 +1037,8 @@ function impliedAnimeName(t){
   const parts = (t.title || '').split(/\s[-–—:]\s/);
   return parts.length > 1 ? parts[0].trim() : '';
 }
+
+function posterInitial(t){ const c = String(t||'?').trim().charAt(0).toUpperCase(); return escapeHtml(c || '?'); }
 
 function escapeHtml(str){
   if(!str) return '';
@@ -1223,17 +1225,17 @@ function navHtml(activeKey, ctx){
       <div class="sidebar">
         <div class="sidebarLogo" id="navBrand">KUTSU<br>TIME</div>
         <div class="sidebarNav">
-          <button class="sidebarLink ${activeKey==='catalog'?'active':''}" data-go="creator"><span class="sIcon">🎬</span><span class="lbl">Catalogue</span></button>
-          <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule"><span class="sIcon">📅</span><span class="lbl">Calendrier</span></button>
-          <button class="sidebarLink ${activeKey==='viewers'?'active':''}" data-go="viewers-list"><span class="sIcon">👥</span><span class="lbl">Viewers</span></button>
-          <button class="sidebarLink ${activeKey==='dashboard'?'active':''}" data-go="dashboard"><span class="sIcon">📊</span><span class="lbl">Dashboard</span></button>
-          <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
-          <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
-          <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
+          <button class="sidebarLink ${activeKey==='catalog'?'active':''}" data-go="creator"><span class="lbl">Catalogue</span></button>
+          <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule"><span class="lbl">Calendrier</span></button>
+          <button class="sidebarLink ${activeKey==='viewers'?'active':''}" data-go="viewers-list"><span class="lbl">Viewers</span></button>
+          <button class="sidebarLink ${activeKey==='dashboard'?'active':''}" data-go="dashboard"><span class="lbl">Dashboard</span></button>
+          <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="lbl">Stream</span></button>
+          <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="lbl">Jeux</span></button>
+          <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="lbl">Roue</span></button>
         </div>
         <div class="sidebarBottom">
-          <button class="sidebarLink" id="navSettings"><span class="sIcon">⚙️</span><span class="lbl">Réglages</span></button>
-          <button class="sidebarLink" id="navSwitch"><span class="sIcon">🍿</span><span class="lbl">Vue viewer</span></button>
+          <button class="sidebarLink" id="navSettings"><span class="lbl">Réglages</span></button>
+          <button class="sidebarLink" id="navSwitch"><span class="lbl">Vue viewer</span></button>
         </div>
       </div>
     `;
@@ -1242,16 +1244,16 @@ function navHtml(activeKey, ctx){
     <div class="sidebar">
       <div class="sidebarLogo" id="navBrand">KUTSU<br>TIME</div>
       <div class="sidebarNav">
-        <button class="sidebarLink ${activeKey==='catalog'?'active':''}" data-go="viewer"><span class="sIcon">🍿</span><span class="lbl">Catalogue</span></button>
-        <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule-view"><span class="sIcon">📅</span><span class="lbl">Calendrier</span></button>
-        <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="sIcon">🔴</span><span class="lbl">Stream</span></button>
-        <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="sIcon">🎮</span><span class="lbl">Jeux</span></button>
-        <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="sIcon">🎡</span><span class="lbl">Roue</span></button>
-        ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="sIcon">🔒</span><span class="lbl">Espace créateur</span></button>` : ''}
+        <button class="sidebarLink ${activeKey==='catalog'?'active':''}" data-go="viewer"><span class="lbl">Catalogue</span></button>
+        <button class="sidebarLink ${activeKey==='schedule'?'active':''}" data-go="schedule-view"><span class="lbl">Calendrier</span></button>
+        <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="lbl">Stream</span></button>
+        <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="lbl">Jeux</span></button>
+        <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="lbl">Roue</span></button>
+        ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
       <div class="sidebarBottom">
         <button class="sidebarLink" id="navProfileTag">${viewerAvatarHtml(viewerName, 22)}<span class="lbl">${escapeHtml(viewerName||'')}</span></button>
-        <button class="sidebarLink" id="navQuit"><span class="sIcon">🚪</span><span class="lbl">Quitter</span></button>
+        <button class="sidebarLink" id="navQuit"><span class="lbl">Quitter</span></button>
       </div>
     </div>
   `;
@@ -1294,7 +1296,8 @@ function viewerAvatarHtml(name, size){
   if(p && p.avatar){
     return `<span style="display:inline-flex;width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;vertical-align:middle;"><img src="${p.avatar}" style="width:100%;height:100%;object-fit:cover;"></span>`;
   }
-  return '📺';
+  const ini = escapeHtml(((name||'?').trim().charAt(0) || '?').toUpperCase());
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:var(--panel-3);font-size:${Math.round(size*0.5)}px;font-weight:700;vertical-align:middle;">${ini}</span>`;
 }
 
 let loginCountdownTick = null;
@@ -1305,17 +1308,14 @@ function renderSelect(){
       <div class="hero">
         <div class="logo center">
           <h1>KUTSU TIME</h1>
-          <div class="tag">ta collection, tes affiches, tes viewers</div>
         </div>
       </div>
       <div class="loginCountdownBox" style="max-width:420px;margin:0 auto 20px;">
-        <div class="hint" style="margin-bottom:8px;">⏱️ Compte à rebours</div>
         <div id="loginCountdown" class="loginCountdownValue">--j --h --m --s</div>
       </div>
-      <div class="twitchbox" style="max-width:420px;margin:0 auto;">
-        <div style="text-align:center;font-size:34px;margin-bottom:14px;">📺</div>
+      <div class="twitchbox" style="max-width:380px;margin:0 auto;padding:22px;">
         <button class="btn twitch" id="twitchBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;">
-          <span>📺</span> Se connecter avec Twitch
+          Se connecter avec Twitch
         </button>
         <div class="hint" style="margin:14px 0;display:flex;align-items:center;gap:10px;">
           <span style="flex:1;height:1px;background:var(--border);"></span>ou avec un compte email<span style="flex:1;height:1px;background:var(--border);"></span>
@@ -1343,7 +1343,7 @@ function renderSelect(){
           <label>Mot de passe</label>
           <input type="password" id="signupPass" placeholder="••••••••" autocomplete="new-password">
           <div class="hint" style="text-align:left;color:var(--rate-orange);margin-bottom:12px;">
-            ⚠️ Utilise un mot de passe que tu n'utilises sur aucun autre site. Ce compte sert uniquement à te reconnaître sur Kutsu Time, ce n'est pas une plateforme bancaire ou professionnelle.
+            Utilise un mot de passe que tu n'utilises sur aucun autre site. Ce compte sert uniquement à te reconnaître sur Kutsu Time, ce n'est pas une plateforme bancaire ou professionnelle.
           </div>
           <div class="hint" id="signupError" style="color:var(--rate-red);min-height:16px;"></div>
           <button class="btn primary" id="signupBtn" style="width:100%;">Créer mon compte</button>
@@ -1445,7 +1445,7 @@ function renderCreator(){
     <div class="page">
       ${navHtml('catalog','creator')}
       <div class="controls">
-        <div class="search"><span class="ic">🔍</span><input type="text" id="search" placeholder="Chercher un titre, un genre..." value="${escapeHtml(query)}"></div>
+        <div class="search"><input type="text" id="search" placeholder="Chercher un titre, un genre..." value="${escapeHtml(query)}"></div>
         ${filterControlsHtml()}
         <button class="addbtn" id="openAdd">+ Ajouter un titre</button>
       </div>
@@ -1454,7 +1454,7 @@ function renderCreator(){
         <button class="tab ${filter==='film'?'active':''}" data-f="film">Films</button>
         <button class="tab ${filter==='serie'?'active':''}" data-f="serie">Séries</button>
         <button class="tab ${filter==='anime'?'active':''}" data-f="anime">Animes</button>
-        <button class="tab ${filter==='sagas'?'active':''}" data-f="sagas">🧩 Sagas</button>
+        <button class="tab ${filter==='sagas'?'active':''}" data-f="sagas">Sagas</button>
         <button class="tab ${filter==='favorites'?'active':''}" data-f="favorites">♥ Favoris</button>
       </div>
       <div id="grid"></div>
@@ -1481,7 +1481,7 @@ function renderViewer(){
     <div class="page">
       ${navHtml('catalog','viewer')}
       <div class="controls">
-        <div class="search"><span class="ic">🔍</span><input type="text" id="search" placeholder="Chercher un titre, un genre..." value="${escapeHtml(query)}"></div>
+        <div class="search"><input type="text" id="search" placeholder="Chercher un titre, un genre..." value="${escapeHtml(query)}"></div>
         ${filterControlsHtml()}
       </div>
       <div class="tabs" id="tabs" style="margin-bottom:22px;">
@@ -1489,7 +1489,7 @@ function renderViewer(){
         <button class="tab ${filter==='film'?'active':''}" data-f="film">Films</button>
         <button class="tab ${filter==='serie'?'active':''}" data-f="serie">Séries</button>
         <button class="tab ${filter==='anime'?'active':''}" data-f="anime">Animes</button>
-        <button class="tab ${filter==='sagas'?'active':''}" data-f="sagas">🧩 Sagas</button>
+        <button class="tab ${filter==='sagas'?'active':''}" data-f="sagas">Sagas</button>
         <button class="tab ${filter==='favorites'?'active':''}" data-f="favorites">♥ Favoris</button>
       </div>
       <div id="grid"></div>
@@ -1522,7 +1522,7 @@ function renderViewersList(){
         <div class="tag">${viewers.length} compte${viewers.length>1?'s':''} viewer${viewers.length>1?'s':''}</div>
       </div>
       <div class="search" style="margin-bottom:20px;max-width:340px;">
-        <span class="ic">🔍</span><input type="text" id="vsearch" placeholder="Chercher un viewer..." value="${escapeHtml(viewerSearchQuery)}">
+        <input type="text" id="vsearch" placeholder="Chercher un viewer..." value="${escapeHtml(viewerSearchQuery)}">
       </div>
       <div id="vlist"></div>
     </div>
@@ -1533,7 +1533,7 @@ function renderViewersList(){
     drawViewersList(viewers);
   });
   if(viewers.length === 0){
-    document.getElementById('vlist').innerHTML = `<div class="empty"><div class="ic">👥</div><div>Aucun viewer ne s'est encore connecté.</div></div>`;
+    document.getElementById('vlist').innerHTML = `<div class="empty"><div>Aucun viewer ne s'est encore connecté.</div></div>`;
     return;
   }
   drawViewersList(viewers);
@@ -1544,7 +1544,7 @@ function drawViewersList(viewers){
   const q = viewerSearchQuery.trim().toLowerCase();
   const filtered = q ? viewers.filter(v => v.display.toLowerCase().includes(q)) : viewers;
   if(filtered.length === 0){
-    vlist.innerHTML = `<div class="empty"><div class="ic">🔍</div><div>Aucun viewer ne correspond à cette recherche.</div></div>`;
+    vlist.innerHTML = `<div class="empty"><div>Aucun viewer ne correspond à cette recherche.</div></div>`;
     return;
   }
   vlist.innerHTML = filtered.map(v => `
@@ -1575,7 +1575,7 @@ function renderViewerProfile(){
     app.innerHTML = `
       <div class="page">
         ${navHtml('viewers','creator')}
-        <div class="empty"><div class="ic">👥</div><div>Ce viewer n'a plus de notes enregistrées.</div></div>
+        <div class="empty"><div>Ce viewer n'a plus de notes enregistrées.</div></div>
         <button class="back" id="backV" style="margin-top:16px;">← retour aux viewers</button>
       </div>
     `;
@@ -1615,11 +1615,11 @@ function renderViewerProfile(){
   document.getElementById('backV').onclick = () => setMode('viewers-list');
   const wrapM = document.getElementById('vmovies');
   if(movies.length === 0){
-    wrapM.innerHTML = `<div class="empty" style="padding:30px 18px;"><div class="ic">🎬</div><div>Aucun film noté individuellement pour l'instant.</div></div>`;
+    wrapM.innerHTML = `<div class="empty" style="padding:30px 18px;"><div>Aucun film noté individuellement pour l'instant.</div></div>`;
   } else {
   wrapM.innerHTML = movies.map(m => `
     <div class="mrow">
-      <div class="mposter" style="${m.movie.poster ? `background-image:url('${m.movie.poster}')` : ''}">${m.movie.poster ? '' : '🎬'}</div>
+      <div class="mposter" style="${m.movie.poster ? `background-image:url('${m.movie.poster}')` : ''}">${m.movie.poster ? '' : posterInitial(m.movie.title)}</div>
       <div class="mtitle">
         ${escapeHtml(m.movie.title)}
         ${m.comment ? `<div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text-dim);margin-top:3px;">${escapeHtml(m.comment)}</div>` : ''}
@@ -1672,7 +1672,6 @@ function renderSchedule(ctx){
       <div class="controls" style="align-items:center;">
         <div class="logo" style="flex:1;">
           <h1 style="font-size:26px;">CALENDRIER</h1>
-          <div class="tag">${isCreator ? 'prochaines rediffs à annoncer' : 'ce que le créateur va react'}</div>
         </div>
         ${isCreator ? `<button class="addbtn" id="openAddSched">+ Programmer</button>` : ''}
       </div>
@@ -1706,7 +1705,7 @@ function renderSchedule(ctx){
         <div class="dayColBody">
           ${dayItems.length === 0 ? `<div class="dayEmpty">—</div>` : dayItems.map(s => `
             <div class="evCard" data-id="${s.id}">
-              ${s.time ? `<div class="evTime">🕒 ${escapeHtml(s.time)}</div>` : ''}
+              ${s.time ? `<div class="evTime">${escapeHtml(s.time)}</div>` : ''}
               <div class="evTitle">${escapeHtml(s.title)}</div>
               ${s.note ? `<div class="evNote">${escapeHtml(s.note)}</div>` : ''}
               ${isCreator ? `
@@ -1897,7 +1896,7 @@ function renderSagaCards(grid, ctx){
   if(summaries.length === 0){
     grid.innerHTML = `
       <div class="empty">
-        <div class="ic">🧩</div>
+        
         <div>${ctx === 'creator'
           ? "Aucune saga pour l'instant. Ouvre un titre → Modifier, et remplis le champ « Saga » (ex : Harry Potter, MCU, Spider-Man) pour le regrouper avec d'autres."
           : "Le créateur n'a pas encore organisé de sagas."}</div>
@@ -1909,13 +1908,13 @@ function renderSagaCards(grid, ctx){
   grid.innerHTML = `<div class="grid">${summaries.map(s => `
     <div class="card sagaCard" data-saga="${escapeHtml(s.name)}">
       <div class="poster" style="${s.cover ? `background-image:url('${s.cover}')` : ''}">
-        ${s.cover ? '' : '🧩'}
+        ${s.cover ? '' : posterInitial(s.name)}
         <span class="badge">${s.count} titre${s.count>1?'s':''}</span>
       </div>
       <div class="info">
         <div class="title">${escapeHtml(s.name)}</div>
         <div class="ratingsRow">
-          <span class="rchip" style="color:${ratingColor(s.avg)}" title="Note moyenne de la saga">🎬 ${s.avg ? s.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
+          <span class="rchip" style="color:${ratingColor(s.avg)}" title="Note moyenne de la saga">Moy ${s.avg ? s.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
         </div>
       </div>
     </div>
@@ -1973,16 +1972,16 @@ function renderGrid(ctx){
 
   if(items.length === 0){
     grid.innerHTML = ctx === 'creator'
-      ? `<div class="empty"><div class="ic">🎞️</div><div>Ta collection est vide pour l'instant.</div><button class="btn2" id="emptyAdd">Ajouter ton premier titre</button></div>`
-      : `<div class="empty"><div class="ic">🎞️</div><div>Le créateur n'a pas encore ajouté de titres.</div></div>`;
+      ? `<div class="empty"><div>Ta collection est vide pour l'instant.</div><button class="btn2" id="emptyAdd">Ajouter ton premier titre</button></div>`
+      : `<div class="empty"><div>Le créateur n'a pas encore ajouté de titres.</div></div>`;
     const btn = document.getElementById('emptyAdd');
     if(btn) btn.onclick = () => openModal();
     return;
   }
   if(list.length === 0){
     grid.innerHTML = backHtml + (filter === 'favorites'
-      ? `<div class="empty"><div class="ic">♥</div><div>Aucun favori pour l'instant.</div></div>`
-      : `<div class="empty"><div class="ic">🔍</div><div>Aucun résultat pour cette recherche.</div></div>`);
+      ? `<div class="empty"><div>Aucun favori pour l'instant.</div></div>`
+      : `<div class="empty"><div>Aucun résultat pour cette recherche.</div></div>`);
     const bb = document.getElementById('backToSagas');
     if(bb) bb.onclick = () => { selectedSaga = null; renderGrid(ctx); };
     return;
@@ -1998,7 +1997,7 @@ function renderGrid(ctx){
     return `
     <div class="card" data-id="${it.id}">
       <div class="poster" style="${it.poster ? `background-image:url('${it.poster}')` : ''}">
-        ${it.poster ? '' : '🎬'}
+        ${it.poster ? '' : posterInitial(it.title)}
         <span class="badge">${typeLabel(it.type)}</span>
         ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="badge rediff" title="Voir la rediff">▶ Rediff</a>` : ''}
         <button class="favBtn ${fav ? 'active' : ''}" data-fav="${it.id}" title="Favori">${fav ? '♥' : '♡'}</button>
@@ -2007,9 +2006,9 @@ function renderGrid(ctx){
         <div class="title">${escapeHtml(it.title)}</div>
         ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
         <div class="ratingsRow">
-          <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">🎬 ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
-          ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">👤 ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>` : ''}
-          <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+')' : ''}">📺 ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
+          <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">Créa ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
+          ${ctx === 'viewer' ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">Toi ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>` : ''}
+          <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+')' : ''}">Moy ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
         </div>
       </div>
     </div>
@@ -2052,9 +2051,9 @@ function openModal(existing){
       <div class="modal">
         <h3>${isEdit ? 'Modifier le titre' : 'Ajouter un titre'}</h3>
         <div class="typetoggle">
-          <button type="button" class="typebtn ${it.type==='film'?'active':''}" data-t="film">🎬 Film</button>
-          <button type="button" class="typebtn ${it.type==='serie'?'active':''}" data-t="serie">📺 Série</button>
-          <button type="button" class="typebtn ${it.type==='anime'?'active':''}" data-t="anime">🌸 Anime</button>
+          <button type="button" class="typebtn ${it.type==='film'?'active':''}" data-t="film">Film</button>
+          <button type="button" class="typebtn ${it.type==='serie'?'active':''}" data-t="serie">Série</button>
+          <button type="button" class="typebtn ${it.type==='anime'?'active':''}" data-t="anime">Anime</button>
         </div>
         <label>Titre</label>
         <input type="text" id="fTitle" value="${escapeHtml(it.title)}" placeholder="ex : Parasite">
@@ -2069,9 +2068,9 @@ function openModal(existing){
         </datalist>
         <label>Affiche</label>
         <div class="posterrow">
-          <div class="posterpreview" id="posterPreview" style="${it.poster ? `background-image:url('${it.poster}')`:''}">${it.poster ? '' : '🖼️'}</div>
+          <div class="posterpreview" id="posterPreview" style="${it.poster ? `background-image:url('${it.poster}')`:''}">${it.poster ? '' : '+'}</div>
           <div class="posterfields">
-            <label class="filebtn" for="fFile">📁 Importer une image</label>
+            <label class="filebtn" for="fFile">Importer une image</label>
             <input type="file" id="fFile" accept="image/*">
             <label style="margin-top:4px;">ou coller une URL</label>
             <input type="text" id="fPosterUrl" value="${it.poster && it.poster.startsWith('http') ? escapeHtml(it.poster) : ''}" placeholder="https://...">
@@ -2178,7 +2177,7 @@ function openDetail(id){
     <div class="overlay" id="overlay">
       <div class="modal">
         <div class="detailhead">
-          <div class="detailposter" style="${it.poster?`background-image:url('${it.poster}')`:''}">${it.poster?'':'🎬'}</div>
+          <div class="detailposter" style="${it.poster?`background-image:url('${it.poster}')`:''}">${it.poster?'':posterInitial(it.title)}</div>
           <div class="detailinfo">
             <h3>${escapeHtml(it.title)}</h3>
             <div class="metaline">${typeLabel(it.type)}${it.year ? ' · '+escapeHtml(it.year):''}${it.genre ? ' · '+escapeHtml(it.genre):''}</div>
@@ -2189,15 +2188,15 @@ function openDetail(id){
             </div>
           </div>
         </div>
-        <div class="pubbox"><span class="l">📺 Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
-        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
+        <div class="pubbox"><span class="l">Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
+        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">Noter les saisons & épisodes</button>` : ''}
         ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
         ${it.rediff ? `<a href="${escapeHtml(it.rediff)}" target="_blank" rel="noopener noreferrer" class="rediffLink">▶ Voir la rediff</a>` : ''}
         ${(viewerRatings[id]||[]).some(r=>r.comment) ? `
           <div class="commentsTitle">Avis des viewers</div>
           ${(viewerRatings[id]||[]).filter(r=>r.comment).slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).map(r => `
             <div class="comment">
-              <div class="who"><span>📺 ${escapeHtml(r.who)}</span><span style="color:${ratingColor(r.score)}">${r.score % 1 === 0 ? r.score : r.score.toFixed(1)}/10</span></div>
+              <div class="who"><span>${escapeHtml(r.who)}</span><span style="color:${ratingColor(r.score)}">${r.score % 1 === 0 ? r.score : r.score.toFixed(1)}/10</span></div>
               <div class="txt">${escapeHtml(r.comment)}</div>
             </div>
           `).join('')}
@@ -2267,7 +2266,7 @@ function openViewerRate(id){
     <div class="overlay" id="overlay">
       <div class="modal">
         <div class="detailhead">
-          <div class="detailposter" style="${it.poster?`background-image:url('${it.poster}')`:''}">${it.poster?'':'🎬'}</div>
+          <div class="detailposter" style="${it.poster?`background-image:url('${it.poster}')`:''}">${it.poster?'':posterInitial(it.title)}</div>
           <div class="detailinfo">
             <h3>${escapeHtml(it.title)}</h3>
             <div class="metaline">${typeLabel(it.type)}${it.year ? ' · '+escapeHtml(it.year):''}${it.genre ? ' · '+escapeHtml(it.genre):''}</div>
@@ -2278,9 +2277,9 @@ function openViewerRate(id){
             </div>
           </div>
         </div>
-        <div class="pubbox"><span class="l">🎬 Note du créateur</span><span class="v" style="color:${ratingColor(creatorStat.avg)}">${creatorStat.count ? (creatorStat.avg % 1 === 0 ? creatorStat.avg : creatorStat.avg.toFixed(1))+'/10' : '—'}</span></div>
-        <div class="pubbox"><span class="l">📺 Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
-        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">🎞️ Noter les saisons & épisodes</button>` : ''}
+        <div class="pubbox"><span class="l">Note du créateur</span><span class="v" style="color:${ratingColor(creatorStat.avg)}">${creatorStat.count ? (creatorStat.avg % 1 === 0 ? creatorStat.avg : creatorStat.avg.toFixed(1))+'/10' : '—'}</span></div>
+        <div class="pubbox"><span class="l">Note moyenne${pub.count ? ` (${pub.count} vote${pub.count>1?'s':''})` : ''}</span><span class="v" style="color:${ratingColor(pub.avg)}">${pub.count ? pub.avg.toFixed(1)+'/10' : '—'}</span></div>
+        ${isEpisodic(it.type) ? `<button class="episodesBtn" id="epsBtn">Noter les saisons & épisodes</button>` : ''}
         <label>Ton avis (optionnel)</label>
         <textarea id="commentInput" placeholder="Ce que tu en as pensé...">${escapeHtml(mine && mine.comment ? mine.comment : '')}</textarea>
         ${it.synopsis ? `<div class="synopsis">${escapeHtml(it.synopsis)}</div>` : ''}
@@ -2289,7 +2288,7 @@ function openViewerRate(id){
           <div class="commentsTitle">Avis des viewers</div>
           ${(viewerRatings[id]||[]).filter(r=>r.comment).slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).map(r => `
             <div class="comment">
-              <div class="who"><span>📺 ${escapeHtml(r.who)}</span><span style="color:${ratingColor(r.score)}">${r.score % 1 === 0 ? r.score : r.score.toFixed(1)}/10</span></div>
+              <div class="who"><span>${escapeHtml(r.who)}</span><span style="color:${ratingColor(r.score)}">${r.score % 1 === 0 ? r.score : r.score.toFixed(1)}/10</span></div>
               <div class="txt">${escapeHtml(r.comment)}</div>
             </div>
           `).join('')}
@@ -2340,7 +2339,7 @@ function openEpisodesManager(it){
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal">
-          <h3>🎞️ ${escapeHtml(it.title)}</h3>
+          <h3>${escapeHtml(it.title)}</h3>
           <div id="seasonsWrap"></div>
           <button class="addSeasonBtn" id="addSeasonBtn">+ Ajouter une saison</button>
           <div class="modalbtns" style="margin-top:18px;">
@@ -2354,7 +2353,7 @@ function openEpisodesManager(it){
 
     const wrap = document.getElementById('seasonsWrap');
     if(it.seasons.length === 0){
-      wrap.innerHTML = `<div class="empty" style="padding:36px 18px;"><div class="ic">🎬</div><div>Aucune saison pour l'instant. Ajoute ta première saison ci-dessous.</div></div>`;
+      wrap.innerHTML = `<div class="empty" style="padding:36px 18px;"><div>Aucune saison pour l'instant. Ajoute ta première saison ci-dessous.</div></div>`;
     } else {
       wrap.innerHTML = it.seasons.map(s => `
         <div class="seasonBlock">
@@ -2466,7 +2465,7 @@ function openViewerEpisodes(it){
     root.innerHTML = `
       <div class="overlay" id="overlay">
         <div class="modal">
-          <h3>🎞️ ${escapeHtml(it.title)}</h3>
+          <h3>${escapeHtml(it.title)}</h3>
           <div id="seasonsWrap"></div>
           <div class="modalbtns" style="margin-top:18px;">
             <button class="btn primary" id="closeBtn">Fermer</button>
@@ -2480,7 +2479,7 @@ function openViewerEpisodes(it){
     const wrap = document.getElementById('seasonsWrap');
     const seasons = it.seasons || [];
     if(seasons.length === 0){
-      wrap.innerHTML = `<div class="empty" style="padding:36px 18px;"><div class="ic">🎬</div><div>Le créateur n'a pas encore ajouté de saisons pour ce titre.</div></div>`;
+      wrap.innerHTML = `<div class="empty" style="padding:36px 18px;"><div>Le créateur n'a pas encore ajouté de saisons pour ce titre.</div></div>`;
       return;
     }
     wrap.innerHTML = seasons.map(s => `
@@ -2493,7 +2492,7 @@ function openViewerEpisodes(it){
           return `
             <div class="epRow">
               <span class="epNum">E${e.number}</span>
-              <span class="epLabel">Épisode ${e.number}${e.rating ? ` · 🎬 ${e.rating}/10` : ''}</span>
+              <span class="epLabel">Épisode ${e.number}${e.rating ? ` · ${e.rating}/10` : ''}</span>
               <input type="text" inputmode="decimal" class="epInput" data-season="${s.number}" data-ep="${e.number}"
                 style="color:${ratingColor(mine ? mine.score : 0)}" value="${mine ? mine.score : ''}" placeholder="—">
             </div>
@@ -2541,18 +2540,18 @@ function openMyProfileModal(){
   root.innerHTML = `
     <div class="overlay" id="overlay">
       <div class="modal">
-        <h3>👤 Mon profil</h3>
+        <h3>Mon profil</h3>
         <div class="avatarRow">
-          <div class="avatarPreview" id="avatarPreview">${localAvatar ? `<img src="${localAvatar}">` : '🍿'}</div>
+          <div class="avatarPreview" id="avatarPreview">${localAvatar ? `<img src="${localAvatar}">` : posterInitial(viewerName)}</div>
           <div>
-            <label class="filebtn" for="avatarFile" style="margin-bottom:0;">📁 Changer la photo</label>
+            <label class="filebtn" for="avatarFile" style="margin-bottom:0;">Changer la photo</label>
             <input type="file" id="avatarFile" accept="image/*">
           </div>
         </div>
         <label>Pseudo affiché</label>
         <input type="text" id="pseudoInput" value="${escapeHtml(profile.display || viewerName)}" placeholder="Ton pseudo">
         <div class="hint" style="text-align:left;margin-bottom:14px;">
-          ⚠️ Si tu changes ton pseudo, tes notes déjà envoyées resteront affichées sous ton ancien pseudo dans l'historique.
+          Si tu changes ton pseudo, tes notes déjà envoyées resteront affichées sous ton ancien pseudo dans l'historique.
         </div>
         <label>Ta bio</label>
         <textarea id="bioInput" placeholder="Quelques mots sur toi...">${escapeHtml(profile.bio||'')}</textarea>
@@ -2612,17 +2611,14 @@ function openCreatorSettings(){
   root.innerHTML = `
     <div class="overlay" id="overlay">
       <div class="modal">
-        <h3>⚙️ Réglages</h3>
+        <h3>Réglages</h3>
         <label>Ton pseudo Twitch (pour le lecteur en direct)</label>
         <input type="text" id="sChannel" value="${escapeHtml(creatorSettings.twitchChannel||'')}" placeholder="ex : monPseudoTwitch">
-        <div class="hint" style="text-align:left;margin-bottom:16px;">
-          C'est le nom de chaîne utilisé pour afficher ton stream en direct dans l'onglet « Stream » du site.
-        </div>
         <div class="modalbtns">
           <button class="btn ghost" id="cancelBtn">Annuler</button>
           <button class="btn primary" id="saveBtn">Enregistrer</button>
         </div>
-        <button class="btn ghost" id="logoutBtn" style="width:100%;margin-top:14px;color:var(--rate-red);border-color:rgba(200,30,58,0.3);">🚪 Déconnexion</button>
+        <button class="btn ghost" id="logoutBtn" style="width:100%;margin-top:14px;color:var(--rate-red);border-color:rgba(200,30,58,0.3);">Déconnexion</button>
       </div>
     </div>
   `;
@@ -2657,21 +2653,16 @@ function renderStreamView(){
       ${navHtml('stream', inCreator ? 'creator' : 'viewer')}
       <div class="logo" style="margin-bottom:20px;">
         <h1 style="font-size:28px;">STREAM</h1>
-        <div class="tag">${channel ? 'en direct depuis Twitch' : 'aucune chaîne configurée'}</div>
       </div>
       ${!channel ? `
         <div class="streamOfflineCard">
-          <div style="font-size:34px;margin-bottom:12px;">📡</div>
           <div>${inCreator ? "Ajoute ta chaîne Twitch dans les Réglages pour l'afficher ici." : "Le créateur n'a pas encore configuré sa chaîne Twitch."}</div>
         </div>
       ` : `
         <div class="twitchEmbedWrap">
           <iframe src="${src}" allowfullscreen scrolling="no"></iframe>
         </div>
-        <div class="hint">
-          Si le lecteur ne s'affiche pas, Twitch bloque parfois l'intégration selon le domaine. Tu peux toujours
-          <a href="https://twitch.tv/${encodeURIComponent(channel)}" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">ouvrir le stream directement sur Twitch</a>.
-        </div>
+        <div class="hint"><a href="https://twitch.tv/${encodeURIComponent(channel)}" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">Ouvrir sur Twitch</a></div>
       `}
     </div>
   `;
@@ -2686,12 +2677,12 @@ function leaderboardHtml(){
     .map(([key, pts]) => ({key, pts, display: (viewerProfiles[key] && viewerProfiles[key].display) || key}))
     .sort((a,b) => b.pts - a.pts);
   if(rows.length === 0){
-    return `<div class="empty"><div class="ic">🏆</div><div>Aucun score enregistré pour l'instant. Joue pour apparaître ici !</div></div>`;
+    return `<div class="empty"><div>Aucun score enregistré pour l'instant. Joue pour apparaître ici !</div></div>`;
   }
   const medals = ['top1','top2','top3'];
   return rows.map((r, i) => `
     <div class="lbRow ${viewerName && r.key === viewerName.toLowerCase() ? 'me' : ''}">
-      <div class="lbRank ${medals[i] || ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : (i+1)}</div>
+      <div class="lbRank ${medals[i] || ''}">${(i+1)}</div>
       <div class="lbName">${escapeHtml(r.display)}</div>
       <div class="lbPts">${r.pts} pts</div>
     </div>
@@ -2708,7 +2699,6 @@ function renderGames(){
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
       <div class="logo" style="margin-bottom:20px;">
         <h1 style="font-size:28px;">MINI-JEUX</h1>
-        <div class="tag">${inCreator ? 'gère la partie et regarde le classement' : 'joue et grimpe au classement'}</div>
       </div>
       ${!inCreator ? `
         <div class="myPointsBox">
@@ -2718,23 +2708,17 @@ function renderGames(){
       ` : ''}
       <div class="gamesGrid">
         <div class="gameCard" id="gameSoleil">
-          <div class="gicon">☀️</div>
           <div class="gtitle">1, 2, 3 Soleil</div>
-          <div class="gdesc">${inCreator ? "Crée un lobby, laisse les viewers te rejoindre, puis lance la partie quand tu veux." : "Rejoins le lobby du créateur et avance sans te faire prendre !"}</div>
         </div>
         <div class="gameCard" id="gameBlindtest">
-          <div class="gicon">🎵</div>
           <div class="gtitle">Blind Test</div>
-          <div class="gdesc">${inCreator ? "Choisis tes catégories (opening, ending, OST...), lance la partie, les viewers devinent en direct." : "Écoute l'extrait et devine le titre avant les autres pour marquer plus de points !"}</div>
         </div>
         <div class="gameCard" id="gameUndercover">
-          <div class="gicon">🕵️</div>
           <div class="gtitle">Undercover</div>
-          <div class="gdesc">${inCreator ? "Choisis le nombre de joueurs et d'infiltrés, lance la partie, chacun reçoit son mot en secret." : "Reçois ton mot en secret, décris-le sans te faire démasquer !"}</div>
         </div>
       </div>
-      ${inCreator ? `<button class="addbtn" id="manageBtTracks" style="margin-bottom:10px;">🎼 Gérer la bibliothèque de musiques</button>` : ''}
-      <div class="sectionLabel">Classement${inCreator ? ` <button class="pill" id="resetLeaderboard" style="margin-left:10px;">🗑️ Reset</button>` : ''}</div>
+      ${inCreator ? `<button class="addbtn" id="manageBtTracks" style="margin-bottom:10px;">Gérer la bibliothèque de musiques</button>` : ''}
+      <div class="sectionLabel">Classement${inCreator ? ` <button class="pill" id="resetLeaderboard" style="margin-left:10px;">Reset</button>` : ''}</div>
       <div id="leaderboard"></div>
     </div>
   `;
@@ -2780,8 +2764,7 @@ function renderSoleil(){
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
       <div class="logo" style="margin-bottom:20px;">
-        <h1 style="font-size:28px;">☀️ 1, 2, 3 SOLEIL</h1>
-        <div class="tag">${inCreator ? 'gère le lobby et la partie' : 'avance sans te faire prendre'}</div>
+        <h1 style="font-size:28px;">1, 2, 3 SOLEIL</h1>
       </div>
       <div id="soleilStageWrap"></div>
     </div>
@@ -2803,11 +2786,11 @@ function playerCountHtml(){
 
 function playersListHtml(showProgress){
   const list = Object.entries(soleilGame.players || {}).sort((a,b) => b[1].progress - a[1].progress);
-  if(list.length === 0) return `<div class="empty" style="padding:30px 18px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+  if(list.length === 0) return `<div class="empty" style="padding:30px 18px;"><div>Personne n'a encore rejoint.</div></div>`;
   const target = soleilGame.target || 100;
   return list.map(([key, p]) => `
     <div class="playerRow ${p.eliminated ? 'eliminated' : ''}">
-      <span class="pname">${p.eliminated ? '❌ ' : ''}${escapeHtml(p.display)}</span>
+      <span class="pname">${p.eliminated ? '' : ''}${escapeHtml(p.display)}</span>
       <div class="ptrack"><div class="pfill" style="width:${Math.min(100, (p.progress/target)*100)}%"></div></div>
       <span class="ppct">${Math.min(target, p.progress)}/${target}</span>
     </div>
@@ -2857,7 +2840,7 @@ function raceTrackHtml(inCreator){
       <div class="raceTrack" style="min-height:260px;display:flex;align-items:center;justify-content:center;">
         ${scenery}
         <div class="empty" style="position:relative;z-index:1;background:rgba(20,20,20,0.75);border:none;padding:24px 30px;">
-          <div class="ic">👥</div><div>Personne n'a encore rejoint.</div>
+          <div>Personne n'a encore rejoint.</div>
         </div>
       </div>
     `;
@@ -2905,12 +2888,12 @@ function drawSoleil(inCreator){
   if(g.status === 'idle'){
     wrap.innerHTML = inCreator ? `
       <div class="empty">
-        <div class="ic">☀️</div>
+        
         <div>Aucune partie en cours.</div>
         <button class="btn2" id="createLobbyBtn">Créer un lobby</button>
       </div>
     ` : `
-      <div class="empty"><div class="ic">☀️</div><div>Le créateur n'a pas encore ouvert de partie.</div></div>
+      <div class="empty"><div>Le créateur n'a pas encore ouvert de partie.</div></div>
     `;
     const cb = document.getElementById('createLobbyBtn');
     if(cb) cb.onclick = async () => {
@@ -2931,12 +2914,12 @@ function drawSoleil(inCreator){
         ${inCreator ? `
           <div class="modalbtns" style="margin-top:18px;">
             <button class="btn ghost" id="closeLobbyBtn">✕ Fermer le lobby</button>
-            <button class="btn primary" id="startGameBtn" ${Object.keys(g.players).length === 0 ? 'disabled' : ''}>▶️ Lancer la partie</button>
+            <button class="btn primary" id="startGameBtn" ${Object.keys(g.players).length === 0 ? 'disabled' : ''}>Lancer la partie</button>
           </div>
         ` : (joined ? `
           <div class="hint">Tu es dans le lobby ! En attente que le créateur lance la partie...</div>
         ` : `
-          <button class="btn primary" id="joinLobbyBtn" style="width:100%;max-width:260px;margin:0 auto;display:block;">🎮 Rejoindre le lobby</button>
+          <button class="btn primary" id="joinLobbyBtn" style="width:100%;max-width:260px;margin:0 auto;display:block;">Rejoindre le lobby</button>
         `)}
       </div>
     `;
@@ -2978,18 +2961,16 @@ function drawSoleil(inCreator){
         <div class="lightIndicator ${g.light}">${g.light === 'green' ? 'VERT' : 'ROUGE'}</div>
         ${inCreator ? `
           <button class="toggleLightBtn ${g.light === 'green' ? 'red' : 'green'}" id="toggleLightBtn">
-            ${g.light === 'green' ? '🔴 Passer au rouge' : '🟢 Repasser au vert'}
+            ${g.light === 'green' ? 'Passer au rouge' : 'Repasser au vert'}
           </button>
-          <div class="hint">Guette ceux qui bougent pendant le rouge (contour rouge qui pulse), puis clique sur leur personnage pour les éliminer.</div>
         ` : (me && !me.eliminated ? `
-          <button class="tapZone" id="tapZoneBtn">☀️<br>AVANCE</button>
-          <div class="hint">${g.light === 'green' ? 'La voie est libre, avance !' : 'STOP ! Ne bouge plus... ou le créateur va te repérer.'}</div>
+          <button class="tapZone" id="tapZoneBtn">AVANCE</button>
         ` : me && me.eliminated ? `
-          <div class="hint" style="font-size:15px;color:var(--red);margin:20px 0;">❌ Tu as été éliminé ! Regarde la suite en spectateur.</div>
+          <div class="hint" style="font-size:15px;color:var(--red);margin:20px 0;">Tu as été éliminé ! Regarde la suite en spectateur.</div>
         ` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`)}
         <div class="sectionLabel">La piste</div>
         <div id="raceTrackWrap">${raceTrackHtml(inCreator)}</div>
-        ${inCreator ? `<button class="btn ghost" id="stopGameBtn" style="width:100%;margin-top:14px;">⏹️ Arrêter la partie</button>` : ''}
+        ${inCreator ? `<button class="btn ghost" id="stopGameBtn" style="width:100%;margin-top:14px;">Arrêter la partie</button>` : ''}
       </div>
     `;
     if(inCreator){
@@ -3024,13 +3005,12 @@ function drawSoleil(inCreator){
     const isMe = g.winner === key;
     wrap.innerHTML = `
       <div class="winnerBanner">
-        <div class="wicon">🏆</div>
         <div class="wname">${winnerP ? escapeHtml(winnerP.display) : '???'} a gagné !</div>
         ${isMe ? `<div class="hint" style="margin-top:10px;color:var(--gold);">+50 points ajoutés à ton score !</div>` : ''}
       </div>
       <div class="sectionLabel">Classement final</div>
       <div id="soleilPlayers">${playersListHtml(true)}</div>
-      ${inCreator ? `<button class="btn primary" id="newRoundBtn" style="width:100%;margin-top:16px;">🔄 Nouvelle partie</button>` : ''}
+      ${inCreator ? `<button class="btn primary" id="newRoundBtn" style="width:100%;margin-top:16px;">Nouvelle partie</button>` : ''}
     `;
     if(inCreator){
       document.getElementById('newRoundBtn').onclick = async () => {
@@ -3086,18 +3066,15 @@ function renderBtAdmin(){
       ${navHtml('games','creator')}
       <button class="back" id="backBt">← retour aux jeux</button>
       <div class="logo" style="margin-bottom:20px;">
-        <h1 style="font-size:26px;">🎼 BIBLIOTHÈQUE MUSICALE</h1>
-        <div class="tag">ajoute les musiques pour ton blind test</div>
+        <h1 style="font-size:26px;">BIBLIOTHÈQUE MUSICALE</h1>
       </div>
       <div class="twitchbox" style="max-width:480px;margin-bottom:24px;">
         <label>Titre précis à deviner</label>
         <input type="text" id="btTitle" placeholder="ex : My Hero Academia - Odd Future">
         <label>Nom de l'anime / série / film</label>
         <input type="text" id="btAnimeName" placeholder="ex : My Hero Academia">
-        <div class="hint" style="text-align:left;margin-bottom:14px;">Deviner juste ce nom (sans le titre précis) rapporte ×0,5 point.</div>
         <label>Raccourcis pour ce nom (optionnel)</label>
         <input type="text" id="btAliases" placeholder="ex : mha, my hero">
-        <div class="hint" style="text-align:left;margin-bottom:14px;">Sépare par des virgules. Comptent comme le nom de l'anime (×0,5 point) — tape aussi « mha opening » pour retrouver directement le titre précis.</div>
         <div class="row2">
           <div style="flex:1;">
             <label>Catégorie</label>
@@ -3114,18 +3091,15 @@ function renderBtAdmin(){
         </div>
         <label style="margin-top:14px;">Fichier audio ou vidéo</label>
         <div class="btDropzone" id="btDropzone">
-          <div class="btDropIcon">📁</div>
           <div id="btDropText">Glisse ton fichier ici<br><span style="opacity:0.6;">ou clique pour parcourir</span></div>
           <input type="file" id="btFile" accept="audio/*,video/mp4,video/*" style="display:none;">
         </div>
-        <div class="hint">Extraits courts recommandés (15-30 sec) — 50 Mo maximum par fichier.</div>
         <div class="hint" id="btUploadStatus" style="min-height:16px;"></div>
         <button class="btn primary" id="btAddBtn" style="width:100%;margin-top:10px;">+ Ajouter à la bibliothèque</button>
       </div>
       <div class="sectionLabel" style="margin-top:0;">Musiques ajoutées (<span id="btCount">${btTracks.length}</span>)</div>
       <div class="btTrackList" id="btTrackList"></div>
       <div class="sectionLabel">Playlists par anime/série/film</div>
-      <div class="hint" style="margin-bottom:10px;">Chaque anime détecté forme automatiquement une playlist. Désactive celles que tu ne veux pas proposer dans tes parties.</div>
       <div id="btPlaylistList"></div>
     </div>
   `;
@@ -3208,14 +3182,14 @@ function drawBtTrackList(){
   const countEl = document.getElementById('btCount');
   if(countEl) countEl.textContent = btTracks.length;
   if(btTracks.length === 0){
-    wrap.innerHTML = `<div class="empty"><div class="ic">🎵</div><div>Aucune musique ajoutée pour l'instant.</div></div>`;
+    wrap.innerHTML = `<div class="empty"><div>Aucune musique ajoutée pour l'instant.</div></div>`;
     return;
   }
   wrap.innerHTML = btTracks.map(t => `
     <div class="btTrackRow">
       <span class="cat">${escapeHtml(t.category)}</span>
       <span class="cat" style="color:${t.difficulty==='Facile'?'var(--rate-green)':t.difficulty==='Difficile'?'var(--rate-red)':'var(--mustard)'};border-color:currentColor;">${escapeHtml(t.difficulty||'Normal')}</span>
-      ${t.mediaType === 'video' ? `<span title="Vidéo">🎬</span>` : `<span title="Audio">🎧</span>`}
+      <span class="cat" style="color:var(--text-dim);border-color:var(--border);">${t.mediaType === 'video' ? 'Vidéo' : 'Audio'}</span>
       <span class="t">${escapeHtml(t.title)}</span>
       <button class="del editIconBtn" id="edit-${t.id}" title="Modifier">✎</button>
       <button class="del" data-id="${t.id}">✕</button>
@@ -3243,7 +3217,7 @@ function drawBtPlaylistList(){
   if(!wrap) return;
   const groups = getBtPlaylistGroups();
   if(groups.length === 0){
-    wrap.innerHTML = `<div class="empty" style="padding:20px 14px;"><div class="ic">🎧</div><div>Ajoute des musiques pour voir apparaître des playlists.</div></div>`;
+    wrap.innerHTML = `<div class="empty" style="padding:20px 14px;"><div>Ajoute des musiques pour voir apparaître des playlists.</div></div>`;
     return;
   }
   wrap.innerHTML = groups.map(g => {
@@ -3350,8 +3324,7 @@ async function renderBlindtest(){
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
       <div class="logo" style="margin-bottom:20px;">
-        <h1 style="font-size:28px;">🎵 BLIND TEST</h1>
-        <div class="tag">${inCreator ? 'gère la partie' : 'devine le plus vite possible'}</div>
+        <h1 style="font-size:28px;">BLIND TEST</h1>
       </div>
       <div id="btStageWrap"></div>
     </div>
@@ -3373,7 +3346,7 @@ async function renderBlindtest(){
 
 function btPlayerRows(){
   const list = Object.entries(btGame.players || {}).sort((a,b) => (b[1].score||0) - (a[1].score||0));
-  if(list.length === 0) return `<div class="empty" style="padding:24px 18px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+  if(list.length === 0) return `<div class="empty" style="padding:24px 18px;"><div>Personne n'a encore rejoint.</div></div>`;
   return list.map(([key,p]) => `
     <div class="btRoundPlayerRow">
       <span class="n">${escapeHtml(p.display)}</span>
@@ -3422,7 +3395,7 @@ function drawBt(inCreator){
       <div class="tag" id="btPoolCount" style="margin:10px 0 14px;"></div>
       <button class="btn primary" id="btCreateLobby" style="width:100%;" ${btTracks.length < 4 ? 'disabled' : ''}>Créer le lobby</button>
       ${btTracks.length < 4 ? `<div class="hint">Ajoute au moins 4 musiques dans la bibliothèque pour pouvoir jouer.</div>` : ''}
-    ` : `<div class="empty"><div class="ic">🎵</div><div>Le créateur n'a pas encore ouvert de blind test.</div></div>`;
+    ` : `<div class="empty"><div>Le créateur n'a pas encore ouvert de blind test.</div></div>`;
 
     if(inCreator){
       const selectedCats = new Set(BT_CATEGORIES);
@@ -3478,10 +3451,10 @@ function drawBt(inCreator){
       ${inCreator ? `
         <div class="modalbtns" style="margin-top:16px;">
           <button class="btn ghost" id="btCloseLobby">✕ Fermer le lobby</button>
-          <button class="btn primary" id="btStart" ${Object.keys(g.players).length===0?'disabled':''}>▶️ Lancer le blind test</button>
+          <button class="btn primary" id="btStart" ${Object.keys(g.players).length===0?'disabled':''}>Lancer le blind test</button>
         </div>
       ` : (joined ? `<div class="hint">Tu es dans le lobby ! En attente du lancement...</div>` : `
-        <button class="btn primary" id="btJoin" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">🎮 Rejoindre le lobby</button>
+        <button class="btn primary" id="btJoin" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Rejoindre le lobby</button>
       `)}
     `;
     if(inCreator){
@@ -3523,20 +3496,19 @@ function drawBt(inCreator){
     wrap.innerHTML = `
       <div class="btPlayerBox">
         <div class="tag" style="margin-bottom:6px;">Round ${g.round}/${g.roundsTotal||'?'} · ${answeredCount}/${totalPlayers} ont répondu</div>
-        <div class="btTimer" id="btTimerDisplay" style="color:${remainingNow<=10?'var(--rate-red)':'var(--gold)'};">⏱️ ${remainingNow}s</div>
+        <div class="btTimer" id="btTimerDisplay" style="color:${remainingNow<=10?'var(--rate-red)':'var(--gold)'};">${remainingNow}s</div>
         <div class="btMediaStage" id="btMediaSlot">
-          <div class="btBlackCover" id="btBlackCover">🎵</div>
+          <div class="btBlackCover" id="btBlackCover"></div>
         </div>
-        ${(!btSoundUnlocked && !inCreator) ? `<button class="btUnlockBtn" id="btUnlock">🔊 Activer le son</button>` : ''}
+        ${(!btSoundUnlocked && !inCreator) ? `<button class="btUnlockBtn" id="btUnlock">Activer le son</button>` : ''}
         ${(btSoundUnlocked && !inCreator) ? `
           <div class="btVolumeRow">
-            <span>🔈</span>
+            <span class="hint" style="margin:0;">Volume</span>
             <input type="range" id="btVolumeSlider" min="0" max="100" value="${Math.round(btVolume*100)}">
-            <span>🔊</span>
+            
           </div>
         ` : ''}
         ${inCreator ? `
-          <div class="hint">Extrait en cours de lecture...</div>
           <button class="btn ghost" id="btReveal" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Révéler la réponse</button>
         ` : (me && !me.answered && !timedOut ? `
           <div class="btGuessBox" id="btGuessBox">
@@ -3544,7 +3516,7 @@ function drawBt(inCreator){
             <div class="btSuggestions" id="btSuggestions"></div>
           </div>
           <button class="btn primary" id="btValidateBtn" style="width:100%;max-width:260px;margin:10px auto 0;display:block;">Valider ma réponse</button>
-        ` : me && me.answered ? `<div class="hint">✓ Réponse envoyée, en attente des autres...</div>` : (me && timedOut ? `<div class="hint" style="color:var(--rate-red);">⏱️ Temps écoulé !</div>` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`))}
+        ` : me && me.answered ? `<div class="hint">✓ Réponse envoyée, en attente des autres...</div>` : (me && timedOut ? `<div class="hint" style="color:var(--rate-red);">Temps écoulé !</div>` : `<div class="hint">Tu n'as pas rejoint cette partie.</div>`))}
       </div>
       <div class="sectionLabel">Scores</div>
       <div id="btPlayers">${btPlayerRows()}</div>
@@ -3641,7 +3613,7 @@ function drawBt(inCreator){
         if(!timerEl){ clearInterval(btTimerTick); return; }
         const elapsed = (Date.now() - startedAt) / 1000;
         const remaining = Math.max(0, Math.ceil((g.timerSeconds||30) - elapsed));
-        timerEl.textContent = `⏱️ ${remaining}s`;
+        timerEl.textContent = `${remaining}s`;
         timerEl.style.color = remaining <= 10 ? 'var(--rate-red)' : 'var(--gold)';
         if(remaining <= 0){
           clearInterval(btTimerTick);
@@ -3650,7 +3622,7 @@ function drawBt(inCreator){
           } else {
             const guessBox = document.getElementById('btGuessBox');
             if(guessBox){
-              guessBox.outerHTML = '<div class="hint" style="color:var(--rate-red);">⏱️ Temps écoulé !</div>';
+              guessBox.outerHTML = '<div class="hint" style="color:var(--rate-red);">Temps écoulé !</div>';
             }
           }
         }
@@ -3664,7 +3636,6 @@ function drawBt(inCreator){
     const isVideo = g.currentTrack.mediaType === 'video';
     wrap.innerHTML = `
       <div class="winnerBanner" style="padding:24px 20px;">
-        <div class="wicon">${isVideo ? '' : '🎶'}</div>
         ${isVideo ? `<div id="btRevealVideoSlot" style="max-width:640px;margin:0 auto 14px;border-radius:4px;overflow:hidden;border:2px solid var(--border);"></div>` : ''}
         <div class="wname" style="font-size:18px;">${escapeHtml(g.currentTrack.title)}</div>
         <div class="tag" style="margin-top:4px;">${escapeHtml(g.currentTrack.category)}</div>
@@ -3673,8 +3644,8 @@ function drawBt(inCreator){
       <div id="btPlayers">${btPlayerRows()}</div>
       ${inCreator ? `
         <div class="modalbtns" style="margin-top:16px;">
-          <button class="btn ghost" id="btFinish">🏁 Terminer</button>
-          ${hasMore ? `<button class="btn primary" id="btNextRound">▶️ Round suivant</button>` : ''}
+          <button class="btn ghost" id="btFinish">Terminer</button>
+          ${hasMore ? `<button class="btn primary" id="btNextRound">Round suivant</button>` : ''}
         </div>
       ` : ''}
     `;
@@ -3711,7 +3682,7 @@ function drawBt(inCreator){
     wrap.innerHTML = `
       <div class="sectionLabel" style="margin-top:0;">Classement final du blind test</div>
       <div id="btPlayers">${btPlayerRows()}</div>
-      ${inCreator ? `<button class="btn primary" id="btNewBt" style="width:100%;margin-top:16px;">🔄 Nouveau blind test</button>` : ''}
+      ${inCreator ? `<button class="btn primary" id="btNewBt" style="width:100%;margin-top:16px;">Nouveau blind test</button>` : ''}
     `;
     if(inCreator){
       document.getElementById('btNewBt').onclick = async () => {
@@ -3855,8 +3826,7 @@ function renderUndercover(){
     <div class="page">
       ${navHtml('games', inCreator ? 'creator' : 'viewer')}
       <div class="logo" style="margin-bottom:20px;">
-        <h1 style="font-size:28px;">🕵️ UNDERCOVER</h1>
-        <div class="tag">${inCreator ? 'configure la partie et modère les votes' : 'décris ton mot sans te faire démasquer'}</div>
+        <h1 style="font-size:28px;">UNDERCOVER</h1>
       </div>
       <div id="ucStageWrap"></div>
     </div>
@@ -3877,7 +3847,7 @@ function renderUndercover(){
 }
 
 function ucAlivePlayers(){ return Object.entries(ucGame.players||{}).filter(([,p]) => p.alive); }
-function ucRoleLabel(role){ return role === 'undercover' ? '🕶️ Undercover' : role === 'mrwhite' ? '❓ Mr White' : '👤 Civil'; }
+function ucRoleLabel(role){ return role === 'undercover' ? 'Undercover' : role === 'mrwhite' ? 'Mr White' : 'Civil'; }
 
 function drawUc(inCreator){
   const wrap = document.getElementById('ucStageWrap');
@@ -3899,11 +3869,11 @@ function drawUc(inCreator){
         <input type="text" id="ucCivilWord" placeholder="ex : Plage">
         <label>Mot des undercover</label>
         <input type="text" id="ucUndercoverWord" placeholder="ex : Désert">
-        <button class="addbtn" id="ucRandomWordBtn" style="margin:6px 0 4px;">🎲 Paire de mots aléatoire</button>
+        <button class="addbtn" id="ucRandomWordBtn" style="margin:6px 0 4px;">Paire de mots aléatoire</button>
         <div class="hint" id="ucCreateStatus" style="min-height:16px;"></div>
         <button class="btn primary" id="ucCreateBtn" style="width:100%;margin-top:8px;">Créer le lobby</button>
       </div>
-    ` : `<div class="empty"><div class="ic">🕵️</div><div>Aucune partie d'Undercover en cours.</div></div>`;
+    ` : `<div class="empty"><div>Aucune partie d'Undercover en cours.</div></div>`;
 
     if(inCreator){
       document.getElementById('ucRandomWordBtn').onclick = () => {
@@ -3918,7 +3888,7 @@ function drawUc(inCreator){
         const includeMrWhite = document.getElementById('ucMrWhite').checked;
         const civilianWord = document.getElementById('ucCivilWord').value.trim();
         const undercoverWord = document.getElementById('ucUndercoverWord').value.trim();
-        if(!civilianWord || !undercoverWord){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = 'Renseigne les deux mots (ou clique sur 🎲).'; return; }
+        if(!civilianWord || !undercoverWord){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = 'Renseigne les deux mots (ou clique sur « Paire de mots aléatoire »).'; return; }
         if(numUndercover + (includeMrWhite?1:0) >= targetPlayers){ statusEl.style.color = 'var(--rate-red)'; statusEl.textContent = "Trop d'infiltrés par rapport au nombre de joueurs."; return; }
         ucGame = {status:'lobby', targetPlayers, numUndercover, includeMrWhite, civilianWord, undercoverWord, players:{}, round:0, votes:{}, eliminatedHistory:[], winner:null, lastElimination:null};
         await saveUc();
@@ -3937,18 +3907,17 @@ function drawUc(inCreator){
       ${inCreator ? `
         <div class="modalbtns" style="margin-top:16px;flex-wrap:wrap;">
           <button class="btn ghost" id="ucCloseLobby">✕ Fermer le lobby</button>
-          ${!meJoined ? `<button class="btn ghost" id="ucJoinAsCreatorBtn">🎮 Je participe aussi</button>` : `<span class="hint" style="align-self:center;">Tu participes à cette partie</span>`}
-          <button class="btn primary" id="ucStartBtn" ${joined < 3 ? 'disabled' : ''}>▶️ Lancer la partie (${joined} joueurs)</button>
+          ${!meJoined ? `<button class="btn ghost" id="ucJoinAsCreatorBtn">Je participe aussi</button>` : `<span class="hint" style="align-self:center;">Tu participes à cette partie</span>`}
+          <button class="btn primary" id="ucStartBtn" ${joined < 3 ? 'disabled' : ''}>Lancer la partie (${joined} joueurs)</button>
         </div>
         ${joined < 3 ? `<div class="hint">Il faut au moins 3 joueurs.</div>` : ''}
-        ${meJoined ? `<div class="hint">En participant, les mots et rôles seront cachés pour toi aussi une fois la partie lancée (un bouton "Voir la solution" restera dispo si besoin).</div>` : ''}
       ` : (meJoined ? `<div class="hint">Tu es dans le lobby ! En attente du lancement...</div>` : `
-        <button class="btn primary" id="ucJoinBtn" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">🎮 Rejoindre le lobby</button>
+        <button class="btn primary" id="ucJoinBtn" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Rejoindre le lobby</button>
       `)}
     `;
     document.getElementById('ucPlayersList').innerHTML = Object.values(g.players||{}).map(p => `
       <div class="btRoundPlayerRow"><span class="n">${escapeHtml(p.display)}</span></div>
-    `).join('') || `<div class="empty" style="padding:20px 14px;"><div class="ic">👥</div><div>Personne n'a encore rejoint.</div></div>`;
+    `).join('') || `<div class="empty" style="padding:20px 14px;"><div>Personne n'a encore rejoint.</div></div>`;
 
     if(inCreator){
       document.getElementById('ucCloseLobby').onclick = async () => {
@@ -3992,7 +3961,7 @@ function drawUc(inCreator){
     let content = '';
     if(showSpoilers){
       content = `
-        ${creatorIsPlaying ? `<button class="pill" id="ucHideAnswersBtn" style="margin-bottom:10px;">🙈 Cacher la solution (jouer normalement)</button>` : ''}
+        ${creatorIsPlaying ? `<button class="pill" id="ucHideAnswersBtn" style="margin-bottom:10px;">Cacher la solution (jouer normalement)</button>` : ''}
         <div class="tag" style="margin-bottom:10px;">Round ${g.round} · Mot civils : <b style="color:var(--text);">${escapeHtml(g.civilianWord)}</b> · Mot undercover : <b style="color:var(--rate-red);">${escapeHtml(g.undercoverWord)}</b></div>
         ${g.lastElimination ? `<div class="hint" style="color:var(--gold);margin-bottom:10px;">Dernière élimination : ${escapeHtml(g.lastElimination.display)} (${ucRoleLabel(g.lastElimination.role)})</div>` : ''}
         <div class="sectionLabel" style="margin-top:0;">Joueurs (${alive.length} en vie)</div>
@@ -4000,17 +3969,17 @@ function drawUc(inCreator){
       `;
     } else if(me){
       if(creatorIsPlaying){
-        content += `<button class="pill" id="ucRevealAnswersBtn" style="margin-bottom:10px;">👁️ Voir la solution (triche)</button>`;
+        content += `<button class="pill" id="ucRevealAnswersBtn" style="margin-bottom:10px;">Voir la solution (triche)</button>`;
       }
       if(!me.alive){
-        content += `<div class="hint" style="color:var(--rate-red);">❌ Tu as été éliminé. Ton rôle était : ${ucRoleLabel(me.role)}${me.word ? ` (mot : ${escapeHtml(me.word)})` : ''}</div>`;
+        content += `<div class="hint" style="color:var(--rate-red);">Tu as été éliminé. Ton rôle était : ${ucRoleLabel(me.role)}${me.word ? ` (mot : ${escapeHtml(me.word)})` : ''}</div>`;
       } else if(me.role === 'mrwhite'){
-        content += `<div class="winnerBanner" style="padding:20px;"><div class="wicon">❓</div><div class="wname" style="font-size:18px;">Tu es Mr White</div><div class="hint">Tu n'as aucun mot — improvise en écoutant les autres, et essaie de ne pas te faire repérer !</div></div>`;
+        content += `<div class="winnerBanner" style="padding:20px;"><div class="wname" style="font-size:18px;">Tu es Mr White</div></div>`;
       } else {
-        content += `<div class="winnerBanner" style="padding:20px;"><div class="wicon">${me.role==='undercover'?'🕶️':'👤'}</div><div class="wname" style="font-size:22px;">${escapeHtml(me.word)}</div><div class="hint">${me.role==='undercover' ? "Tu es Undercover — ton mot ressemble à celui des autres, mais n'est pas identique." : "Tu es Civil."}</div></div>`;
+        content += `<div class="winnerBanner" style="padding:20px;"><div class="wname" style="font-size:22px;">${escapeHtml(me.word)}</div></div>`;
       }
     } else {
-      content = `<div class="empty"><div class="ic">🕵️</div><div>Tu n'as pas rejoint cette partie.</div></div>`;
+      content = `<div class="empty"><div>Tu n'as pas rejoint cette partie.</div></div>`;
     }
 
     if(g.status === 'voting'){
@@ -4026,7 +3995,7 @@ function drawUc(inCreator){
         </div>`;
       }
     } else if(inCreator && showSpoilers){
-      content += `<button class="btn primary" id="ucOpenVoteBtn" style="width:100%;max-width:280px;">🗳️ Passer au vote</button>`;
+      content += `<button class="btn primary" id="ucOpenVoteBtn" style="width:100%;max-width:280px;">Passer au vote</button>`;
     }
 
     wrap.innerHTML = content;
@@ -4041,7 +4010,7 @@ function drawUc(inCreator){
       if(rolesEl){
         rolesEl.innerHTML = Object.entries(g.players||{}).map(([k,p]) => `
           <div class="btRoundPlayerRow ${!p.alive?'eliminated':''}">
-            <span class="n">${p.alive?'':'💀 '}${escapeHtml(p.display)}</span>
+            <span class="n">${p.alive?'':''}${escapeHtml(p.display)}</span>
             <span class="st" style="color:var(--text-dim);">${ucRoleLabel(p.role)}${p.word ? ' — '+escapeHtml(p.word) : ''}</span>
           </div>
         `).join('');
@@ -4065,19 +4034,18 @@ function drawUc(inCreator){
   }
 
   if(g.status === 'ended'){
-    const winnerLabel = g.winner === 'civilians' ? '👤 Les Civils gagnent !' : g.winner === 'undercover' ? '🕶️ Les Undercover gagnent !' : '❓ Mr White gagne !';
+    const winnerLabel = g.winner === 'civilians' ? 'Les Civils gagnent !' : g.winner === 'undercover' ? 'Les Undercover gagnent !' : 'Mr White gagne !';
     wrap.innerHTML = `
       <div class="winnerBanner">
-        <div class="wicon">🏆</div>
         <div class="wname" style="font-size:20px;">${winnerLabel}</div>
       </div>
       <div class="sectionLabel" style="margin-top:0;">Tous les rôles</div>
       <div id="ucFinalRoles"></div>
-      ${inCreator ? `<button class="btn primary" id="ucNewGameBtn" style="width:100%;margin-top:16px;">🔄 Nouvelle partie</button>` : ''}
+      ${inCreator ? `<button class="btn primary" id="ucNewGameBtn" style="width:100%;margin-top:16px;">Nouvelle partie</button>` : ''}
     `;
     document.getElementById('ucFinalRoles').innerHTML = Object.values(g.players||{}).map(p => `
       <div class="btRoundPlayerRow ${!p.alive?'eliminated':''}">
-        <span class="n">${p.alive?'':'💀 '}${escapeHtml(p.display)}</span>
+        <span class="n">${p.alive?'':''}${escapeHtml(p.display)}</span>
         <span class="st" style="color:var(--text-dim);">${ucRoleLabel(p.role)}${p.word ? ' — '+escapeHtml(p.word) : ''}</span>
       </div>
     `).join('');
@@ -4179,7 +4147,6 @@ function renderWheel(){
       ${navHtml('wheel', inCreator ? 'creator' : 'viewer')}
       <div class="logo" style="margin-bottom:20px;">
         <h1 style="font-size:28px;">ROUE DES FILMS</h1>
-        <div class="tag">${inCreator ? 'ajoute des titres et laisse le hasard décider' : 'ce que le créateur pourrait regarder'}</div>
       </div>
       <div class="wheelLayout">
         <div class="wheelStageBox">
@@ -4187,11 +4154,11 @@ function renderWheel(){
             <div class="wheelPointer"></div>
             <div class="wheelSpinner" id="wheelSpinner">${wheelItems.length ? buildWheelSVG(wheelItems) : ''}</div>
           </div>
-          ${inCreator ? `<button class="spinBtn" id="spinBtn" ${wheelItems.length < 2 ? 'disabled' : ''}>🎡 Tourner la roue</button>` : ''}
-          <div class="wheelResult" id="wheelResult">${wheelState.lastWinner ? '🎉 ' + escapeHtml(wheelState.lastWinner) : ''}</div>
+          ${inCreator ? `<button class="spinBtn" id="spinBtn" ${wheelItems.length < 2 ? 'disabled' : ''}>Tourner la roue</button>` : ''}
+          <div class="wheelResult" id="wheelResult">${wheelState.lastWinner ? '' + escapeHtml(wheelState.lastWinner) : ''}</div>
           ${inCreator ? `
             <div class="wheelResultActions" id="wheelResultActions" style="display:none;">
-              <button class="btn danger" id="wheelRemoveBtn">🗑️ Retirer de la roue</button>
+              <button class="btn danger" id="wheelRemoveBtn">Retirer de la roue</button>
               <button class="btn ghost" id="wheelDismissBtn">✕ Fermer</button>
             </div>
           ` : ''}
@@ -4229,7 +4196,7 @@ function renderWheel(){
 
   const listEl = document.getElementById('wheelList');
   if(wheelItems.length === 0){
-    listEl.innerHTML = `<div class="empty" style="padding:30px 18px;"><div class="ic">🎡</div><div>${inCreator ? "Ajoute au moins 2 titres pour pouvoir tourner la roue." : "Le créateur n'a pas encore ajouté de titres à la roue."}</div></div>`;
+    listEl.innerHTML = `<div class="empty" style="padding:30px 18px;"><div>${inCreator ? "Ajoute au moins 2 titres pour pouvoir tourner la roue." : "Le créateur n'a pas encore ajouté de titres à la roue."}</div></div>`;
   } else {
     listEl.innerHTML = wheelItems.map(it => `
       <div class="wheelListItem">
@@ -4297,13 +4264,13 @@ function drawWheelSuggestions(){
   if(!wrap) return;
   const pending = wheelSuggestions.filter(s => s.status === 'pending');
   if(pending.length === 0){
-    wrap.innerHTML = `<div class="empty" style="padding:20px 14px;"><div class="ic">📭</div><div>Aucune proposition en attente.</div></div>`;
+    wrap.innerHTML = `<div class="empty" style="padding:20px 14px;"><div>Aucune proposition en attente.</div></div>`;
     return;
   }
   wrap.innerHTML = pending.map(s => `
     <div class="btTrackRow">
       <span class="t">${escapeHtml(s.title)} <span style="color:var(--text-dim);font-size:11px;">— par ${escapeHtml(s.submittedBy)}</span></span>
-      ${s.trailerUrl ? `<a href="${escapeHtml(s.trailerUrl)}" target="_blank" rel="noopener" class="pill" style="text-decoration:none;">▶️ Trailer</a>` : ''}
+      ${s.trailerUrl ? `<a href="${escapeHtml(s.trailerUrl)}" target="_blank" rel="noopener" class="pill" style="text-decoration:none;">Trailer</a>` : ''}
       <button class="del" id="wsApprove-${s.id}" title="Ajouter à la roue">✓</button>
       <button class="del" id="wsReject-${s.id}" title="Refuser">✕</button>
     </div>
@@ -4363,7 +4330,7 @@ function spinTheWheel(){
   setTimeout(async () => {
     wheelSpinning = false;
     if(spinBtn) spinBtn.disabled = wheelItems.length < 2;
-    resultEl.textContent = '🎉 ' + winner.label;
+    resultEl.textContent = '' + winner.label;
     wheelState.lastWinner = winner.label;
     wheelState.lastSpinAt = Date.now();
     await saveWheelState();
@@ -4420,7 +4387,6 @@ function renderDashboard(){
       ${navHtml('dashboard','creator')}
       <div class="logo" style="margin-bottom:20px;">
         <h1 style="font-size:28px;">DASHBOARD</h1>
-        <div class="tag">un coup d'œil sur ta communauté</div>
       </div>
       <div class="dashGrid">
         <div class="dashStat"><div class="n">${s.totalTitles}</div><div class="l">Titres au catalogue</div></div>
@@ -4430,26 +4396,26 @@ function renderDashboard(){
       <div class="sectionLabel" style="margin-top:0;">Temps forts</div>
       ${s.best ? `
         <div class="dashHighlight">
-          <div class="dposter" style="${s.best.poster?`background-image:url('${s.best.poster}')`:''}">${s.best.poster?'':'🎬'}</div>
-          <div class="dinfo"><div class="dlabel">🏆 Titre le mieux noté</div><div class="dtitle">${escapeHtml(s.best.title)}</div></div>
+          <div class="dposter" style="${s.best.poster?`background-image:url('${s.best.poster}')`:''}">${s.best.poster?'':posterInitial(s.best.title)}</div>
+          <div class="dinfo"><div class="dlabel">Titre le mieux noté</div><div class="dtitle">${escapeHtml(s.best.title)}</div></div>
           <div class="dvalue" style="color:${ratingColor(s.bestVal)}">${s.bestVal.toFixed(1)}/10</div>
         </div>
       ` : ''}
       ${s.mostCommented && s.mostCommentedCount > 0 ? `
         <div class="dashHighlight">
-          <div class="dposter" style="${s.mostCommented.poster?`background-image:url('${s.mostCommented.poster}')`:''}">${s.mostCommented.poster?'':'🎬'}</div>
-          <div class="dinfo"><div class="dlabel">💬 Titre le plus commenté</div><div class="dtitle">${escapeHtml(s.mostCommented.title)}</div></div>
+          <div class="dposter" style="${s.mostCommented.poster?`background-image:url('${s.mostCommented.poster}')`:''}">${s.mostCommented.poster?'':posterInitial(s.mostCommented.title)}</div>
+          <div class="dinfo"><div class="dlabel">Titre le plus commenté</div><div class="dtitle">${escapeHtml(s.mostCommented.title)}</div></div>
           <div class="dvalue">${s.mostCommentedCount}</div>
         </div>
       ` : ''}
       ${s.topDisplay ? `
         <div class="dashHighlight">
-          <div class="dposter" style="display:flex;align-items:center;justify-content:center;">👤</div>
-          <div class="dinfo"><div class="dlabel">🔥 Viewer le plus actif</div><div class="dtitle">${escapeHtml(s.topDisplay)}</div></div>
+          <div class="dposter" style="display:flex;align-items:center;justify-content:center;">${posterInitial(s.topDisplay)}</div>
+          <div class="dinfo"><div class="dlabel">Viewer le plus actif</div><div class="dtitle">${escapeHtml(s.topDisplay)}</div></div>
           <div class="dvalue">${s.topCount}</div>
         </div>
       ` : ''}
-      ${!s.best && !s.mostCommented && !s.topDisplay ? `<div class="empty"><div class="ic">📊</div><div>Pas encore assez de données pour afficher des temps forts.</div></div>` : ''}
+      ${!s.best && !s.mostCommented && !s.topDisplay ? `<div class="empty"><div>Pas encore assez de données pour afficher des temps forts.</div></div>` : ''}
     </div>
   `;
   wireNav('creator');
@@ -4457,13 +4423,13 @@ function renderDashboard(){
 
 /* ---------- BADGES ---------- */
 const BADGE_DEFS = [
-  {id:'first_review', icon:'📝', label:'Premier avis', check: s => s.comments >= 1},
-  {id:'critic', icon:'🖋️', label:'Critique confirmé', check: s => s.comments >= 5},
-  {id:'ten_films', icon:'🍿', label:'10 films notés', check: s => s.filmsRated >= 10},
-  {id:'series_fan', icon:'📺', label:'Fan de séries', check: s => s.showsRated >= 1},
-  {id:'marathon', icon:'🏃', label:'Marathonien', check: s => s.episodesRated >= 10},
-  {id:'gamer', icon:'🎮', label:'Joueur', check: s => s.gamePoints > 0},
-  {id:'podium', icon:'🏆', label:'Top 3 classement', check: s => s.rank && s.rank <= 3},
+  {id:'first_review', icon:'', label:'Premier avis', check: s => s.comments >= 1},
+  {id:'critic', icon:'', label:'Critique confirmé', check: s => s.comments >= 5},
+  {id:'ten_films', icon:'', label:'10 films notés', check: s => s.filmsRated >= 10},
+  {id:'series_fan', icon:'', label:'Fan de séries', check: s => s.showsRated >= 1},
+  {id:'marathon', icon:'', label:'Marathonien', check: s => s.episodesRated >= 10},
+  {id:'gamer', icon:'', label:'Joueur', check: s => s.gamePoints > 0},
+  {id:'podium', icon:'', label:'Top 3 classement', check: s => s.rank && s.rank <= 3},
 ];
 
 function getViewerCommentsCount(key){
@@ -4487,7 +4453,7 @@ function badgesRowHtml(key){
   const badges = getViewerBadges(key);
   return `<div class="badgesRow">${badges.map(b => `
     <div class="badgeChip ${b.earned ? 'earned' : ''}" title="${escapeHtml(b.label)}">
-      <span class="bicon">${b.icon}</span>${escapeHtml(b.label)}
+      ${escapeHtml(b.label)}
     </div>
   `).join('')}</div>`;
 }
@@ -4526,7 +4492,6 @@ async function processSession(){
   if(SUPABASE_URL.includes('TON-PROJET') || SUPABASE_ANON_KEY.includes('TA_CLE')){
     document.getElementById('app').innerHTML = `
       <div class="page" style="text-align:center;padding:80px 20px;">
-        <div style="font-size:40px;margin-bottom:16px;">⚙️</div>
         <h1 style="font-family:'Space Grotesk',sans-serif;color:var(--gold);font-size:24px;">Configuration manquante</h1>
         <p style="color:var(--text-dim);max-width:420px;margin:14px auto 0;line-height:1.6;">
           Ouvre ce fichier, cherche <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> tout en haut,
