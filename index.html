@@ -1065,6 +1065,11 @@ function setMode(m){
   render();
 }
 
+function goHome(){
+  streamViewFromCreator = isCreatorAccount;
+  setMode('stream-view');
+}
+
 function render(){
   if(mode === 'select') return renderSelect();
   if(mode === 'creator') return renderCreator();
@@ -1136,7 +1141,7 @@ function wireNav(ctx){
     };
   });
   const brand = document.getElementById('navBrand');
-  if(brand) brand.onclick = () => setMode(ctx === 'creator' ? 'creator' : 'viewer');
+  if(brand) brand.onclick = () => goHome();
   if(ctx === 'creator'){
     const sw = document.getElementById('navSwitch');
     if(sw) sw.onclick = () => setMode('viewer');
@@ -1151,7 +1156,7 @@ function wireNav(ctx){
       if(session) await supabaseClient.auth.signOut();
       viewerName = null;
       isCreatorAccount = false;
-      setMode('viewer');
+      goHome();
     };
     const nl = document.getElementById('navLogin');
     if(nl) nl.onclick = () => setMode('select');
@@ -1233,7 +1238,7 @@ function renderSelect(){
     });
   };
 
-  document.getElementById('backToSite').onclick = () => setMode('viewer');
+  document.getElementById('backToSite').onclick = () => goHome();
 
   document.getElementById('authTabs').addEventListener('click', (e) => {
     const btn = e.target.closest('.tab');
@@ -1260,6 +1265,7 @@ function renderSelect(){
       return;
     }
     const ok = await processSession();
+    if(ok){ streamViewFromCreator = isCreatorAccount; mode = 'stream-view'; }
     wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
     render();
   };
@@ -1292,6 +1298,7 @@ function renderSelect(){
       return;
     }
     const ok = await processSession();
+    if(ok){ streamViewFromCreator = isCreatorAccount; mode = 'stream-view'; }
     wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
     render();
   };
@@ -2502,7 +2509,7 @@ function openCreatorSettings(){
     isCreatorAccount = false;
     viewerName = null;
     closeModal();
-    setMode('viewer');
+    goHome();
   };
   document.getElementById('saveBtn').onclick = async () => {
     creatorSettings.twitchChannel = document.getElementById('sChannel').value.trim().replace(/^https?:\/\/(www\.)?twitch\.tv\//i,'');
@@ -4100,7 +4107,8 @@ async function processSession(){
   await loadUc();
 
   await processSession();
-  if(mode === 'select') mode = 'viewer';
+  streamViewFromCreator = isCreatorAccount;
+  mode = 'stream-view';
 
   wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
   render();
