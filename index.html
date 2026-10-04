@@ -181,6 +181,7 @@
     display:inline-flex;align-items:center;gap:3px;background:#111111;border:1px solid var(--border);
     border-radius:var(--r-pill);padding:3px 6px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
   }
+  .rchip.avg{font-size:13px;padding:4px 12px;}
 
   .empty{
     text-align:center;padding:64px 22px;color:var(--text-dim);
@@ -1787,7 +1788,7 @@ function renderSagaCards(grid, ctx){
       <div class="info">
         <div class="title">${escapeHtml(s.name)}</div>
         <div class="ratingsRow">
-          <span class="rchip" style="color:${ratingColor(s.avg)}" title="Note moyenne de la saga">Moy ${s.avg ? s.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
+          <span class="rchip avg" style="color:${ratingColor(s.avg)}" title="Note moyenne de la saga">${s.avg ? s.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
         </div>
       </div>
     </div>
@@ -1862,11 +1863,7 @@ function renderGrid(ctx){
   }
   grid.innerHTML = backHtml + `<div class="grid">${list.map(it => {
     const episodic = isEpisodic(it.type);
-    const creatorStat = creatorRatingStat(it);
     const pub = episodic ? seriesPublicStats(it) : publicStats(it.id);
-    const mineStat = (ctx === 'viewer' && viewerName)
-      ? (episodic ? seriesViewerOwnAvg(it, viewerName) : {avg: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase())?.score || 0, count: (viewerRatings[it.id]||[]).find(r=>r.who.toLowerCase()===viewerName.toLowerCase()) ? 1 : 0})
-      : null;
     const fav = isFavorite(it, ctx);
     return `
     <div class="card" data-id="${it.id}">
@@ -1880,9 +1877,7 @@ function renderGrid(ctx){
         <div class="title">${escapeHtml(it.title)}</div>
         ${it.year ? `<div class="year">${escapeHtml(it.year)}</div>` : ''}
         <div class="ratingsRow">
-          <span class="rchip" style="color:${ratingColor(creatorStat.avg)}" title="Note du créateur">Créa ${creatorStat.count ? creatorStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
-          ${mineStat ? `<span class="rchip" style="color:${ratingColor(mineStat.avg)}" title="Ta note">Toi ${mineStat.count ? mineStat.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>` : ''}
-          <span class="rchip" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+')' : ''}">Moy ${pub.count ? pub.avg.toFixed(1) : '—'}</span>
+          <span class="rchip avg" style="color:${ratingColor(pub.avg)}" title="Note moyenne${pub.count ? ' ('+pub.count+' note'+(pub.count>1?'s':'')+')' : ''}">${pub.count ? pub.avg.toFixed(1).replace(/\.0$/,'') : '—'}</span>
         </div>
       </div>
     </div>
