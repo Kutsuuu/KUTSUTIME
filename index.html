@@ -745,6 +745,75 @@
     .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:13px;}
   }
 
+
+  /* Boosters & cartes */
+  .packGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;}
+  .packTile{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;}
+  .packArt{
+    position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;
+    background:var(--panel-3);border-bottom:2px solid var(--gold);
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:var(--gold);
+  }
+  .packArt::before{
+    content:'BOOSTER';position:absolute;top:12px;left:0;right:0;
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--text-dim);
+  }
+  .packInfo{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;}
+  .packName{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
+  .packMeta{font-size:12px;color:var(--text-dim);}
+  .addbtn:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+
+  .tcgGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
+  .tcg{
+    --rc:#8b9199;position:relative;aspect-ratio:5/7;border-radius:var(--r-md);padding:6px;
+    background:var(--panel);border:2px solid var(--rc);display:flex;flex-direction:column;overflow:hidden;
+  }
+  .tcg.r-commune{--rc:#8b9199;}
+  .tcg.r-rare{--rc:#3b82f6;box-shadow:0 0 10px rgba(59,130,246,0.3);}
+  .tcg.r-epique{--rc:#a855f7;box-shadow:0 0 14px rgba(168,85,247,0.38);}
+  .tcg.r-legendaire{--rc:#f5b301;box-shadow:0 0 20px rgba(245,179,1,0.5);}
+  .tcg.r-legendaire::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);
+    background-size:250% 100%;animation:tcgShine 3.2s linear infinite;
+  }
+  @keyframes tcgShine{0%{background-position:200% 0;}100%{background-position:-100% 0;}}
+  .tcg .art{
+    flex:1;min-height:0;border-radius:calc(var(--r-md) - 6px);background:#111111 center 25%/cover no-repeat;
+    display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;color:var(--text-dim);
+  }
+  .tcg .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;padding:6px 4px 1px;text-align:center;line-height:1.2;}
+  .tcg .rr{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--rc);padding-bottom:3px;}
+  .tcg .cnt{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.75);border-radius:var(--r-pill);padding:2px 9px;font-size:11px;font-weight:700;}
+  .tcg .newtag{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;border-radius:var(--r-pill);padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+  .tcg.locked{opacity:.5;box-shadow:none;}
+  .tcg.locked::after{display:none;}
+  .tcgWrap{display:flex;flex-direction:column;gap:8px;}
+  .tcgWrap .tcgRar{width:100%;padding:8px 12px;font-size:12px;}
+  .tcgBtns{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .progressOuter{height:8px;border-radius:var(--r-pill);background:var(--panel-3);overflow:hidden;}
+  .progressFill{height:100%;background:var(--gold);border-radius:var(--r-pill);transition:width .4s ease;}
+
+  .packOverlay{align-items:center;background:rgba(5,5,5,0.97);}
+  .packStage{width:100%;max-width:900px;margin:auto;text-align:center;}
+  .packTitle{font-family:'JetBrains Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-size:11px;margin-bottom:20px;}
+  .packCards{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-bottom:22px;}
+  .flip{width:clamp(104px,17vw,156px);aspect-ratio:5/7;perspective:900px;cursor:pointer;}
+  .flipInner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;}
+  .flip.flipped .flipInner{transform:rotateY(180deg);}
+  .flipFace{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+  .flipFront{transform:rotateY(180deg);}
+  .flipFront .tcg{width:100%;height:100%;aspect-ratio:auto;}
+  .flipBack{
+    border-radius:var(--r-md);background:var(--panel-3);border:2px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold);font-size:11px;letter-spacing:3px;
+  }
+  .flip.burst{animation:cardBurst .7s ease-out;}
+  @keyframes cardBurst{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
+  .packSummary{min-height:22px;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text);}
+  .packBtns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+
   /* Barre de navigation en bas façon TikTok / Instagram en mobile */
   @media(max-width:768px){
     .wrap:has(.sidebar){padding-left:clamp(16px,4vw,64px);padding-bottom:86px;padding-top:20px;}
@@ -809,6 +878,7 @@ const BT_BUCKET = 'blindtest-audio';
 const UC_KEY = 'undercoverGame';
 const WATCH_CURRENCY = 'Ryos';
 const WATCH_PREFIX = 'watch:';
+const CARDS_KEY = 'cardsCatalog';
 
 let items = [];
 let viewerRatings = {}; // { movieId: [{who, score, comment, ts}] }
@@ -1111,6 +1181,7 @@ function render(){
   if(mode === 'blindtest-admin') return renderBtAdmin();
   if(mode === 'blindtest') return renderBlindtest();
   if(mode === 'undercover') return renderUndercover();
+  if(mode === 'boosters') return renderBoosters();
   if(mode === 'wheel') return renderWheel();
   if(mode === 'dashboard') return renderDashboard();
 }
@@ -1129,6 +1200,7 @@ function navHtml(activeKey, ctx){
           <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="lbl">Stream</span></button>
           <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="lbl">Jeux</span></button>
           <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="lbl">Roue</span></button>
+          <button class="sidebarLink ${activeKey==='boosters'?'active':''}" data-go="boosters"><span class="lbl">Boosters</span></button>
         </div>
         <div class="sidebarBottom">
           <button class="sidebarLink" id="navSettings"><span class="lbl">Réglages</span></button>
@@ -1146,6 +1218,7 @@ function navHtml(activeKey, ctx){
         <button class="sidebarLink ${activeKey==='stream'?'active':''}" data-go="stream-view"><span class="lbl">Stream</span></button>
         <button class="sidebarLink ${activeKey==='games'?'active':''}" data-go="games"><span class="lbl">Jeux</span></button>
         <button class="sidebarLink ${activeKey==='wheel'?'active':''}" data-go="wheel"><span class="lbl">Roue</span></button>
+        <button class="sidebarLink ${activeKey==='boosters'?'active':''}" data-go="boosters"><span class="lbl">Boosters</span></button>
         ${isCreatorAccount ? `<button class="sidebarLink" id="navBackCreator"><span class="lbl">Espace créateur</span></button>` : ''}
       </div>
       <div class="sidebarBottom">
@@ -1165,6 +1238,7 @@ function wireNav(ctx){
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'games') gamesViewFromCreator = (ctx === 'creator');
       if(b.dataset.go === 'wheel') wheelViewFromCreator = (ctx === 'creator');
+      if(b.dataset.go === 'boosters') boostersViewFromCreator = (ctx === 'creator');
       setMode(b.dataset.go);
     };
   });
@@ -2714,6 +2788,597 @@ function renderStreamView(){
   `;
   wireNav(inCreator ? 'creator' : 'viewer');
   if(channel) startWatchTimer();
+}
+
+/* ---------- BOOSTERS & COLLECTIONS ---------- */
+let cardsCatalog = {collections: [], cards: []};
+let boostersViewFromCreator = true;
+let boostersTab = null;
+let boostersColId = null;
+let boostersFilter = 'all';
+let manageColId = null;
+let boosterLock = false;
+let collectorsBoard = [];
+
+const RARITIES = {
+  commune:    {label: 'Commune',    weight: 60, value: 2,  rank: 0},
+  rare:       {label: 'Rare',       weight: 25, value: 8,  rank: 1},
+  epique:     {label: 'Épique',     weight: 12, value: 25, rank: 2},
+  legendaire: {label: 'Légendaire', weight: 3,  value: 80, rank: 3}
+};
+const RARITY_KEYS = ['commune', 'rare', 'epique', 'legendaire'];
+
+const MARVEL_TEMPLATE = {
+  name: 'Marvel (MCU)',
+  legendaire: ['Iron Man', 'Captain America', 'Thor', 'Thanos'],
+  epique: ['Hulk', 'Black Widow', 'Spider-Man', 'Black Panther', 'Doctor Strange', 'Loki', 'Star-Lord', 'Captain Marvel'],
+  rare: ['Hawkeye', 'Scarlet Witch', 'Vision', 'Winter Soldier', 'Falcon', 'Ant-Man', 'Wasp', 'Gamora', 'Rocket', 'Groot'],
+  commune: ['Nick Fury', 'Pepper Potts', 'Happy Hogan', 'Peggy Carter', 'Maria Hill', 'Drax', 'Nebula', 'Wong', 'Okoye', 'Shuri']
+};
+
+async function loadCards(){
+  const v = await kvGet(CARDS_KEY);
+  cardsCatalog = (v && Array.isArray(v.collections) && Array.isArray(v.cards)) ? v : {collections: [], cards: []};
+}
+async function saveCards(){ await kvSet(CARDS_KEY, cardsCatalog); }
+
+function cardUid(prefix){ return prefix + Math.random().toString(36).slice(2, 10); }
+function colCards(colId){ return cardsCatalog.cards.filter(c => c.collectionId === colId); }
+function myCardCount(cardId){ return (watchMine && watchMine.cards && watchMine.cards[cardId]) || 0; }
+function myProgress(colId){
+  const cs = colCards(colId);
+  return {owned: cs.filter(c => myCardCount(c.id) > 0).length, total: cs.length};
+}
+function oddsText(){
+  const total = RARITY_KEYS.reduce((a, k) => a + RARITIES[k].weight, 0);
+  return RARITY_KEYS.map(k => `${RARITIES[k].label} ${Math.round(RARITIES[k].weight / total * 100)} %`).join(' · ') + ' · la dernière carte est au moins Rare';
+}
+
+function drawCards(collectionId, n){
+  const pool = colCards(collectionId);
+  if(!pool.length) return [];
+  const byRarity = {};
+  RARITY_KEYS.forEach(k => { byRarity[k] = pool.filter(c => c.rarity === k); });
+  const out = [];
+  for(let i = 0; i < n; i++){
+    const minRank = (i === n - 1 && n > 1) ? 1 : 0;
+    let keys = RARITY_KEYS.filter(k => byRarity[k].length && RARITIES[k].rank >= minRank);
+    if(!keys.length) keys = RARITY_KEYS.filter(k => byRarity[k].length);
+    const total = keys.reduce((a, k) => a + RARITIES[k].weight, 0);
+    let r = Math.random() * total;
+    let pick = keys[keys.length - 1];
+    for(const k of keys){ r -= RARITIES[k].weight; if(r <= 0){ pick = k; break; } }
+    const arr = byRarity[pick];
+    out.push(arr[Math.floor(Math.random() * arr.length)]);
+  }
+  return out;
+}
+
+function cardTileHtml(card, o = {}){
+  const r = RARITIES[card.rarity] || RARITIES.commune;
+  const locked = !!o.locked;
+  const art = (!locked && card.image) ? `style="background-image:url('${escapeHtml(card.image)}')"` : '';
+  const inner = locked ? '?' : (card.image ? '' : posterInitial(card.name));
+  return `
+    <div class="tcg r-${card.rarity} ${locked ? 'locked' : ''}" data-card="${card.id}">
+      <div class="art" ${art}>${inner}</div>
+      <div class="nm">${escapeHtml(card.name)}</div>
+      <div class="rr">${r.label}</div>
+      ${o.count > 1 ? `<span class="cnt">x${o.count}</span>` : ''}
+      ${o.isNew ? `<span class="newtag">Nouvelle</span>` : ''}
+    </div>`;
+}
+
+async function renderBoosters(){
+  const inCreator = boostersViewFromCreator;
+  const valid = inCreator ? ['manage', 'board'] : ['open', 'collection', 'board'];
+  if(!valid.includes(boostersTab)) boostersTab = valid[0];
+  app.innerHTML = `
+    <div class="page">
+      ${navHtml('boosters', inCreator ? 'creator' : 'viewer')}
+      <div class="logo" style="margin-bottom:20px;">
+        <h1 style="font-size:28px;">BOOSTERS</h1>
+      </div>
+      <div class="tabs" id="boosterTabs" style="margin-bottom:18px;"></div>
+      <div id="boostersBody"></div>
+    </div>
+  `;
+  wireNav(inCreator ? 'creator' : 'viewer');
+  await loadCards();
+  await loadWatchMine();
+  drawBoosters();
+}
+
+function drawBoosters(){
+  const inCreator = boostersViewFromCreator;
+  const tabsEl = document.getElementById('boosterTabs');
+  const body = document.getElementById('boostersBody');
+  if(!tabsEl || !body) return;
+  const tabs = inCreator ? [['manage', 'Gérer'], ['board', 'Classement']] : [['open', 'Boosters'], ['collection', 'Ma collection'], ['board', 'Classement']];
+  tabsEl.innerHTML = tabs.map(([k, l]) => `<button class="tab ${boostersTab === k ? 'active' : ''}" data-t="${k}">${l}</button>`).join('');
+  tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { boostersTab = b.dataset.t; drawBoosters(); }; });
+  const y = window.scrollY;
+  if(boostersTab === 'open') drawBoostersOpen(body);
+  else if(boostersTab === 'collection') drawBoostersCollection(body);
+  else if(boostersTab === 'board') drawBoostersBoard(body);
+  else drawBoostersManage(body);
+  window.scrollTo(0, y);
+}
+
+function boosterLoginPrompt(msg){
+  return `<div class="empty" style="padding:36px 18px;"><div>${msg}</div><button class="btn2" id="boosterLoginBtn">Se connecter</button></div>`;
+}
+function wireBoosterLogin(){
+  const b = document.getElementById('boosterLoginBtn');
+  if(b) b.onclick = () => setMode('select');
+}
+
+function drawBoostersOpen(body){
+  const canPlay = !!viewerName && !isCreatorAccount;
+  const bal = watchMine ? (watchMine.points || 0) : 0;
+  const cols = cardsCatalog.collections.filter(c => colCards(c.id).length > 0);
+  const head = !viewerName ? boosterLoginPrompt('Connecte-toi pour ouvrir des boosters.') : (canPlay ? `
+    <div class="watchBar" style="margin:0 0 18px;">
+      <div class="watchMine">
+        <div class="n">${bal}</div>
+        <div class="l">${WATCH_CURRENCY}</div>
+        <div class="m">${watchMine && watchMine.packs ? watchMine.packs : 0} boosters ouverts</div>
+      </div>
+    </div>` : '');
+  body.innerHTML = head + (cols.length ? `
+    <div class="packGrid">
+      ${cols.map(col => {
+        const pr = myProgress(col.id);
+        const afford = bal >= col.price;
+        const label = !canPlay ? `${col.price} ${WATCH_CURRENCY}` : (afford ? `Ouvrir · ${col.price} ${WATCH_CURRENCY}` : `${col.price} ${WATCH_CURRENCY} · il t'en manque ${col.price - bal}`);
+        return `
+        <div class="packTile">
+          <div class="packArt"><span>${escapeHtml(col.name)}</span></div>
+          <div class="packInfo">
+            <div class="packName">${escapeHtml(col.name)}</div>
+            <div class="packMeta">${col.perPack} cartes par booster${canPlay ? ` · ${pr.owned}/${pr.total} possédées` : ` · ${pr.total} cartes`}</div>
+            <button class="btn primary" data-open="${col.id}" style="flex:none;width:100%;" ${canPlay && afford ? '' : 'disabled'}>${label}</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="hint" style="margin-top:18px;">${oddsText()}</div>
+  ` : `<div class="empty"><div>Aucun booster disponible pour l'instant.</div></div>`);
+  body.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => openBooster(b.dataset.open); });
+  wireBoosterLogin();
+}
+
+async function openBooster(collectionId){
+  if(boosterLock) return;
+  if(!viewerName || isCreatorAccount) return;
+  boosterLock = true;
+  try{
+    await loadCards();
+    const col = cardsCatalog.collections.find(c => c.id === collectionId);
+    if(!col) return;
+    const key = WATCH_PREFIX + viewerName.toLowerCase();
+    const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
+    if((rec.points || 0) < col.price){ watchMine = rec; drawBoosters(); return; }
+    const drawn = drawCards(collectionId, col.perPack);
+    if(!drawn.length) return;
+    rec.cards = rec.cards || {};
+    const pulled = drawn.map(card => {
+      const had = rec.cards[card.id] || 0;
+      rec.cards[card.id] = had + 1;
+      return {card, isNew: had === 0};
+    });
+    rec.points = (rec.points || 0) - col.price;
+    rec.packs = (rec.packs || 0) + 1;
+    rec.display = viewerName;
+    await kvSet(key, rec);
+    watchMine = rec;
+    showPackOpening(pulled, col);
+  } finally {
+    boosterLock = false;
+  }
+}
+
+function showPackOpening(pulled, col){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay packOverlay" id="packOverlay">
+      <div class="packStage">
+        <div class="packTitle">${escapeHtml(col.name)}</div>
+        <div class="packCards">
+          ${pulled.map((p, i) => `
+            <div class="flip" data-i="${i}" data-rarity="${p.card.rarity}">
+              <div class="flipInner">
+                <div class="flipFace flipBack"><span>BOOSTER</span></div>
+                <div class="flipFace flipFront">${cardTileHtml(p.card, {isNew: p.isNew})}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="packSummary" id="packSummary"></div>
+        <div class="packBtns">
+          <button class="addbtn" id="revealAllBtn">Tout révéler</button>
+          <button class="addbtn" id="packAgainBtn" style="display:none;">Ouvrir un autre booster</button>
+          <button class="btn ghost" id="packCloseBtn" style="flex:none;">Fermer</button>
+        </div>
+      </div>
+    </div>`;
+  const flips = Array.from(root.querySelectorAll('.flip'));
+  const finish = () => {
+    if(flips.some(f => !f.classList.contains('flipped'))) return;
+    const nNew = pulled.filter(p => p.isNew).length;
+    const nDup = pulled.length - nNew;
+    document.getElementById('packSummary').textContent = `${nNew} nouvelle${nNew > 1 ? 's' : ''} carte${nNew > 1 ? 's' : ''} · ${nDup} doublon${nDup > 1 ? 's' : ''}`;
+    document.getElementById('revealAllBtn').style.display = 'none';
+    const again = document.getElementById('packAgainBtn');
+    if(watchMine && (watchMine.points || 0) >= col.price) again.style.display = '';
+  };
+  const flipOne = (f) => {
+    if(f.classList.contains('flipped')) return;
+    f.classList.add('flipped');
+    if(f.dataset.rarity === 'legendaire' || f.dataset.rarity === 'epique') f.classList.add('burst');
+    setTimeout(finish, 650);
+  };
+  flips.forEach(f => { f.onclick = () => flipOne(f); });
+  document.getElementById('revealAllBtn').onclick = () => {
+    flips.filter(f => !f.classList.contains('flipped')).forEach((f, i) => setTimeout(() => flipOne(f), i * 180));
+  };
+  const closeIt = () => { closeModal(); if(mode === 'boosters') drawBoosters(); };
+  document.getElementById('packCloseBtn').onclick = closeIt;
+  document.getElementById('packAgainBtn').onclick = () => { closeModal(); openBooster(col.id); };
+}
+
+function recycleValue(colId){
+  let sum = 0;
+  colCards(colId).forEach(c => {
+    const n = myCardCount(c.id);
+    if(n > 1) sum += (n - 1) * (RARITIES[c.rarity] || RARITIES.commune).value;
+  });
+  return sum;
+}
+
+async function recycleDuplicates(colId){
+  if(!viewerName || isCreatorAccount) return;
+  const key = WATCH_PREFIX + viewerName.toLowerCase();
+  const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
+  rec.cards = rec.cards || {};
+  let gain = 0;
+  colCards(colId).forEach(c => {
+    const n = rec.cards[c.id] || 0;
+    if(n > 1){ gain += (n - 1) * (RARITIES[c.rarity] || RARITIES.commune).value; rec.cards[c.id] = 1; }
+  });
+  if(!gain) return;
+  rec.points = (rec.points || 0) + gain;
+  rec.display = viewerName;
+  await kvSet(key, rec);
+  watchMine = rec;
+  drawBoosters();
+}
+
+function drawBoostersCollection(body){
+  if(!viewerName || isCreatorAccount){ body.innerHTML = boosterLoginPrompt('Connecte-toi pour voir ta collection.'); wireBoosterLogin(); return; }
+  const cols = cardsCatalog.collections.filter(c => colCards(c.id).length > 0);
+  if(!cols.length){ body.innerHTML = `<div class="empty"><div>Aucune collection pour l'instant.</div></div>`; return; }
+  if(!cols.find(c => c.id === boostersColId)) boostersColId = cols[0].id;
+  const col = cols.find(c => c.id === boostersColId);
+  const cards = colCards(col.id).slice().sort((a, b) => (RARITIES[b.rarity].rank - RARITIES[a.rarity].rank) || a.name.localeCompare(b.name));
+  const pr = myProgress(col.id);
+  const pct = pr.total ? Math.round(pr.owned / pr.total * 100) : 0;
+  const recycle = recycleValue(col.id);
+  const shown = boostersFilter === 'all' ? cards : cards.filter(c => c.rarity === boostersFilter);
+  body.innerHTML = `
+    ${cols.length > 1 ? `<div class="tabs" id="colTabs" style="margin-bottom:14px;">${cols.map(c => `<button class="tab ${c.id === col.id ? 'active' : ''}" data-c="${c.id}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
+    <div class="watchBar" style="margin:0 0 10px;">
+      <div class="watchMine"><div class="n">${pr.owned}/${pr.total}</div><div class="l">${pct} %</div></div>
+      <button class="addbtn" id="recycleBtn" ${recycle > 0 ? '' : 'disabled'}>Recycler les doublons${recycle > 0 ? ` (+${recycle} ${WATCH_CURRENCY})` : ''}</button>
+    </div>
+    <div class="progressOuter"><div class="progressFill" style="width:${pct}%;"></div></div>
+    <div class="tabs" id="rarFilter" style="margin:16px 0;">
+      <button class="tab ${boostersFilter === 'all' ? 'active' : ''}" data-r="all">Toutes</button>
+      ${RARITY_KEYS.map(k => `<button class="tab ${boostersFilter === k ? 'active' : ''}" data-r="${k}">${RARITIES[k].label}</button>`).join('')}
+    </div>
+    <div class="tcgGrid">${shown.map(c => { const n = myCardCount(c.id); return cardTileHtml(c, {locked: n === 0, count: n}); }).join('')}</div>
+  `;
+  body.querySelectorAll('#colTabs .tab').forEach(b => { b.onclick = () => { boostersColId = b.dataset.c; boostersFilter = 'all'; drawBoosters(); }; });
+  body.querySelectorAll('#rarFilter .tab').forEach(b => { b.onclick = () => { boostersFilter = b.dataset.r; drawBoosters(); }; });
+  const rb = document.getElementById('recycleBtn');
+  if(rb) rb.onclick = () => {
+    if(confirm(`Recycler tes doublons contre ${recycle} ${WATCH_CURRENCY} ? Tu gardes un exemplaire de chaque carte.`)) recycleDuplicates(col.id);
+  };
+}
+
+async function loadCollectors(){
+  try{
+    const { data, error } = await supabaseClient.from('app_data').select('key,value').like('key', WATCH_PREFIX + '%');
+    if(error){ console.error('loadCollectors', error); return; }
+    collectorsBoard = (data || []).map(r => {
+      const v = r.value || {};
+      const cards = v.cards || {};
+      return {key: r.key.slice(WATCH_PREFIX.length), display: v.display || r.key.slice(WATCH_PREFIX.length),
+              unique: Object.keys(cards).length, total: Object.values(cards).reduce((a, b) => a + b, 0), packs: v.packs || 0};
+    }).filter(r => r.unique > 0).sort((a, b) => (b.unique - a.unique) || (b.total - a.total)).slice(0, 10);
+  }catch(e){ console.error('loadCollectors failed', e); }
+}
+
+async function drawBoostersBoard(body){
+  body.innerHTML = '';
+  await loadCollectors();
+  if(boostersTab !== 'board') return;
+  const me = viewerName ? viewerName.toLowerCase() : null;
+  body.innerHTML = collectorsBoard.length ? collectorsBoard.map((r, i) => `
+    <div class="lbRow ${me && r.key === me ? 'me' : ''}">
+      <div class="lbRank ${['top1', 'top2', 'top3'][i] || ''}">${i + 1}</div>
+      <div class="lbName">${escapeHtml(r.display)}</div>
+      <div class="lbPts">${r.unique} cartes uniques</div>
+    </div>`).join('') : `<div class="empty"><div>Personne n'a encore de cartes.</div></div>`;
+}
+
+/* ----- gestion (créateur) ----- */
+function normName(s){ return stripAccents(String(s || '').toLowerCase()).replace(/[^a-z0-9]/g, ''); }
+
+function parseRarity(t){
+  const n = stripAccents((t || '').toLowerCase()).trim();
+  if(n.startsWith('l')) return 'legendaire';
+  if(n.startsWith('e')) return 'epique';
+  if(n.startsWith('r')) return 'rare';
+  return 'commune';
+}
+
+function matchCardByFile(fileName, cards){
+  const f = normName(fileName.replace(/\.[^.]+$/, ''));
+  if(!f) return null;
+  const exact = cards.find(c => normName(c.name) === f);
+  if(exact) return exact;
+  const cands = cards.filter(c => {
+    const n = normName(c.name);
+    return n.length >= 3 && (f.includes(n) || (f.length >= 4 && n.includes(f)));
+  });
+  cands.sort((a, b) => normName(b.name).length - normName(a.name).length);
+  return cands[0] || null;
+}
+
+function resizeImageToBlob(file, maxSide = 800, quality = 0.85){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      cv.toBlob(b => b ? resolve(b) : reject(new Error('Conversion impossible')), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible')); };
+    img.src = url;
+  });
+}
+
+async function uploadCardImage(card, file){
+  const blob = await resizeImageToBlob(file, 800, 0.85);
+  const path = `cards/${card.id}-${Date.now()}.jpg`;
+  const { error } = await supabaseClient.storage.from(BT_BUCKET).upload(path, blob, {contentType: 'image/jpeg', upsert: true});
+  if(error) throw new Error(error.message);
+  const { data } = supabaseClient.storage.from(BT_BUCKET).getPublicUrl(path);
+  if(card.imagePath){ try{ await supabaseClient.storage.from(BT_BUCKET).remove([card.imagePath]); }catch(e){} }
+  card.image = data.publicUrl;
+  card.imagePath = path;
+}
+
+async function removeCardFiles(cards){
+  const paths = cards.map(c => c.imagePath).filter(Boolean);
+  if(paths.length){ try{ await supabaseClient.storage.from(BT_BUCKET).remove(paths); }catch(e){} }
+}
+
+function pickFiles(multiple, cb){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = !!multiple;
+  inp.onchange = () => { if(inp.files && inp.files.length) cb(Array.from(inp.files)); };
+  inp.click();
+}
+
+function drawBoostersManage(body){
+  const cols = cardsCatalog.collections;
+  if(!cols.find(c => c.id === manageColId)) manageColId = cols[0] ? cols[0].id : null;
+  const col = cols.find(c => c.id === manageColId);
+  const cards = col ? colCards(col.id).slice().sort((a, b) => (RARITIES[b.rarity].rank - RARITIES[a.rarity].rank) || a.name.localeCompare(b.name)) : [];
+  const counts = RARITY_KEYS.map(k => `${RARITIES[k].label} ${cards.filter(c => c.rarity === k).length}`).join(' · ');
+  const withImg = cards.filter(c => c.image).length;
+
+  body.innerHTML = `
+    <div class="twitchbox" style="max-width:560px;margin-bottom:22px;">
+      <div class="sectionLabel" style="margin-top:0;">Nouvelle collection</div>
+      <label>Nom</label>
+      <input type="text" id="newColName" placeholder="ex : Marvel (MCU)">
+      <div class="row2">
+        <div style="flex:1;"><label>Prix du booster (${WATCH_CURRENCY})</label><input type="text" inputmode="numeric" id="newColPrice" value="100"></div>
+        <div style="flex:1;"><label>Cartes par booster</label><input type="text" inputmode="numeric" id="newColPer" value="5"></div>
+      </div>
+      <div class="hint" id="newColStatus" style="min-height:16px;"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn primary" id="newColBtn" style="flex:none;">Créer</button>
+        <button class="addbtn" id="marvelTplBtn">Modèle Marvel (MCU), 32 personnages</button>
+      </div>
+    </div>
+    ${cols.length ? `<div class="tabs" id="manageTabs" style="margin-bottom:16px;">${cols.map(c => `<button class="tab ${c.id === manageColId ? 'active' : ''}" data-c="${c.id}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
+    ${col ? `
+    <div class="twitchbox" style="max-width:560px;margin-bottom:18px;">
+      <div class="sectionLabel" style="margin-top:0;">Réglages de la collection</div>
+      <label>Nom</label>
+      <input type="text" id="colName" value="${escapeHtml(col.name)}">
+      <div class="row2">
+        <div style="flex:1;"><label>Prix du booster (${WATCH_CURRENCY})</label><input type="text" inputmode="numeric" id="colPrice" value="${col.price}"></div>
+        <div style="flex:1;"><label>Cartes par booster</label><input type="text" inputmode="numeric" id="colPer" value="${col.perPack}"></div>
+      </div>
+      <div class="hint" id="colStatus" style="min-height:16px;"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn primary" id="colSaveBtn" style="flex:none;">Enregistrer</button>
+        <button class="btn ghost" id="colDeleteBtn" style="flex:none;color:var(--rate-red);">Supprimer la collection</button>
+      </div>
+    </div>
+    <div class="twitchbox" style="max-width:560px;margin-bottom:18px;">
+      <div class="sectionLabel" style="margin-top:0;">Ajouter des cartes</div>
+      <label>Nom de la carte</label>
+      <input type="text" id="cardName" placeholder="ex : Iron Man">
+      <label>Rareté</label>
+      <select id="cardRarity" class="selectBox" style="width:100%;margin-bottom:15px;">${RARITY_KEYS.map(k => `<option value="${k}">${RARITIES[k].label}</option>`).join('')}</select>
+      <button class="btn primary" id="cardAddBtn" style="flex:none;">Ajouter la carte</button>
+      <label style="margin-top:18px;">Ajout en lot (une carte par ligne, « Nom | rareté »)</label>
+      <textarea id="cardBatch" placeholder="Groot | rare&#10;Rocket | épique&#10;Nick Fury"></textarea>
+      <button class="addbtn" id="cardBatchBtn">Ajouter le lot</button>
+      <label style="margin-top:18px;">Images en lot (le nom du fichier doit contenir le nom de la carte)</label>
+      <button class="addbtn" id="cardImagesBtn">Choisir des images</button>
+      <div class="hint" id="cardStatus" style="min-height:16px;text-align:left;"></div>
+    </div>
+    <div class="sectionLabel">${cards.length} cartes · ${withImg} avec image</div>
+    <div class="hint" style="text-align:left;margin:0 0 14px;">${counts}</div>
+    <div class="tcgGrid">
+      ${cards.map(c => `
+        <div class="tcgWrap">
+          ${cardTileHtml(c, {})}
+          <select class="selectBox tcgRar" data-rar="${c.id}">${RARITY_KEYS.map(k => `<option value="${k}" ${c.rarity === k ? 'selected' : ''}>${RARITIES[k].label}</option>`).join('')}</select>
+          <div class="tcgBtns">
+            <button class="addbtn" data-img="${c.id}">Image</button>
+            <button class="btn ghost" data-del="${c.id}" style="flex:none;color:var(--rate-red);">Supprimer</button>
+          </div>
+        </div>`).join('')}
+    </div>
+    ` : ''}
+  `;
+  wireBoostersManage(col, cards);
+}
+
+function wireBoostersManage(col, cards){
+  const g = (id) => document.getElementById(id);
+  const redraw = () => drawBoosters();
+
+  g('newColBtn').onclick = async () => {
+    const st = g('newColStatus');
+    const name = g('newColName').value.trim();
+    const price = Math.max(1, parseInt(g('newColPrice').value, 10) || 100);
+    const perPack = Math.min(10, Math.max(1, parseInt(g('newColPer').value, 10) || 5));
+    if(!name){ st.style.color = 'var(--rate-red)'; st.textContent = 'Donne un nom à la collection.'; return; }
+    await loadCards();
+    const c = {id: cardUid('col-'), name, price, perPack};
+    cardsCatalog.collections.push(c);
+    manageColId = c.id;
+    await saveCards();
+    redraw();
+  };
+
+  g('marvelTplBtn').onclick = async () => {
+    await loadCards();
+    let name = MARVEL_TEMPLATE.name, i = 2;
+    while(cardsCatalog.collections.some(c => c.name === name)) name = `${MARVEL_TEMPLATE.name} ${i++}`;
+    const c = {id: cardUid('col-'), name, price: 100, perPack: 5};
+    cardsCatalog.collections.push(c);
+    RARITY_KEYS.forEach(k => {
+      (MARVEL_TEMPLATE[k] || []).forEach(n => cardsCatalog.cards.push({id: cardUid('card-'), collectionId: c.id, name: n, rarity: k, image: '', imagePath: ''}));
+    });
+    manageColId = c.id;
+    await saveCards();
+    redraw();
+  };
+
+  const tabsEl = g('manageTabs');
+  if(tabsEl) tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { manageColId = b.dataset.c; redraw(); }; });
+  if(!col) return;
+
+  g('colSaveBtn').onclick = async () => {
+    const st = g('colStatus');
+    const name = g('colName').value.trim();
+    if(!name){ st.style.color = 'var(--rate-red)'; st.textContent = 'Le nom ne peut pas être vide.'; return; }
+    await loadCards();
+    const c = cardsCatalog.collections.find(x => x.id === col.id);
+    if(!c) return;
+    c.name = name;
+    c.price = Math.max(1, parseInt(g('colPrice').value, 10) || 100);
+    c.perPack = Math.min(10, Math.max(1, parseInt(g('colPer').value, 10) || 5));
+    await saveCards();
+    redraw();
+  };
+
+  g('colDeleteBtn').onclick = async () => {
+    if(!confirm(`Supprimer la collection « ${col.name} » et ses ${cards.length} cartes ?`)) return;
+    await loadCards();
+    const doomed = cardsCatalog.cards.filter(c => c.collectionId === col.id);
+    cardsCatalog.cards = cardsCatalog.cards.filter(c => c.collectionId !== col.id);
+    cardsCatalog.collections = cardsCatalog.collections.filter(c => c.id !== col.id);
+    await saveCards();
+    await removeCardFiles(doomed);
+    manageColId = null;
+    redraw();
+  };
+
+  g('cardAddBtn').onclick = async () => {
+    const st = g('cardStatus');
+    const name = g('cardName').value.trim();
+    if(!name){ st.style.color = 'var(--rate-red)'; st.textContent = 'Donne un nom à la carte.'; return; }
+    await loadCards();
+    cardsCatalog.cards.push({id: cardUid('card-'), collectionId: col.id, name, rarity: g('cardRarity').value, image: '', imagePath: ''});
+    await saveCards();
+    redraw();
+  };
+
+  g('cardBatchBtn').onclick = async () => {
+    const lines = g('cardBatch').value.split('\n').map(l => l.trim()).filter(Boolean);
+    if(!lines.length) return;
+    await loadCards();
+    lines.forEach(line => {
+      const [name, rar] = line.split(/\s*[|;\t]\s*/);
+      if(name && name.trim()) cardsCatalog.cards.push({id: cardUid('card-'), collectionId: col.id, name: name.trim(), rarity: parseRarity(rar), image: '', imagePath: ''});
+    });
+    await saveCards();
+    redraw();
+  };
+
+  g('cardImagesBtn').onclick = () => pickFiles(true, async (files) => {
+    const st = g('cardStatus');
+    await loadCards();
+    const list = colCards(col.id);
+    let ok = 0; const unmatched = []; const failed = [];
+    for(let i = 0; i < files.length; i++){
+      const f = files[i];
+      const card = matchCardByFile(f.name, list);
+      st.style.color = 'var(--text-dim)';
+      st.textContent = `Envoi ${i + 1}/${files.length}...`;
+      if(!card){ unmatched.push(f.name); continue; }
+      try{ await uploadCardImage(card, f); await saveCards(); ok++; }
+      catch(e){ failed.push(`${f.name} (${e.message})`); }
+    }
+    st.style.color = (unmatched.length || failed.length) ? 'var(--rate-orange)' : 'var(--rate-green)';
+    st.textContent = `${ok} image${ok > 1 ? 's' : ''} associée${ok > 1 ? 's' : ''}` + (unmatched.length ? ` · sans carte : ${unmatched.join(', ')}` : '') + (failed.length ? ` · échecs : ${failed.join(', ')}` : '');
+    if(!failed.length && !unmatched.length) redraw();
+    else { const y = window.scrollY; drawBoostersManage(document.getElementById('boostersBody')); const st2 = document.getElementById('cardStatus'); if(st2){ st2.style.color = 'var(--rate-orange)'; st2.textContent = st.textContent; } window.scrollTo(0, y); }
+  });
+
+  document.querySelectorAll('[data-rar]').forEach(sel => {
+    sel.onchange = async () => {
+      await loadCards();
+      const c = cardsCatalog.cards.find(x => x.id === sel.dataset.rar);
+      if(c){ c.rarity = sel.value; await saveCards(); redraw(); }
+    };
+  });
+  document.querySelectorAll('[data-img]').forEach(btn => {
+    btn.onclick = () => pickFiles(false, async (files) => {
+      await loadCards();
+      const c = cardsCatalog.cards.find(x => x.id === btn.dataset.img);
+      if(!c) return;
+      btn.textContent = '...';
+      try{ await uploadCardImage(c, files[0]); await saveCards(); redraw(); }
+      catch(e){ btn.textContent = 'Échec'; console.error(e); }
+    });
+  });
+  document.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = async () => {
+      await loadCards();
+      const c = cardsCatalog.cards.find(x => x.id === btn.dataset.del);
+      if(!c || !confirm(`Supprimer la carte « ${c.name} » ?`)) return;
+      cardsCatalog.cards = cardsCatalog.cards.filter(x => x.id !== c.id);
+      await saveCards();
+      await removeCardFiles([c]);
+      redraw();
+    };
+  });
 }
 
 /* ---------- MINI-JEUX & CLASSEMENT ---------- */
