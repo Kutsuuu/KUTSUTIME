@@ -746,7 +746,7 @@
   }
 
 
-  /* Boosters & cartes */
+  /* Boosters, cartes et holographie */
   .packGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;}
   .packTile{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;}
   .packArt{
@@ -761,6 +761,13 @@
   .packInfo{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;}
   .packName{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;}
   .packMeta{font-size:12px;color:var(--text-dim);}
+  .packOdds{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);line-height:1.5;}
+  .oddsBox summary{cursor:pointer;font-size:12px;color:var(--gold);padding:2px 0;}
+  .oddsTable{width:100%;border-collapse:collapse;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;}
+  .oddsWrap{overflow-x:auto;}
+  .oddsTable th, .oddsTable td{padding:4px 2px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .oddsTable th:first-child, .oddsTable td:first-child{text-align:left;}
+  .oddsTable th{color:var(--text-dim);font-weight:400;font-size:9px;}
   .addbtn:disabled{opacity:.4;cursor:not-allowed;filter:none;}
 
   .tcgGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
@@ -772,50 +779,17 @@
   .tcg.r-rare{--rc:#3b82f6;box-shadow:0 0 10px rgba(59,130,246,0.3);}
   .tcg.r-epique{--rc:#a855f7;box-shadow:0 0 14px rgba(168,85,247,0.38);}
   .tcg.r-legendaire{--rc:#f5b301;box-shadow:0 0 20px rgba(245,179,1,0.5);}
-  .tcg.r-legendaire::after{
-    content:'';position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);
-    background-size:250% 100%;animation:tcgShine 3.2s linear infinite;
+  @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg;}
+  .tcg.r-ultime{
+    --rc:#ff5ccd;border:2px solid transparent;
+    background:linear-gradient(var(--panel),var(--panel)) padding-box, conic-gradient(from var(--ang), #ff3d81, #ffb02e, #4cf2a0, #35c0ff, #a259ff, #ff3d81) border-box;
+    box-shadow:0 0 24px rgba(255,92,205,0.45);animation:ultSpin 6s linear infinite;
   }
-  @keyframes tcgShine{0%{background-position:200% 0;}100%{background-position:-100% 0;}}
+  @keyframes ultSpin{to{--ang:360deg;}}
   .tcg .art{
-    flex:1;min-height:0;border-radius:calc(var(--r-md) - 6px);background:#111111 center 25%/cover no-repeat;
+    position:relative;flex:1;min-height:0;border-radius:calc(var(--r-md) - 6px);background:#111111 center 25%/cover no-repeat;
     display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;color:var(--text-dim);
   }
-  .tcg .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;padding:6px 4px 1px;text-align:center;line-height:1.2;}
-  .tcg .rr{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--rc);padding-bottom:3px;}
-  .tcg .cnt{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.75);border-radius:var(--r-pill);padding:2px 9px;font-size:11px;font-weight:700;}
-  .tcg .newtag{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;border-radius:var(--r-pill);padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
-  .tcg.locked{opacity:.5;box-shadow:none;}
-  .tcg.locked::after{display:none;}
-  .tcgWrap{display:flex;flex-direction:column;gap:8px;}
-  .tcgWrap .tcgRar{width:100%;padding:8px 12px;font-size:12px;}
-  .tcgBtns{display:flex;align-items:center;justify-content:space-between;gap:6px;}
-  .progressOuter{height:8px;border-radius:var(--r-pill);background:var(--panel-3);overflow:hidden;}
-  .progressFill{height:100%;background:var(--gold);border-radius:var(--r-pill);transition:width .4s ease;}
-
-  .packOverlay{align-items:center;background:rgba(5,5,5,0.97);}
-  .packStage{width:100%;max-width:900px;margin:auto;text-align:center;}
-  .packTitle{font-family:'JetBrains Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-size:11px;margin-bottom:20px;}
-  .packCards{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-bottom:22px;}
-  .flip{width:clamp(104px,17vw,156px);aspect-ratio:5/7;perspective:900px;cursor:pointer;}
-  .flipInner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;}
-  .flip.flipped .flipInner{transform:rotateY(180deg);}
-  .flipFace{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-  .flipFront{transform:rotateY(180deg);}
-  .flipFront .tcg{width:100%;height:100%;aspect-ratio:auto;}
-  .flipBack{
-    border-radius:var(--r-md);background:var(--panel-3);border:2px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold);font-size:11px;letter-spacing:3px;
-  }
-  .flip.burst{animation:cardBurst .7s ease-out;}
-  @keyframes cardBurst{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
-  .packSummary{min-height:22px;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text);}
-  .packBtns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
-
-
-  /* visuel de secours et holographie */
   .tcg .art.noimg{
     background:repeating-linear-gradient(135deg, hsl(var(--h) 45% 24%) 0 12px, hsl(var(--h) 45% 19%) 12px 24px);
   }
@@ -823,6 +797,29 @@
     display:flex;align-items:center;justify-content:center;width:54%;aspect-ratio:1;border-radius:50%;
     background:hsl(var(--h) 65% 54%);color:#0e0e0e;font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;
   }
+  .tcg .credit{
+    position:absolute;left:6px;bottom:6px;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    background:rgba(0,0,0,0.68);color:#fff;border-radius:var(--r-pill);padding:2px 8px;
+    font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;
+  }
+  .tcg .holotag{
+    position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,0.68);color:#fff;border:1px solid rgba(255,255,255,0.35);
+    border-radius:var(--r-pill);padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;
+  }
+  .tcg .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;padding:6px 4px 1px;text-align:center;line-height:1.2;}
+  .tcg .rr{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--rc);padding-bottom:3px;}
+  .tcg .cnt{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.75);border-radius:var(--r-pill);padding:2px 9px;font-size:11px;font-weight:700;z-index:3;}
+  .tcg .newtag{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;border-radius:var(--r-pill);padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;z-index:3;}
+  .tcg.locked{opacity:.5;box-shadow:none;}
+  .tcg.locked.r-ultime{animation:none;}
+  .tcgGrid .tcg{cursor:pointer;}
+  .tcgWrap{display:flex;flex-direction:column;gap:8px;}
+  .tcgWrap .tcgRar{width:100%;padding:8px 12px;font-size:12px;}
+  .tcgBtns{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+  .progressOuter{height:8px;border-radius:var(--r-pill);background:var(--panel-3);overflow:hidden;}
+  .progressFill{height:100%;background:var(--gold);border-radius:var(--r-pill);transition:width .4s ease;}
+
+  /* version holographique : seules les cartes holo ont le foil et l'inclinaison */
   .tcg.holo{
     transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
     transition:transform .3s ease, box-shadow .3s ease;will-change:transform;
@@ -837,35 +834,84 @@
     background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 55%);
     mix-blend-mode:overlay;
   }
-  .tcg.r-rare.tilting .glare{opacity:.5;}
-  .tcg.r-epique.tilting .foil{opacity:.36;}
-  .tcg.r-epique.tilting .glare{opacity:.6;}
-  .tcg.r-legendaire .foil{opacity:.22;}
-  .tcg.r-legendaire.tilting .foil{opacity:.6;}
-  .tcg.r-legendaire.tilting .glare{opacity:.75;}
-  .tcg.r-legendaire.tilting::after{opacity:0;}
-  .tcgGrid .tcg{cursor:pointer;}
+  .tcg.holo .foil{opacity:.24;}
+  .tcg.holo.tilting .foil{opacity:.5;}
+  .tcg.holo.tilting .glare{opacity:.6;}
+  .tcg.holo.r-legendaire.tilting .foil, .tcg.holo.r-ultime.tilting .foil{opacity:.62;}
+  .tcg.holo.r-legendaire::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%);
+    background-size:250% 100%;animation:tcgShine 3.2s linear infinite;
+  }
+  @keyframes tcgShine{0%{background-position:200% 0;}100%{background-position:-100% 0;}}
+  .tcg.holo.r-legendaire.tilting::after{opacity:0;}
   @media (hover:none){
-    .tcg.r-epique .foil{opacity:.3;animation:foilDrift 7s ease-in-out infinite alternate;}
-    .tcg.r-legendaire .foil{opacity:.5;animation:foilDrift 6s ease-in-out infinite alternate;}
+    .tcg.holo .foil{opacity:.34;animation:foilDrift 7s ease-in-out infinite alternate;}
   }
   @keyframes foilDrift{from{background-position:10% 20%;}to{background-position:90% 80%;}}
   @media (prefers-reduced-motion: reduce){
     .tcg.holo{transform:none !important;transition:none;}
     .tcg .foil{animation:none !important;}
-    .tcg.r-legendaire::after{animation:none;}
+    .tcg.holo.r-legendaire::after{animation:none;}
+    .tcg.r-ultime{animation:none;}
     .flipInner{transition:none;}
     .flip.burst{animation:none;}
   }
 
+  /* ouverture de booster */
+  .packOverlay{align-items:center;background:rgba(5,5,5,0.97);}
+  .packStage{width:100%;max-width:900px;margin:auto;text-align:center;}
+  .packTitle{font-family:'JetBrains Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-size:11px;margin-bottom:20px;}
+  .packCards{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-bottom:22px;}
+  .flip{width:clamp(96px,15vw,150px);aspect-ratio:5/7;perspective:900px;cursor:pointer;}
+  .flipInner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;}
+  .flip.flipped .flipInner{transform:rotateY(180deg);}
+  .flipFace{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+  .flipFront{transform:rotateY(180deg);}
+  .flipFront .tcg{width:100%;height:100%;aspect-ratio:auto;}
+  .flipBack{
+    border-radius:var(--r-md);background:var(--panel-3);border:2px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold);font-size:11px;letter-spacing:3px;
+  }
+  .flip.burst{animation:cardBurst .7s ease-out;}
+  @keyframes cardBurst{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
+  .packSummary{min-height:22px;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text);}
+  .packBtns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+  .packBanner{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:-6px 0 16px;}
+  .packBanner.gold{color:#f5b301;}
+  .packBanner.deviant{color:#35c0ff;}
+  .packOverlay.gold{background:rgba(22,15,0,0.97);}
+  .packOverlay.gold .flipBack{background:#2a2000;border-color:#f5b301;color:#f5b301;box-shadow:0 0 22px rgba(245,179,1,0.55);}
+  .packOverlay.gold .packTitle{color:#f5b301;}
+  .packOverlay.deviant .flipBack{border-color:#35c0ff;color:#35c0ff;box-shadow:0 0 18px rgba(53,192,255,0.4);}
+
+  /* fiche détaillée */
   .cardDetail{display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:780px;margin:auto;}
   .cardBig .tcg{width:min(300px,72vw);touch-action:none;cursor:default;}
   .cardInfo{flex:1;min-width:240px;max-width:360px;text-align:left;--rc:#8b9199;}
-  .cardInfo.r-rare{--rc:#3b82f6;} .cardInfo.r-epique{--rc:#a855f7;} .cardInfo.r-legendaire{--rc:#f5b301;}
+  .cardInfo.r-rare{--rc:#3b82f6;} .cardInfo.r-epique{--rc:#a855f7;} .cardInfo.r-legendaire{--rc:#f5b301;} .cardInfo.r-ultime{--rc:#ff5ccd;}
   .cardRar{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--rc);margin-bottom:14px;}
   .cardDesc{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px;}
-  .cardMeta{font-size:12.5px;color:var(--text-dim);margin-bottom:18px;}
-  .tcgBtns{flex-wrap:wrap;}
+  .cardMeta{font-size:12.5px;color:var(--text-dim);margin-bottom:10px;}
+
+  /* fan arts */
+  .faRow{
+    display:flex;gap:14px;align-items:center;padding:12px 14px;margin-bottom:10px;
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+  }
+  .faThumb{width:72px;height:72px;flex:none;border-radius:var(--r-sm);background:#111111 center/cover no-repeat;border:1px solid var(--border);}
+  .faThumb.big{width:120px;height:120px;}
+  .faInfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+  .faInfo .faName{margin:0;padding:8px 12px;}
+  .faInfo .faColSel{padding:8px 12px;font-size:12px;}
+  .faMeta{font-size:12px;color:var(--text-dim);}
+  .faBtns{display:flex;flex-direction:column;gap:6px;}
+  .faStatus{padding:5px 12px;border-radius:var(--r-pill);font-size:12px;font-weight:600;background:var(--panel-3);color:var(--text-dim);white-space:nowrap;}
+  .faStatus.approved{background:rgba(63,174,92,0.15);color:var(--rate-green);}
+  .faStatus.rejected{background:rgba(229,72,77,0.15);color:var(--rate-red);}
+  .checkLine{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5;margin:4px 0 14px;text-transform:none;letter-spacing:0;font-family:'Space Grotesk',sans-serif;color:var(--text);}
+  .checkLine input{margin-top:3px;flex:none;}
 
   /* Barre de navigation en bas façon TikTok / Instagram en mobile */
   @media(max-width:768px){
@@ -2844,22 +2890,55 @@ function renderStreamView(){
 }
 
 /* ---------- BOOSTERS & COLLECTIONS ---------- */
-let cardsCatalog = {collections: [], cards: []};
+let cardsCatalog = {collections: [], cards: [], v: 2};
 let boostersViewFromCreator = true;
 let boostersTab = null;
 let boostersColId = null;
 let boostersFilter = 'all';
+let boostersVersion = 'normal';
 let manageColId = null;
 let boosterLock = false;
 let collectorsBoard = [];
+let fanartList = [];
+let fanartDraft = {file: null, preview: ''};
+
+const CARDS_PER_PACK = 6;
+const HOLO_CHANCE = 0.12;        // chance d'être holographique, pour chacune des cartes éligibles (voir SLOT_ODDS)
+
+/* boosters spéciaux : une seule tirée au sort à chaque ouverture */
+const GOLD_CHANCE = 0.0001;      // 0,01 % : booster Gold
+const GOLD_CARDS = 7;            // 5 Légendaires, puis 50 % d'Ultime sur l'avant-dernière, Ultime assuré sur la dernière
+const GOLD_ULTIME_BOOST = 0.5;
+const DEVIANT_CHANCE = 0.02;     // 2 % : booster Déviant
+const DEVIANT_MAX_EXTRA = 6;     // de 1 à 6 cartes en plus
+const HOLO_MULT = 3;
+const MAX_PENDING_FANARTS = 3;
+const FANART_PREFIX = 'fanart:';
 
 const RARITIES = {
-  commune:    {label: 'Commune',    weight: 60, value: 2,  rank: 0},
-  rare:       {label: 'Rare',       weight: 25, value: 8,  rank: 1},
-  epique:     {label: 'Épique',     weight: 12, value: 25, rank: 2},
-  legendaire: {label: 'Légendaire', weight: 3,  value: 80, rank: 3}
+  commune:    {label: 'Commune',    value: 1,   rank: 0},
+  rare:       {label: 'Rare',       value: 4,   rank: 1},
+  epique:     {label: 'Épique',     value: 12,  rank: 2},
+  legendaire: {label: 'Légendaire', value: 40,  rank: 3},
+  ultime:     {label: 'Ultime',     value: 120, rank: 4}
 };
-const RARITY_KEYS = ['commune', 'rare', 'epique', 'legendaire'];
+const RARITY_KEYS = ['commune', 'rare', 'epique', 'legendaire', 'ultime'];
+
+/* Probabilités (en %) de chaque rareté, carte par carte, en partant de la FIN du booster.
+   Index 0 = dernière carte, 1 = avant-dernière, etc. Les cartes au-delà de la 6e en partant de la fin
+   utilisent la dernière ligne. Chaque ligne fait 100 %.
+   - Légendaire : seulement sur les 2 dernières cartes (1 % chacune)
+   - Ultime     : seulement sur la dernière carte (0,05 %) */
+const H_PCT = HOLO_CHANCE * 100;
+const SLOT_ODDS = [
+  {commune: 0,  rare: 55, epique: 43.95, legendaire: 1, ultime: 0.05, holo: H_PCT},
+  {commune: 25, rare: 52, epique: 22,    legendaire: 1, ultime: 0,    holo: H_PCT},
+  {commune: 58, rare: 36, epique: 6,     legendaire: 0, ultime: 0,    holo: H_PCT},
+  {commune: 75, rare: 24, epique: 1,     legendaire: 0, ultime: 0,    holo: 0},
+  {commune: 85, rare: 15, epique: 0,     legendaire: 0, ultime: 0,    holo: 0},
+  {commune: 92, rare: 8,  epique: 0,     legendaire: 0, ultime: 0,    holo: 0}
+];
+const HOLO_LAST_SLOTS = SLOT_ODDS.filter(r => r.holo > 0).length;   // holographiques : uniquement sur les dernières cartes
 
 const MARVEL_TEMPLATE = {
   key: 'marvel',
@@ -2868,7 +2947,8 @@ const MARVEL_TEMPLATE = {
     {n: 'Iron Man', h: 355, d: "Tony Stark, génie milliardaire et inventeur, qui bâtit sa propre armure pour protéger ceux qui comptent."},
     {n: 'Captain America', h: 215, d: "Steve Rogers, soldat des années 40 transformé par un sérum. Un bouclier, un sens du devoir sans faille."},
     {n: 'Thor', h: 205, d: "Dieu du tonnerre d'Asgard, porteur du marteau Mjolnir. Fier, puissant, et en train d'apprendre l'humilité."},
-    {n: 'Thanos', h: 275, d: "Le Titan qui rêve de rassembler les Pierres d'Infinité. Une menace venue des confins de l'univers."}
+    {n: 'Thanos', h: 275, d: "Le Titan qui rêve de rassembler les Pierres d'Infinité. Une menace venue des confins de l'univers."},
+    {n: 'Ultron', h: 195, d: "Intelligence artificielle créée pour protéger la Terre. Elle en tire une conclusion bien à elle."}
   ],
   epique: [
     {n: 'Hulk', h: 125, d: "Le docteur Bruce Banner et son double de colère verte. Une force colossale, parfois difficile à contrôler."},
@@ -2878,7 +2958,9 @@ const MARVEL_TEMPLATE = {
     {n: 'Doctor Strange', h: 12, d: "Ancien chirurgien de génie devenu Sorcier Suprême. Il veille sur la Terre face aux menaces mystiques."},
     {n: 'Loki', h: 140, d: "Dieu de la malice, frère adoptif de Thor. Charmeur, rusé, jamais là où on l'attend."},
     {n: 'Star-Lord', h: 18, d: "Peter Quill, pilleur de l'espace et chef des Gardiens de la Galaxie. Walkman, bagout et grands rêves."},
-    {n: 'Captain Marvel', h: 42, d: "Carol Danvers, pilote devenue héroïne cosmique. L'une des plus puissantes protectrices de la galaxie."}
+    {n: 'Captain Marvel', h: 42, d: "Carol Danvers, pilote devenue héroïne cosmique. L'une des plus puissantes protectrices de la galaxie."},
+    {n: 'Hela', h: 160, d: "Déesse de la Mort au pouvoir effrayant. Son retour menace tout Asgard."},
+    {n: 'Red Skull', h: 0, d: "Chef de l'Hydra, ambitieux et cruel. Il cherche un pouvoir qui ne devrait appartenir à personne."}
   ],
   rare: [
     {n: 'Hawkeye', h: 265, d: "Clint Barton, archer sans superpouvoir mais d'une précision redoutable."},
@@ -2890,7 +2972,12 @@ const MARVEL_TEMPLATE = {
     {n: 'Wasp', h: 50, d: "Hope van Dyne, héroïne miniature volante. Agile, déterminée, et experte en combat."},
     {n: 'Gamora', h: 152, d: "Guerrière d'élite surnommée la femme la plus dangereuse de la galaxie. Elle trace sa propre route."},
     {n: 'Rocket', h: 26, d: "Raton laveur génétiquement modifié, as de la mécanique et des armes lourdes. Caractère explosif."},
-    {n: 'Groot', h: 102, d: "Arbre extraterrestre au vocabulaire de trois mots. Solide, fidèle et étonnamment tendre."}
+    {n: 'Groot', h: 102, d: "Arbre extraterrestre au vocabulaire de trois mots. Solide, fidèle et étonnamment tendre."},
+    {n: 'Valkyrie', h: 305, d: "Guerrière d'Asgard au passé lourd. Redoutable à l'épée, fidèle avant tout à sa liberté."},
+    {n: 'Yondu', h: 232, d: "Capitaine des Ravageurs, archer à la flèche sifflante. Voleur, mais pas sans honneur."},
+    {n: 'Erik Killmonger', h: 285, d: "Adversaire ambitieux et déterminé venu bouleverser l'ordre du Wakanda."},
+    {n: 'The Ancient One', h: 55, d: "Maîtresse des arts mystiques et mentor de Doctor Strange. Sage, mystérieuse et redoutable."},
+    {n: 'Vulture', h: 118, d: "Marchand d'armes en exosquelette ailé. Un adversaire de quartier pour le jeune Spider-Man."}
   ],
   commune: [
     {n: 'Nick Fury', h: 222, d: "Directeur du S.H.I.E.L.D. et créateur de l'initiative Avengers. Toujours un plan d'avance."},
@@ -2902,7 +2989,15 @@ const MARVEL_TEMPLATE = {
     {n: 'Nebula', h: 208, d: "Mercenaire cyborg à la peau bleue, élevée comme une arme. En quête de sa propre place."},
     {n: 'Wong', h: 176, d: "Gardien de la bibliothèque de Kamar-Taj et maître des arts mystiques. Sérieux, mais pas sans humour."},
     {n: 'Okoye', h: 4, d: "Générale des Dora Milaje, la garde royale du Wakanda. Lance en main, loyauté inébranlable."},
-    {n: 'Shuri', h: 168, d: "Princesse du Wakanda et prodige technologique. L'esprit brillant derrière les innovations du royaume."}
+    {n: 'Shuri', h: 168, d: "Princesse du Wakanda et prodige technologique. L'esprit brillant derrière les innovations du royaume."},
+    {n: 'Phil Coulson', h: 235, d: "Agent du S.H.I.E.L.D., sérieux et dévoué. Le plus grand fan des Avengers."},
+    {n: 'Heimdall', h: 46, d: "Gardien du Bifröst, il voit tout dans les neuf royaumes. Calme et vigilant."},
+    {n: 'Odin', h: 210, d: "Roi d'Asgard et père de Thor. Sage, puissant et parfois sévère."},
+    {n: 'Jane Foster', h: 330, d: "Astrophysicienne brillante, curieuse de tout. Sa rencontre avec Thor bouleverse son quotidien."},
+    {n: 'Korg', h: 95, d: "Gladiateur de pierre à l'accent tranquille. Toujours calme, même en pleine bataille."},
+    {n: 'Mantis', h: 130, d: "Empathe aux antennes, douce et timide. Elle ressent les émotions des autres."},
+    {n: 'Hank Pym', h: 245, d: "Scientifique à l'origine de la technologie Pym. Brillant, têtu et protecteur."},
+    {n: 'Ned Leeds', h: 70, d: "Meilleur ami de Peter Parker et fan de Lego. Enthousiaste et loyal."}
   ]
 };
 
@@ -2923,7 +3018,9 @@ const HAIKYUU_TEMPLATE = {
     {n: 'Tetsuro Kuroo', h: 355, d: "Capitaine de Nekoma, central rusé au sourire en coin. Maître du bloc stratégique."},
     {n: 'Kenma Kozume', h: 48, d: "Passeur de Nekoma, cerveau tranquille. Il analyse tout, sans jamais s'agiter."},
     {n: 'Kotaro Bokuto', h: 42, d: "As de Fukurodani, solaire et imprévisible. Quand son moral est au sommet, il est injouable."},
-    {n: 'Hajime Iwaizumi', h: 172, d: "Attaquant d'Aoba Johsai et ami d'enfance d'Oikawa. Franc, solide et pas du genre à se laisser faire."}
+    {n: 'Hajime Iwaizumi', h: 172, d: "Attaquant d'Aoba Johsai et ami d'enfance d'Oikawa. Franc, solide et pas du genre à se laisser faire."},
+    {n: 'Kourai Hoshiumi', h: 33, d: "Ailier de Kamomedai, plus petit que la moyenne mais bourré d'ambition. Il attaque avec une énergie débordante."},
+    {n: 'Kentaro Kyoutani', h: 20, d: "Ailier d'Aoba Johsai au tempérament de chien de garde. Puissant, intense et en progrès constant."}
   ],
   rare: [
     {n: 'Koshi Sugawara', h: 190, d: "Passeur de Karasuno au doux sourire et au grand cœur. Le soutien moral de l'équipe."},
@@ -2935,7 +3032,12 @@ const HAIKYUU_TEMPLATE = {
     {n: 'Osamu Miya', h: 320, d: "Ailier d'Inarizaki et jumeau d'Atsumu. Plus posé, mais tout aussi têtu."},
     {n: 'Kiyoomi Sakusa', h: 155, d: "As d'Itachiyama, grand, puissant et très exigeant envers lui-même."},
     {n: 'Lev Haiba', h: 340, d: "Central de Nekoma, très grand et plein d'énergie. Il apprend vite, et ça se voit."},
-    {n: 'Shinsuke Kita', h: 205, d: "Capitaine d'Inarizaki, la discipline incarnée. Chaque geste est travaillé avec soin."}
+    {n: 'Shinsuke Kita', h: 205, d: "Capitaine d'Inarizaki, la discipline incarnée. Chaque geste est travaillé avec soin."},
+    {n: 'Tsutomu Goshiki', h: 280, d: "Jeune ailier de Shiratorizawa, plein de fougue. Il apprend à son rythme pour devenir un as."},
+    {n: 'Shigeru Yahaba', h: 168, d: "Passeur d'Aoba Johsai, déterminé à se faire un nom sur le terrain."},
+    {n: 'Rintaro Suna', h: 250, d: "Central d'Inarizaki, décontracté et malin. Son bloc surprend souvent l'adversaire."},
+    {n: 'Motoya Komori', h: 140, d: "Libéro d'Itachiyama et cousin de Sakusa. Calme, solide et de bonne humeur."},
+    {n: 'Takanobu Aone', h: 215, d: "Central de Date Tech, grand mur silencieux. Son bloc est l'un des plus redoutés."}
   ],
   commune: [
     {n: 'Kiyoko Shimizu', h: 330, d: "Manageuse de Karasuno, élégante et réservée. Elle veille sur l'équipe en coulisses."},
@@ -2947,47 +3049,195 @@ const HAIKYUU_TEMPLATE = {
     {n: 'Taketora Yamamoto', h: 348, d: "Ailier de Nekoma, impulsif et motivé. Il rêve de devenir l'as de l'équipe."},
     {n: 'Issei Matsukawa', h: 196, d: "Central d'Aoba Johsai, grand et malicieux. Un bloc qui fait mal."},
     {n: 'Takahiro Hanamaki', h: 182, d: "Ailier d'Aoba Johsai et complice de Matsukawa. Toujours une blague en réserve."},
-    {n: 'Eita Semi', h: 262, d: "Passeur de Shiratorizawa, précis et sûr de lui."}
+    {n: 'Eita Semi', h: 262, d: "Passeur de Shiratorizawa, précis et sûr de lui."},
+    {n: 'Yutaro Kindaichi', h: 178, d: "Central d'Aoba Johsai, grand et sérieux. Il progresse à chaque match."},
+    {n: 'Akira Kunimi', h: 165, d: "Ailier d'Aoba Johsai, calme et économe de ses mots. Il garde son énergie pour l'essentiel."},
+    {n: 'Kenjiro Shirabu', h: 268, d: "Passeur de Shiratorizawa, exigeant et ambitieux. Il vise la perfection à chaque passe."},
+    {n: 'Akinori Konoha', h: 70, d: "Ailier de Fukurodani, discret et fiable. Un équilibre précieux pour l'équipe."},
+    {n: 'Nobuyuki Kai', h: 5, d: "Ailier et vice-capitaine de Nekoma, posé et fiable. Il soutient l'équipe en défense."},
+    {n: 'Aran Ojiro', h: 310, d: "Ailier d'Inarizaki, sérieux et régulier. Un joueur sur qui on peut compter."},
+    {n: 'Kazuma Narita', h: 100, d: "Joueur de Karasuno au grand cœur. Toujours prêt à encourager ses coéquipiers."},
+    {n: 'Hisashi Kinoshita', h: 120, d: "Ailier de Karasuno, fidèle soutien de l'équipe. Il ne lâche jamais."},
+    {n: 'Kenji Futakuchi', h: 335, d: "Ailier de Date Tech, vif et provocateur. Il aime pousser ses adversaires dans leurs retranchements."}
   ]
 };
 
-const COLLECTION_TEMPLATES = [MARVEL_TEMPLATE, HAIKYUU_TEMPLATE];
+const MHA_TEMPLATE = {
+  key: 'mha',
+  name: 'My Hero Academia',
+  legendaire: [
+    {n: 'Izuku Midoriya', h: 130, d: "Un garçon sans alter qui rêve de devenir un héros. Sa détermination attire l'attention d'All Might."},
+    {n: 'Katsuki Bakugo', h: 25, d: "Rival explosif de Deku. Un alter qui produit des explosions et un caractère à la hauteur."},
+    {n: 'Shoto Todoroki', h: 200, d: "Fils d'Endeavor, il maîtrise la glace d'un côté et le feu de l'autre. Calme, mais tiraillé par son histoire."},
+    {n: 'All Might', h: 50, d: "Le Symbole de la Paix, sourire éclatant et force légendaire. Le héros que tout le monde admire."}
+  ],
+  epique: [
+    {n: 'Endeavor', h: 8, d: "Héros numéro deux et maître des flammes. Ambitieux, intense, obsédé par la victoire."},
+    {n: 'Eraser Head', h: 280, d: "Professeur de la classe 1-A. Son regard annule les alters, sa patience a ses limites."},
+    {n: 'Tomura Shigaraki', h: 220, d: "Chef de la Ligue des Super-Vilains. Son pouvoir réduit en poussière tout ce qu'il touche."},
+    {n: 'Hawks', h: 15, d: "Héros aux ailes de plumes, rapide et décontracté. Un as de la vitesse."},
+    {n: 'Ochaco Uraraka', h: 340, d: "Camarade de Deku capable d'annuler la gravité. Joyeuse, courageuse et très motivée."},
+    {n: 'Tenya Iida', h: 215, d: "Délégué de classe sérieux aux jambes à moteur. Droit, rapide et un peu raide."},
+    {n: 'Eijiro Kirishima', h: 355, d: "Un alter de durcissement et un cœur sincère. Il rêve d'être un héros fiable."},
+    {n: 'Dabi', h: 195, d: "Super-vilain aux flammes bleues. Un pouvoir qui le brûle lui-même, et un passé qu'il garde pour lui."}
+  ],
+  rare: [
+    {n: 'Momo Yaoyorozu', h: 330, d: "Créatrice de génie : elle fabrique des objets à partir de sa propre énergie. Brillante et réfléchie."},
+    {n: 'Tsuyu Asui', h: 145, d: "Fille-grenouille franche et attachante. Elle dit toujours ce qu'elle pense."},
+    {n: 'Denki Kaminari', h: 55, d: "Alter électrique, grande gueule et bon copain. Quand il décharge trop, il fait un court-circuit."},
+    {n: 'Mina Ashido', h: 320, d: "Peau rose et alter d'acide. Danseuse, pétillante et toujours partante."},
+    {n: 'Fumikage Tokoyami', h: 260, d: "Camarade réservé, accompagné de Dark Shadow. Plus il fait sombre, plus elle est forte."},
+    {n: 'Mirio Togata', h: 40, d: "Héros en herbe au sourire solaire. Son alter lui permet de traverser la matière."},
+    {n: 'Stain', h: 350, d: "Le Tueur de Héros, qui traque ceux qu'il juge indignes de ce nom. Un idéal radical."},
+    {n: 'Himiko Toga', h: 345, d: "Jeune vilaine obsédée par le sang de ceux qu'elle aime. Elle peut prendre leur apparence."},
+    {n: 'Kyoka Jiro', h: 300, d: "Prises auriculaires et amour de la musique. Une oreille hors norme, un caractère tranquille."},
+    {n: 'Hitoshi Shinso', h: 270, d: "Ses mots peuvent contrôler l'esprit de qui lui répond. Il rêve d'intégrer la section héros."},
+    {n: 'Mezo Shoji', h: 20, d: "Grand et discret, il fait pousser des bras supplémentaires. Très doué en reconnaissance."},
+    {n: 'Rikido Sato', h: 30, d: "Puissance décuplée par le sucre, au prix d'un coup de barre. Il adore pâtisser."}
+  ],
+  commune: [
+    {n: 'Present Mic', h: 65, d: "Professeur d'anglais à la voix tonitruante. Son cri fait vibrer les murs."},
+    {n: 'Midnight', h: 310, d: "Héroïne provocante et professeure. Son parfum endort ses adversaires."},
+    {n: 'Recovery Girl', h: 150, d: "Infirmière miniature d'U.A. Un baiser qui soigne, mais qui épuise."},
+    {n: 'Nezu', h: 190, d: "Directeur d'U.A., d'une intelligence hors norme. Rusé, calme et parfois déroutant."},
+    {n: 'Gran Torino', h: 35, d: "Vieux héros à la retraite, rapide comme l'éclair. Il sait encore donner une leçon."},
+    {n: 'Mount Lady', h: 335, d: "Héroïne géante, populaire et un peu maladroite. Son gabarit change tout."},
+    {n: 'Minoru Mineta', h: 285, d: "Petit et collant : son alter produit des boules adhésives. Pas toujours sérieux, souvent utile."},
+    {n: 'Hanta Sero', h: 160, d: "Rubans élastiques et bonne humeur. Un coéquipier sur qui compter."},
+    {n: 'Mashirao Ojiro', h: 45, d: "Queue puissante et arts martiaux. Un combattant honnête et travailleur."},
+    {n: 'Koji Koda', h: 105, d: "Timide mais doux, il parle aux animaux. Son alter appelle les bêtes à l'aide."},
+    {n: 'Yuga Aoyama', h: 240, d: "Laser du nombril et style éclatant. Plus fragile qu'il ne le montre."},
+    {n: 'Toru Hagakure', h: 175, d: "Invisible mais pleine d'énergie. On la repère à sa bonne humeur."},
+    {n: 'Itsuka Kendo', h: 10, d: "Représentante de la classe 1-B. Elle agrandit ses poings, et son leadership."},
+    {n: 'Neito Monoma', h: 100, d: "Rival de la classe 1-B qui copie les alters des autres. Beaucoup d'aplomb, peu de modestie."},
+    {n: 'Kurogiri', h: 255, d: "Le portier de la Ligue, un brouillard capable de téléporter. Toujours poli, jamais rassurant."},
+    {n: 'Mr. Compress', h: 85, d: "Magicien de la Ligue des Super-Vilains. Il compresse tout dans des billes."}
+  ]
+};
+
+const COLLECTION_TEMPLATES = [MARVEL_TEMPLATE, HAIKYUU_TEMPLATE, MHA_TEMPLATE];
 const templateCount = (t) => RARITY_KEYS.reduce((a, k) => a + (t[k] || []).length, 0);
 
 async function loadCards(){
   const v = await kvGet(CARDS_KEY);
   cardsCatalog = (v && Array.isArray(v.collections) && Array.isArray(v.cards)) ? v : {collections: [], cards: []};
+  if(!cardsCatalog.v || cardsCatalog.v < 2){
+    cardsCatalog.collections.forEach(c => { c.perPack = CARDS_PER_PACK; });
+    cardsCatalog.v = 2;
+    if(isCreatorAccount && cardsCatalog.collections.length) await saveCards();
+  }
 }
 async function saveCards(){ await kvSet(CARDS_KEY, cardsCatalog); }
 
 function cardUid(prefix){ return prefix + Math.random().toString(36).slice(2, 10); }
 function colCards(colId){ return cardsCatalog.cards.filter(c => c.collectionId === colId); }
-function myCardCount(cardId){ return (watchMine && watchMine.cards && watchMine.cards[cardId]) || 0; }
-function myProgress(colId){
+function ownedMap(holo){ return (watchMine && (holo ? watchMine.holo : watchMine.cards)) || {}; }
+function myCardCount(cardId, holo){ return ownedMap(holo)[cardId] || 0; }
+function myProgress(colId, holo){
   const cs = colCards(colId);
-  return {owned: cs.filter(c => myCardCount(c.id) > 0).length, total: cs.length};
+  return {owned: cs.filter(c => myCardCount(c.id, holo) > 0).length, total: cs.length};
 }
-function oddsText(){
-  const total = RARITY_KEYS.reduce((a, k) => a + RARITIES[k].weight, 0);
-  return RARITY_KEYS.map(k => `${RARITIES[k].label} ${Math.round(RARITIES[k].weight / total * 100)} %`).join(' · ') + ' · la dernière carte est au moins Rare';
+function cardValue(card, holo){
+  const base = (RARITIES[card.rarity] || RARITIES.commune).value;
+  return holo ? base * HOLO_MULT : base;
+}
+/* ligne de probabilités d'une carte, par position en partant de la fin (1 = dernière carte) */
+function rowAtPos(pos){ return SLOT_ODDS[Math.min(Math.max(pos, 1), SLOT_ODDS.length) - 1]; }
+
+/* booster déviant : la progression est étirée proportionnellement sur toutes les cartes.
+   La 1re carte garde la ligne la plus faible, la dernière la ligne la meilleure, les autres sont interpolées. */
+function stretchedRow(i, n){
+  const last = SLOT_ODDS.length - 1;
+  const u = n <= 1 ? last : (i / (n - 1)) * last;
+  const lo = Math.floor(u), hi = Math.min(last, lo + 1), w = u - lo;
+  const a = SLOT_ODDS[last - lo], b = SLOT_ODDS[last - hi];
+  const row = {};
+  [...RARITY_KEYS, 'holo'].forEach(k => { row[k] = a[k] * (1 - w) + b[k] * w; });
+  return row;
 }
 
-function drawCards(collectionId, n){
+/* probabilités effectives pour une collection donnée.
+   Si une rareté n'existe pas dans la collection, sa part va à la rareté la plus probable de la position. */
+function oddsFromRow(row, present){
+  const odds = {};
+  let missing = 0;
+  RARITY_KEYS.forEach(k => { if(present.includes(k)) odds[k] = row[k]; else { odds[k] = 0; missing += row[k]; } });
+  if(missing > 0 && present.length){
+    const target = present.filter(k => row[k] > 0).sort((a, b) => row[b] - row[a])[0];
+    if(target) odds[target] += missing;
+    else { const share = 100 / present.length; present.forEach(k => { odds[k] = share; }); }
+  }
+  return odds;
+}
+function slotOddsFor(pos, present){ return oddsFromRow(rowAtPos(pos), present); }
+function presentRarities(colId){
+  const cs = colCards(colId);
+  return RARITY_KEYS.filter(k => cs.some(c => c.rarity === k));
+}
+function fmtPct(x){
+  if(!x || x < 0.0001) return '—';
+  return (Math.round(x * 100) / 100).toString().replace('.', ',') + ' %';
+}
+function lastCardOdds(colId){
+  const odds = slotOddsFor(1, presentRarities(colId));
+  return 'Dernière carte : ' + RARITY_KEYS.filter(k => odds[k] > 0.0001).map(k => `${RARITIES[k].label} ${fmtPct(odds[k])}`).join(' · ');
+}
+const RARITY_SHORT = {commune: 'Com.', rare: 'Rare', epique: 'Épi.', legendaire: 'Lég.', ultime: 'Ult.'};
+function oddsTableHtml(col){
+  const present = presentRarities(col.id);
+  const rows = [];
+  for(let i = 0; i < col.perPack; i++){
+    const pos = col.perPack - i;
+    const odds = slotOddsFor(pos, present);
+    rows.push(`<tr><td>${i + 1}</td>${present.map(k => `<td>${fmtPct(odds[k])}</td>`).join('')}<td>${fmtPct(rowAtPos(pos).holo)}</td></tr>`);
+  }
+  return `<div class="oddsWrap"><table class="oddsTable"><thead><tr><th title="Numéro de la carte dans le booster">N°</th>${present.map(k => `<th title="${RARITIES[k].label}">${RARITY_SHORT[k]}</th>`).join('')}<th title="Holographique">Holo</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+}
+
+/* rareté la plus proche de celle visée, parmi celles qui existent dans la collection (on descend d'abord, puis on monte) */
+function bestAvailable(target, present){
+  const rank = RARITIES[target].rank;
+  const sorted = present.slice().sort((a, b) => RARITIES[a].rank - RARITIES[b].rank);
+  const below = sorted.filter(k => RARITIES[k].rank <= rank);
+  return below.length ? below[below.length - 1] : sorted[0];
+}
+
+/* quel type de booster sort à cette ouverture ? un seul tirage : Gold, Déviant ou normal */
+function rollVariant(col){
+  const r = Math.random();
+  if(r < GOLD_CHANCE) return {type: 'gold', n: GOLD_CARDS, extra: 0};
+  if(r < GOLD_CHANCE + DEVIANT_CHANCE){
+    const extra = 1 + Math.floor(Math.random() * DEVIANT_MAX_EXTRA);
+    return {type: 'deviant', n: col.perPack + extra, extra};
+  }
+  return {type: 'normal', n: col.perPack, extra: 0};
+}
+
+function drawCards(collectionId, n, opts){
+  opts = opts || {};
   const pool = colCards(collectionId);
   if(!pool.length) return [];
   const byRarity = {};
   RARITY_KEYS.forEach(k => { byRarity[k] = pool.filter(c => c.rarity === k); });
+  const present = RARITY_KEYS.filter(k => byRarity[k].length);
   const out = [];
   for(let i = 0; i < n; i++){
-    const minRank = (i === n - 1 && n > 1) ? 1 : 0;
-    let keys = RARITY_KEYS.filter(k => byRarity[k].length && RARITIES[k].rank >= minRank);
-    if(!keys.length) keys = RARITY_KEYS.filter(k => byRarity[k].length);
-    const total = keys.reduce((a, k) => a + RARITIES[k].weight, 0);
-    let r = Math.random() * total;
-    let pick = keys[keys.length - 1];
-    for(const k of keys){ r -= RARITIES[k].weight; if(r <= 0){ pick = k; break; } }
-    const arr = byRarity[pick];
-    out.push(arr[Math.floor(Math.random() * arr.length)]);
+    const pos = n - i;                                            // 1 = dernière carte du booster
+    const row = opts.stretch ? stretchedRow(i, n) : rowAtPos(pos);
+    let rarity;
+    if(opts.gold){
+      const target = i < n - 2 ? 'legendaire' : (i === n - 2 ? (Math.random() < GOLD_ULTIME_BOOST ? 'ultime' : 'legendaire') : 'ultime');
+      rarity = bestAvailable(target, present);
+    } else {
+      const odds = oddsFromRow(row, present);
+      const cands = present.filter(k => odds[k] > 0);
+      const total = cands.reduce((a, k) => a + odds[k], 0);
+      let r = Math.random() * total;
+      rarity = cands[cands.length - 1];
+      for(const k of cands){ r -= odds[k]; if(r <= 0){ rarity = k; break; } }
+    }
+    const arr = byRarity[rarity];
+    out.push({card: arr[Math.floor(Math.random() * arr.length)], holo: Math.random() * 100 < row.holo});
   }
   return out;
 }
@@ -3001,14 +3251,14 @@ function hashHue(str){
 function cardTileHtml(card, o = {}){
   const r = RARITIES[card.rarity] || RARITIES.commune;
   const locked = !!o.locked;
+  const holo = !locked && !!o.holo;
   const hue = (card.hue !== undefined && card.hue !== null && card.hue !== '') ? Number(card.hue) : hashHue(card.name);
   const hasImg = !locked && !!card.image;
   const artStyle = hasImg ? `style="background-image:url('${escapeHtml(card.image)}')"` : (locked ? '' : `style="--h:${hue}"`);
   const inner = locked ? '?' : (hasImg ? '' : `<span class="mono">${posterInitial(card.name)}</span>`);
-  const holo = !locked && r.rank >= 1;
   return `
     <div class="tcg r-${card.rarity} ${locked ? 'locked' : ''} ${holo ? 'holo' : ''}" data-card="${card.id}">
-      <div class="art ${(hasImg || locked) ? '' : 'noimg'}" ${artStyle}>${inner}</div>
+      <div class="art ${(hasImg || locked) ? '' : 'noimg'}" ${artStyle}>${inner}${(!locked && card.artist) ? `<span class="credit">par ${escapeHtml(card.artist)}</span>` : ''}${holo ? '<span class="holotag">HOLO</span>' : ''}</div>
       <div class="nm">${escapeHtml(card.name)}</div>
       <div class="rr">${r.label}</div>
       ${holo ? '<div class="foil"></div><div class="glare"></div>' : ''}
@@ -3045,31 +3295,44 @@ document.addEventListener('pointermove', (e) => {
 document.addEventListener('pointerup', (e) => { if(e.pointerType && e.pointerType !== 'mouse'){ holoReset(holoActive); holoActive = null; } });
 document.addEventListener('mouseleave', () => { holoReset(holoActive); holoActive = null; });
 
-function openCardDetail(cardId, preview){
+function openCardDetail(cardId, preview, startHolo){
   const card = cardsCatalog.cards.find(c => c.id === cardId);
   if(!card) return;
+  let holoView = !!startHolo;
   const col = cardsCatalog.collections.find(c => c.id === card.collectionId);
   const r = RARITIES[card.rarity] || RARITIES.commune;
-  const count = preview ? 1 : myCardCount(card.id);
-  const owned = count > 0;
   const root = document.getElementById('modalRoot');
-  root.innerHTML = `
-    <div class="overlay packOverlay" id="cardOverlay">
-      <div class="cardDetail">
-        <div class="cardBig">${cardTileHtml(card, {locked: !owned, count: preview ? 0 : count})}</div>
-        <div class="cardInfo r-${card.rarity}">
-          <div class="packTitle" style="text-align:left;margin-bottom:8px;">${escapeHtml(col ? col.name : '')}</div>
-          <h3 style="margin-bottom:4px;">${escapeHtml(card.name)}</h3>
-          <div class="cardRar">${r.label}</div>
-          <div class="cardDesc">${owned ? escapeHtml(card.desc || 'Pas encore de description.') : "Obtiens cette carte pour débloquer sa description."}</div>
-          <div class="cardMeta">${preview ? 'Aperçu' : (owned ? `Exemplaires : ${count}` : 'Pas encore obtenue')}${(!preview && count > 1) ? ` · Recyclage : ${r.value} ${WATCH_CURRENCY} par doublon` : ''}</div>
-          <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>
+  const draw = () => {
+    const nN = preview ? 1 : myCardCount(card.id, false);
+    const nH = preview ? 1 : myCardCount(card.id, true);
+    const count = holoView ? nH : nN;
+    const owned = count > 0;
+    const ownedAny = preview || (nN + nH) > 0;
+    root.innerHTML = `
+      <div class="overlay packOverlay" id="cardOverlay">
+        <div class="cardDetail">
+          <div class="cardBig">${cardTileHtml(card, {locked: !owned, count: preview ? 0 : count, holo: holoView})}</div>
+          <div class="cardInfo r-${card.rarity}">
+            <div class="packTitle" style="text-align:left;margin-bottom:8px;">${escapeHtml(col ? col.name : '')}</div>
+            <h3 style="margin-bottom:4px;">${escapeHtml(card.name)}</h3>
+            <div class="cardRar">${r.label}</div>
+            <div class="tabs" id="verSwitch" style="margin-bottom:14px;">
+              <button class="tab ${!holoView ? 'active' : ''}" data-h="0">Normale${preview ? '' : ` (${nN})`}</button>
+              <button class="tab ${holoView ? 'active' : ''}" data-h="1">Holographique${preview ? '' : ` (${nH})`}</button>
+            </div>
+            <div class="cardDesc">${ownedAny ? escapeHtml(card.desc || 'Pas encore de description.') : "Obtiens cette carte pour débloquer sa description."}</div>
+            ${card.artist ? `<div class="cardMeta">Illustration de ${escapeHtml(card.artist)}</div>` : ''}
+            <div class="cardMeta">${preview ? 'Aperçu' : (owned ? `Exemplaires : ${count}` : 'Pas encore obtenue')}${(!preview && count > 1) ? ` · Recyclage : ${cardValue(card, holoView)} ${WATCH_CURRENCY} par doublon` : ''}</div>
+            <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>
+          </div>
         </div>
-      </div>
-    </div>`;
-  const close = () => closeModal();
-  document.getElementById('cardCloseBtn').onclick = close;
-  document.getElementById('cardOverlay').onclick = (e) => { if(e.target.id === 'cardOverlay') close(); };
+      </div>`;
+    const close = () => closeModal();
+    document.getElementById('cardCloseBtn').onclick = close;
+    document.getElementById('cardOverlay').onclick = (e) => { if(e.target.id === 'cardOverlay') close(); };
+    document.querySelectorAll('#verSwitch .tab').forEach(b => { b.onclick = () => { holoView = b.dataset.h === '1'; draw(); }; });
+  };
+  draw();
 }
 
 function openCardEditor(cardId){
@@ -3087,6 +3350,8 @@ function openCardEditor(cardId){
         <select id="edRar" class="selectBox" style="width:100%;margin-bottom:15px;">${RARITY_KEYS.map(k => `<option value="${k}" ${card.rarity === k ? 'selected' : ''}>${RARITIES[k].label}</option>`).join('')}</select>
         <label>Description</label>
         <textarea id="edDesc" placeholder="Une ou deux phrases">${escapeHtml(card.desc || '')}</textarea>
+        <label>Artiste (pour les fan arts, laisse vide sinon)</label>
+        <input type="text" id="edArtist" value="${escapeHtml(card.artist || '')}">
         <label>Teinte du visuel de secours (utilisée quand il n'y a pas d'image)</label>
         <input type="range" id="edHue" min="0" max="360" value="${hue}" style="width:100%;margin-bottom:8px;">
         <div id="edSwatch" style="height:14px;border-radius:999px;background:hsl(${hue} 65% 52%);margin-bottom:18px;"></div>
@@ -3108,6 +3373,7 @@ function openCardEditor(cardId){
     c.name = name;
     c.rarity = document.getElementById('edRar').value;
     c.desc = document.getElementById('edDesc').value.trim();
+    c.artist = document.getElementById('edArtist').value.trim();
     c.hue = parseInt(document.getElementById('edHue').value, 10);
     await saveCards();
     closeModal();
@@ -3115,26 +3381,42 @@ function openCardEditor(cardId){
   };
 }
 
+function templateForCollection(col){
+  return COLLECTION_TEMPLATES.find(t => t.key === col.tpl)
+    || COLLECTION_TEMPLATES.find(t => col.name === t.name || col.name.startsWith(t.name + ' '));
+}
+
 async function fillTemplateDescriptions(colId){
   await loadCards();
+  const col = cardsCatalog.collections.find(c => c.id === colId);
+  let added = 0, completed = 0;
+  const tpl = col ? templateForCollection(col) : null;
+  if(tpl){
+    const have = new Set(colCards(colId).map(c => normName(c.name)));
+    RARITY_KEYS.forEach(k => (tpl[k] || []).forEach(it => {
+      if(have.has(normName(it.n))) return;
+      cardsCatalog.cards.push({id: cardUid('card-'), collectionId: colId, name: it.n, rarity: k, desc: it.d, hue: it.h, image: '', imagePath: ''});
+      have.add(normName(it.n));
+      added++;
+    }));
+  }
   const index = {};
   COLLECTION_TEMPLATES.forEach(t => RARITY_KEYS.forEach(k => (t[k] || []).forEach(it => { index[normName(it.n)] = it; })));
-  let n = 0;
   cardsCatalog.cards.filter(c => c.collectionId === colId).forEach(c => {
     const it = index[normName(c.name)];
     if(!it) return;
     let touched = false;
     if(!c.desc){ c.desc = it.d; touched = true; }
     if(c.hue === undefined || c.hue === null || c.hue === ''){ c.hue = it.h; touched = true; }
-    if(touched) n++;
+    if(touched) completed++;
   });
-  await saveCards();
-  return n;
+  if(added || completed) await saveCards();
+  return {added, completed};
 }
 
 async function renderBoosters(){
   const inCreator = boostersViewFromCreator;
-  const valid = inCreator ? ['manage', 'board'] : ['open', 'collection', 'board'];
+  const valid = inCreator ? ['manage', 'fanarts', 'board'] : ['open', 'collection', 'fanart', 'board'];
   if(!valid.includes(boostersTab)) boostersTab = valid[0];
   app.innerHTML = `
     <div class="page">
@@ -3149,6 +3431,7 @@ async function renderBoosters(){
   wireNav(inCreator ? 'creator' : 'viewer');
   await loadCards();
   await loadWatchMine();
+  if(inCreator) await loadFanarts();
   drawBoosters();
 }
 
@@ -3157,13 +3440,18 @@ function drawBoosters(){
   const tabsEl = document.getElementById('boosterTabs');
   const body = document.getElementById('boostersBody');
   if(!tabsEl || !body) return;
-  const tabs = inCreator ? [['manage', 'Gérer'], ['board', 'Classement']] : [['open', 'Boosters'], ['collection', 'Ma collection'], ['board', 'Classement']];
+  const pendingN = fanartList.filter(f => f.status === 'pending').length;
+  const tabs = inCreator
+    ? [['manage', 'Gérer'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
+    : [['open', 'Boosters'], ['collection', 'Ma collection'], ['fanart', 'Fan art'], ['board', 'Classement']];
   tabsEl.innerHTML = tabs.map(([k, l]) => `<button class="tab ${boostersTab === k ? 'active' : ''}" data-t="${k}">${l}</button>`).join('');
   tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { boostersTab = b.dataset.t; drawBoosters(); }; });
   const y = window.scrollY;
   if(boostersTab === 'open') drawBoostersOpen(body);
   else if(boostersTab === 'collection') drawBoostersCollection(body);
   else if(boostersTab === 'board') drawBoostersBoard(body);
+  else if(boostersTab === 'fanart') drawBoostersFanartForm(body);
+  else if(boostersTab === 'fanarts') drawBoostersFanarts(body);
   else drawBoostersManage(body);
   window.scrollTo(0, y);
 }
@@ -3185,13 +3473,14 @@ function drawBoostersOpen(body){
       <div class="watchMine">
         <div class="n">${bal}</div>
         <div class="l">${WATCH_CURRENCY}</div>
-        <div class="m">${watchMine && watchMine.packs ? watchMine.packs : 0} boosters ouverts</div>
+        <div class="m">${watchMine && watchMine.packs ? watchMine.packs : 0} boosters ouverts${watchMine && watchMine.gold ? ` · ${watchMine.gold} Gold` : ''}${watchMine && watchMine.deviant ? ` · ${watchMine.deviant} déviant${watchMine.deviant > 1 ? 's' : ''}` : ''}</div>
       </div>
     </div>` : '');
   body.innerHTML = head + (cols.length ? `
     <div class="packGrid">
       ${cols.map(col => {
-        const pr = myProgress(col.id);
+        const pr = myProgress(col.id, false);
+        const ph = myProgress(col.id, true);
         const afford = bal >= col.price;
         const label = !canPlay ? `${col.price} ${WATCH_CURRENCY}` : (afford ? `Ouvrir · ${col.price} ${WATCH_CURRENCY}` : `${col.price} ${WATCH_CURRENCY} · il t'en manque ${col.price - bal}`);
         return `
@@ -3199,13 +3488,15 @@ function drawBoostersOpen(body){
           <div class="packArt"><span>${escapeHtml(col.name)}</span></div>
           <div class="packInfo">
             <div class="packName">${escapeHtml(col.name)}</div>
-            <div class="packMeta">${col.perPack} cartes par booster${canPlay ? ` · ${pr.owned}/${pr.total} possédées` : ` · ${pr.total} cartes`}</div>
+            <div class="packMeta">${col.perPack} cartes par booster${canPlay ? ` · ${pr.owned}/${pr.total} normales · ${ph.owned}/${ph.total} holo` : ` · ${pr.total} cartes`}</div>
+            <div class="packOdds">${lastCardOdds(col.id)}</div>
+            <details class="oddsBox"><summary>Voir tous les taux</summary>${oddsTableHtml(col)}</details>
             <button class="btn primary" data-open="${col.id}" style="flex:none;width:100%;" ${canPlay && afford ? '' : 'disabled'}>${label}</button>
           </div>
         </div>`;
       }).join('')}
     </div>
-    <div class="hint" style="margin-top:18px;">${oddsText()}</div>
+    <div class="hint" style="margin-top:18px;">Les cartes les plus rares arrivent en fin de booster · holographiques possibles sur les ${HOLO_LAST_SLOTS} dernières cartes (${Math.round(HOLO_CHANCE * 100)} % chacune)<br>À chaque ouverture : ${fmtPct(GOLD_CHANCE * 100)} de booster Gold (${GOLD_CARDS} cartes Légendaires, Ultime assuré sur la dernière) · ${fmtPct(DEVIANT_CHANCE * 100)} de booster Déviant (de 1 à ${DEVIANT_MAX_EXTRA} cartes en plus)</div>
   ` : `<div class="empty"><div>Aucun booster disponible pour l'instant.</div></div>`);
   body.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => openBooster(b.dataset.open); });
   wireBoosterLogin();
@@ -3222,37 +3513,47 @@ async function openBooster(collectionId){
     const key = WATCH_PREFIX + viewerName.toLowerCase();
     const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
     if((rec.points || 0) < col.price){ watchMine = rec; drawBoosters(); return; }
-    const drawn = drawCards(collectionId, col.perPack);
+    const variant = rollVariant(col);
+    const drawn = drawCards(collectionId, variant.n, {gold: variant.type === 'gold', stretch: variant.type === 'deviant'});
     if(!drawn.length) return;
     rec.cards = rec.cards || {};
-    const pulled = drawn.map(card => {
-      const had = rec.cards[card.id] || 0;
-      rec.cards[card.id] = had + 1;
-      return {card, isNew: had === 0};
+    rec.holo = rec.holo || {};
+    const pulled = drawn.map(({card, holo}) => {
+      const map = holo ? rec.holo : rec.cards;
+      const had = map[card.id] || 0;
+      map[card.id] = had + 1;
+      return {card, holo, isNew: had === 0};
     });
     rec.points = (rec.points || 0) - col.price;
     rec.packs = (rec.packs || 0) + 1;
+    if(variant.type === 'gold') rec.gold = (rec.gold || 0) + 1;
+    if(variant.type === 'deviant') rec.deviant = (rec.deviant || 0) + 1;
     rec.display = viewerName;
     await kvSet(key, rec);
     watchMine = rec;
-    showPackOpening(pulled, col);
+    showPackOpening(pulled, col, variant);
   } finally {
     boosterLock = false;
   }
 }
 
-function showPackOpening(pulled, col){
+function showPackOpening(pulled, col, variant){
+  variant = variant || {type: 'normal', extra: 0};
+  const backLabel = variant.type === 'gold' ? 'GOLD' : (variant.type === 'deviant' ? 'DÉVIANT' : 'BOOSTER');
+  const banner = variant.type === 'gold' ? `<div class="packBanner gold" id="packBanner">Booster Gold ! ${pulled.length} cartes, Ultime assuré sur la dernière</div>`
+    : (variant.type === 'deviant' ? `<div class="packBanner deviant" id="packBanner">Booster Déviant : ${variant.extra} carte${variant.extra > 1 ? 's' : ''} en plus</div>` : '');
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
-    <div class="overlay packOverlay" id="packOverlay">
+    <div class="overlay packOverlay ${variant.type}" id="packOverlay">
       <div class="packStage">
         <div class="packTitle">${escapeHtml(col.name)}</div>
+        ${banner}
         <div class="packCards">
           ${pulled.map((p, i) => `
-            <div class="flip" data-i="${i}" data-rarity="${p.card.rarity}">
+            <div class="flip" data-i="${i}" data-rarity="${p.card.rarity}" data-holo="${p.holo ? '1' : '0'}">
               <div class="flipInner">
-                <div class="flipFace flipBack"><span>BOOSTER</span></div>
-                <div class="flipFace flipFront">${cardTileHtml(p.card, {isNew: p.isNew})}</div>
+                <div class="flipFace flipBack"><span>${backLabel}</span></div>
+                <div class="flipFace flipFront">${cardTileHtml(p.card, {isNew: p.isNew, holo: p.holo})}</div>
               </div>
             </div>`).join('')}
         </div>
@@ -3269,7 +3570,8 @@ function showPackOpening(pulled, col){
     if(flips.some(f => !f.classList.contains('flipped'))) return;
     const nNew = pulled.filter(p => p.isNew).length;
     const nDup = pulled.length - nNew;
-    document.getElementById('packSummary').textContent = `${nNew} nouvelle${nNew > 1 ? 's' : ''} carte${nNew > 1 ? 's' : ''} · ${nDup} doublon${nDup > 1 ? 's' : ''}`;
+    const nHolo = pulled.filter(p => p.holo).length;
+    document.getElementById('packSummary').textContent = `${nNew} nouvelle${nNew > 1 ? 's' : ''} carte${nNew > 1 ? 's' : ''} · ${nDup} doublon${nDup > 1 ? 's' : ''}` + (nHolo ? ` · ${nHolo} holographique${nHolo > 1 ? 's' : ''}` : '');
     document.getElementById('revealAllBtn').style.display = 'none';
     const again = document.getElementById('packAgainBtn');
     if(watchMine && (watchMine.points || 0) >= col.price) again.style.display = '';
@@ -3277,7 +3579,8 @@ function showPackOpening(pulled, col){
   const flipOne = (f) => {
     if(f.classList.contains('flipped')) return;
     f.classList.add('flipped');
-    if(f.dataset.rarity === 'legendaire' || f.dataset.rarity === 'epique') f.classList.add('burst');
+    const rk = (RARITIES[f.dataset.rarity] || RARITIES.commune).rank;
+    if(rk >= 2 || f.dataset.holo === '1') f.classList.add('burst');
     setTimeout(finish, 650);
   };
   flips.forEach(f => { f.onclick = () => flipOne(f); });
@@ -3292,8 +3595,10 @@ function showPackOpening(pulled, col){
 function recycleValue(colId){
   let sum = 0;
   colCards(colId).forEach(c => {
-    const n = myCardCount(c.id);
-    if(n > 1) sum += (n - 1) * (RARITIES[c.rarity] || RARITIES.commune).value;
+    [false, true].forEach(h => {
+      const n = myCardCount(c.id, h);
+      if(n > 1) sum += (n - 1) * cardValue(c, h);
+    });
   });
   return sum;
 }
@@ -3303,10 +3608,14 @@ async function recycleDuplicates(colId){
   const key = WATCH_PREFIX + viewerName.toLowerCase();
   const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
   rec.cards = rec.cards || {};
+  rec.holo = rec.holo || {};
   let gain = 0;
   colCards(colId).forEach(c => {
-    const n = rec.cards[c.id] || 0;
-    if(n > 1){ gain += (n - 1) * (RARITIES[c.rarity] || RARITIES.commune).value; rec.cards[c.id] = 1; }
+    [false, true].forEach(h => {
+      const map = h ? rec.holo : rec.cards;
+      const n = map[c.id] || 0;
+      if(n > 1){ gain += (n - 1) * cardValue(c, h); map[c.id] = 1; }
+    });
   });
   if(!gain) return;
   rec.points = (rec.points || 0) + gain;
@@ -3322,15 +3631,21 @@ function drawBoostersCollection(body){
   if(!cols.length){ body.innerHTML = `<div class="empty"><div>Aucune collection pour l'instant.</div></div>`; return; }
   if(!cols.find(c => c.id === boostersColId)) boostersColId = cols[0].id;
   const col = cols.find(c => c.id === boostersColId);
+  const isHolo = boostersVersion === 'holo';
   const cards = colCards(col.id).slice().sort((a, b) => (RARITIES[b.rarity].rank - RARITIES[a.rarity].rank) || a.name.localeCompare(b.name));
-  const pr = myProgress(col.id);
-  const pct = pr.total ? Math.round(pr.owned / pr.total * 100) : 0;
+  const cur = myProgress(col.id, isHolo);
+  const oth = myProgress(col.id, !isHolo);
+  const pct = cur.total ? Math.round(cur.owned / cur.total * 100) : 0;
   const recycle = recycleValue(col.id);
   const shown = boostersFilter === 'all' ? cards : cards.filter(c => c.rarity === boostersFilter);
   body.innerHTML = `
     ${cols.length > 1 ? `<div class="tabs" id="colTabs" style="margin-bottom:14px;">${cols.map(c => `<button class="tab ${c.id === col.id ? 'active' : ''}" data-c="${c.id}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
+    <div class="tabs" id="verTabs" style="margin-bottom:14px;">
+      <button class="tab ${!isHolo ? 'active' : ''}" data-v="normal">Normales</button>
+      <button class="tab ${isHolo ? 'active' : ''}" data-v="holo">Holographiques</button>
+    </div>
     <div class="watchBar" style="margin:0 0 10px;">
-      <div class="watchMine"><div class="n">${pr.owned}/${pr.total}</div><div class="l">${pct} %</div></div>
+      <div class="watchMine"><div class="n">${cur.owned}/${cur.total}</div><div class="l">${pct} %</div><div class="m">${oth.owned}/${oth.total} ${isHolo ? 'normales' : 'holographiques'}</div></div>
       <button class="addbtn" id="recycleBtn" ${recycle > 0 ? '' : 'disabled'}>Recycler les doublons${recycle > 0 ? ` (+${recycle} ${WATCH_CURRENCY})` : ''}</button>
     </div>
     <div class="progressOuter"><div class="progressFill" style="width:${pct}%;"></div></div>
@@ -3338,14 +3653,15 @@ function drawBoostersCollection(body){
       <button class="tab ${boostersFilter === 'all' ? 'active' : ''}" data-r="all">Toutes</button>
       ${RARITY_KEYS.map(k => `<button class="tab ${boostersFilter === k ? 'active' : ''}" data-r="${k}">${RARITIES[k].label}</button>`).join('')}
     </div>
-    <div class="tcgGrid">${shown.map(c => { const n = myCardCount(c.id); return cardTileHtml(c, {locked: n === 0, count: n}); }).join('')}</div>
+    <div class="tcgGrid">${shown.map(c => { const n = myCardCount(c.id, isHolo); return cardTileHtml(c, {locked: n === 0, count: n, holo: isHolo}); }).join('')}</div>
   `;
-  body.querySelectorAll('.tcgGrid .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, false); });
   body.querySelectorAll('#colTabs .tab').forEach(b => { b.onclick = () => { boostersColId = b.dataset.c; boostersFilter = 'all'; drawBoosters(); }; });
+  body.querySelectorAll('#verTabs .tab').forEach(b => { b.onclick = () => { boostersVersion = b.dataset.v; drawBoosters(); }; });
   body.querySelectorAll('#rarFilter .tab').forEach(b => { b.onclick = () => { boostersFilter = b.dataset.r; drawBoosters(); }; });
+  body.querySelectorAll('.tcgGrid .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, false, isHolo); });
   const rb = document.getElementById('recycleBtn');
   if(rb) rb.onclick = () => {
-    if(confirm(`Recycler tes doublons contre ${recycle} ${WATCH_CURRENCY} ? Tu gardes un exemplaire de chaque carte.`)) recycleDuplicates(col.id);
+    if(confirm(`Recycler tes doublons contre ${recycle} ${WATCH_CURRENCY} ? Tu gardes un exemplaire de chaque carte et de chaque version.`)) recycleDuplicates(col.id);
   };
 }
 
@@ -3356,9 +3672,12 @@ async function loadCollectors(){
     collectorsBoard = (data || []).map(r => {
       const v = r.value || {};
       const cards = v.cards || {};
+      const holo = v.holo || {};
+      const ids = new Set([...Object.keys(cards), ...Object.keys(holo)]);
+      const total = Object.values(cards).reduce((a, b) => a + b, 0) + Object.values(holo).reduce((a, b) => a + b, 0);
       return {key: r.key.slice(WATCH_PREFIX.length), display: v.display || r.key.slice(WATCH_PREFIX.length),
-              unique: Object.keys(cards).length, total: Object.values(cards).reduce((a, b) => a + b, 0), packs: v.packs || 0};
-    }).filter(r => r.unique > 0).sort((a, b) => (b.unique - a.unique) || (b.total - a.total)).slice(0, 10);
+              unique: ids.size, holo: Object.keys(holo).length, total, packs: v.packs || 0};
+    }).filter(r => r.unique > 0).sort((a, b) => (b.unique - a.unique) || (b.holo - a.holo) || (b.total - a.total)).slice(0, 10);
   }catch(e){ console.error('loadCollectors failed', e); }
 }
 
@@ -3371,8 +3690,165 @@ async function drawBoostersBoard(body){
     <div class="lbRow ${me && r.key === me ? 'me' : ''}">
       <div class="lbRank ${['top1', 'top2', 'top3'][i] || ''}">${i + 1}</div>
       <div class="lbName">${escapeHtml(r.display)}</div>
-      <div class="lbPts">${r.unique} cartes uniques</div>
+      <div class="lbPts">${r.unique} cartes uniques${r.holo ? ` · ${r.holo} holo` : ''}</div>
     </div>`).join('') : `<div class="empty"><div>Personne n'a encore de cartes.</div></div>`;
+}
+
+/* ----- fan arts (cartes Ultime) ----- */
+function blobToDataURL(blob){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.onerror = () => reject(new Error('Lecture impossible'));
+    fr.readAsDataURL(blob);
+  });
+}
+
+async function loadFanarts(onlyViewerKey){
+  try{
+    const prefix = FANART_PREFIX + (onlyViewerKey ? onlyViewerKey + ':' : '');
+    const { data, error } = await supabaseClient.from('app_data').select('key,value').like('key', prefix + '%');
+    if(error){ console.error('loadFanarts', error); return; }
+    fanartList = (data || []).filter(r => r.value && r.value.id)
+      .map(r => Object.assign({key: r.key}, r.value))
+      .filter(f => !onlyViewerKey || f.viewerKey === onlyViewerKey);
+  }catch(e){ console.error('loadFanarts failed', e); }
+}
+
+const FANART_STATUS = {pending: 'En attente', approved: 'Approuvé, carte Ultime créée', rejected: 'Refusé'};
+
+async function drawBoostersFanartForm(body){
+  if(!viewerName || isCreatorAccount){ body.innerHTML = boosterLoginPrompt('Connecte-toi pour proposer un fan art.'); wireBoosterLogin(); return; }
+  const me = viewerName.toLowerCase();
+  await loadFanarts(me);
+  if(boostersTab !== 'fanart') return;
+  const mine = fanartList.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const pending = mine.filter(f => f.status === 'pending').length;
+  const cols = cardsCatalog.collections;
+  body.innerHTML = `
+    <div class="twitchbox" style="max-width:520px;margin-bottom:24px;">
+      <div class="sectionLabel" style="margin-top:0;">Proposer un fan art</div>
+      ${cols.length ? `
+      <label>Collection</label>
+      <select id="faCol" class="selectBox" style="width:100%;margin-bottom:15px;">${cols.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select>
+      <label>Personnage dessiné</label>
+      <input type="text" id="faChar" placeholder="ex : Shoyo Hinata">
+      <label>Ton dessin</label>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:15px;">
+        <div class="faThumb" id="faPreview" style="${fanartDraft.preview ? `background-image:url('${fanartDraft.preview}')` : ''}"></div>
+        <button class="addbtn" id="faPickBtn">Choisir une image</button>
+      </div>
+      <label class="checkLine"><input type="checkbox" id="faConsent"> <span>Je suis l'auteur de ce dessin et j'autorise son utilisation comme carte Ultime sur Kutsu Time, avec mon pseudo en crédit.</span></label>
+      <div class="hint" id="faStatus" style="min-height:16px;text-align:left;"></div>
+      <button class="btn primary" id="faSubmitBtn" style="flex:none;" ${pending >= MAX_PENDING_FANARTS ? 'disabled' : ''}>${pending >= MAX_PENDING_FANARTS ? `${MAX_PENDING_FANARTS} propositions en attente maximum` : 'Envoyer'}</button>
+      ` : `<div class="hint" style="text-align:left;">Aucune collection disponible pour l'instant.</div>`}
+    </div>
+    <div class="sectionLabel" style="margin-top:0;">Mes propositions</div>
+    ${mine.length ? mine.map(f => `
+      <div class="faRow">
+        <div class="faThumb" style="${f.image ? `background-image:url('${f.image}')` : ''}"></div>
+        <div class="faInfo"><div class="nm" style="padding:0;text-align:left;">${escapeHtml(f.character)}</div><div class="faMeta">${escapeHtml((cardsCatalog.collections.find(c => c.id === f.collectionId) || {name: ''}).name)}</div></div>
+        <span class="faStatus ${f.status}">${FANART_STATUS[f.status] || f.status}</span>
+      </div>`).join('') : `<div class="empty" style="padding:24px 16px;"><div>Aucune proposition pour l'instant.</div></div>`}
+  `;
+  if(!cols.length) return;
+  const g = (id) => document.getElementById(id);
+  g('faPickBtn').onclick = () => pickFiles(false, (files) => {
+    fanartDraft.file = files[0];
+    if(fanartDraft.preview) URL.revokeObjectURL(fanartDraft.preview);
+    fanartDraft.preview = URL.createObjectURL(files[0]);
+    g('faPreview').style.backgroundImage = `url('${fanartDraft.preview}')`;
+  });
+  g('faSubmitBtn').onclick = async () => {
+    const st = g('faStatus');
+    const character = g('faChar').value.trim();
+    const colId = g('faCol').value;
+    const fail = (m) => { st.style.color = 'var(--rate-red)'; st.textContent = m; };
+    if(!fanartDraft.file) return fail('Choisis ton dessin.');
+    if(!character) return fail('Indique le personnage dessiné.');
+    if(!g('faConsent').checked) return fail("Coche la case pour confirmer que tu es l'auteur.");
+    await loadFanarts(me);
+    if(fanartList.filter(f => f.status === 'pending').length >= MAX_PENDING_FANARTS) return fail(`Tu as déjà ${MAX_PENDING_FANARTS} propositions en attente.`);
+    st.style.color = 'var(--text-dim)'; st.textContent = 'Envoi...';
+    try{
+      const blob = await resizeImageToBlob(fanartDraft.file, 700, 0.82);
+      const dataUrl = await blobToDataURL(blob);
+      if(dataUrl.length > 450000) throw new Error('Image trop lourde');
+      const id = cardUid('fa-');
+      await kvSet(FANART_PREFIX + me + ':' + id, {id, viewerKey: me, viewer: viewerName, collectionId: colId, character, image: dataUrl, status: 'pending', createdAt: Date.now()});
+      if(fanartDraft.preview) URL.revokeObjectURL(fanartDraft.preview);
+      fanartDraft = {file: null, preview: ''};
+      drawBoosters();
+    }catch(e){ fail('Erreur : ' + e.message); }
+  };
+}
+
+async function approveFanart(f, collectionId, character){
+  await loadCards();
+  const col = cardsCatalog.collections.find(c => c.id === collectionId) || cardsCatalog.collections[0];
+  if(!col) throw new Error('Aucune collection');
+  const card = {id: cardUid('card-'), collectionId: col.id, name: character || f.character, rarity: 'ultime',
+                desc: `Illustration de ${f.viewer}.`, hue: hashHue(character || f.character), image: '', imagePath: '', artist: f.viewer};
+  const blob = await (await fetch(f.image)).blob();
+  await uploadCardImage(card, new File([blob], 'fanart.jpg', {type: 'image/jpeg'}));
+  cardsCatalog.cards.push(card);
+  await saveCards();
+  await kvSet(f.key, {id: f.id, viewerKey: f.viewerKey, viewer: f.viewer, collectionId: col.id, character: card.name, image: '', status: 'approved', cardId: card.id, createdAt: f.createdAt, decidedAt: Date.now()});
+}
+
+async function rejectFanart(f){
+  await kvSet(f.key, {id: f.id, viewerKey: f.viewerKey, viewer: f.viewer, collectionId: f.collectionId, character: f.character, image: '', status: 'rejected', createdAt: f.createdAt, decidedAt: Date.now()});
+}
+
+async function drawBoostersFanarts(body){
+  body.innerHTML = '';
+  await loadFanarts();
+  if(boostersTab !== 'fanarts') return;
+  const pending = fanartList.filter(f => f.status === 'pending').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const nOk = fanartList.filter(f => f.status === 'approved').length;
+  const nNo = fanartList.filter(f => f.status === 'rejected').length;
+  const tab = document.querySelector('#boosterTabs [data-t="fanarts"]');
+  if(tab) tab.textContent = 'Fan arts' + (pending.length ? ` (${pending.length})` : '');
+  const cols = cardsCatalog.collections;
+  body.innerHTML = `
+    <div class="hint" style="text-align:left;margin:0 0 14px;">${pending.length} en attente · ${nOk} approuvés · ${nNo} refusés</div>
+    ${pending.length ? pending.map(f => `
+      <div class="faRow" data-fa="${escapeHtml(f.key)}">
+        <div class="faThumb big" style="background-image:url('${f.image}')"></div>
+        <div class="faInfo">
+          <input type="text" class="faName" value="${escapeHtml(f.character)}">
+          <select class="selectBox faColSel">${cols.map(c => `<option value="${c.id}" ${c.id === f.collectionId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}</select>
+          <div class="faMeta">par ${escapeHtml(f.viewer)}</div>
+        </div>
+        <div class="faBtns">
+          <button class="btn primary" data-ok="${escapeHtml(f.key)}" style="flex:none;">Approuver</button>
+          <button class="btn ghost" data-no="${escapeHtml(f.key)}" style="flex:none;color:var(--rate-red);">Refuser</button>
+        </div>
+      </div>`).join('') : `<div class="empty"><div>Aucun fan art en attente.</div></div>`}
+  `;
+  const find = (key) => fanartList.find(f => f.key === key);
+  body.querySelectorAll('[data-ok]').forEach(btn => {
+    btn.onclick = async () => {
+      const f = find(btn.dataset.ok);
+      const row = btn.closest('.faRow');
+      if(!f || !row) return;
+      btn.disabled = true; btn.textContent = '...';
+      try{
+        await approveFanart(f, row.querySelector('.faColSel').value, row.querySelector('.faName').value.trim());
+        await loadFanarts();
+        drawBoosters();
+      }catch(e){ btn.disabled = false; btn.textContent = 'Échec : ' + e.message; }
+    };
+  });
+  body.querySelectorAll('[data-no]').forEach(btn => {
+    btn.onclick = async () => {
+      const f = find(btn.dataset.no);
+      if(!f) return;
+      await rejectFanart(f);
+      await loadFanarts();
+      drawBoosters();
+    };
+  });
 }
 
 /* ----- gestion (créateur) ----- */
@@ -3380,6 +3856,7 @@ function normName(s){ return stripAccents(String(s || '').toLowerCase()).replace
 
 function parseRarity(t){
   const n = stripAccents((t || '').toLowerCase()).trim();
+  if(n.startsWith('u')) return 'ultime';
   if(n.startsWith('l')) return 'legendaire';
   if(n.startsWith('e')) return 'epique';
   if(n.startsWith('r')) return 'rare';
@@ -3452,10 +3929,10 @@ function drawBoostersManage(body){
     <div class="twitchbox" style="max-width:560px;margin-bottom:22px;">
       <div class="sectionLabel" style="margin-top:0;">Nouvelle collection</div>
       <label>Nom</label>
-      <input type="text" id="newColName" placeholder="ex : Marvel (MCU)">
+      <input type="text" id="newColName" placeholder="ex : Demon Slayer">
       <div class="row2">
         <div style="flex:1;"><label>Prix du booster (${WATCH_CURRENCY})</label><input type="text" inputmode="numeric" id="newColPrice" value="100"></div>
-        <div style="flex:1;"><label>Cartes par booster</label><input type="text" inputmode="numeric" id="newColPer" value="5"></div>
+        <div style="flex:1;"><label>Cartes par booster</label><input type="text" inputmode="numeric" id="newColPer" value="${CARDS_PER_PACK}"></div>
       </div>
       <div class="hint" id="newColStatus" style="min-height:16px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -3476,7 +3953,7 @@ function drawBoostersManage(body){
       <div class="hint" id="colStatus" style="min-height:16px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn primary" id="colSaveBtn" style="flex:none;">Enregistrer</button>
-        <button class="addbtn" id="fillDescBtn">Remplir les descriptions manquantes (modèles)</button>
+        <button class="addbtn" id="fillDescBtn">Compléter depuis le modèle (personnages et descriptions)</button>
         <button class="btn ghost" id="colDeleteBtn" style="flex:none;color:var(--rate-red);">Supprimer la collection</button>
       </div>
     </div>
@@ -3521,7 +3998,7 @@ function wireBoostersManage(col, cards){
     const st = g('newColStatus');
     const name = g('newColName').value.trim();
     const price = Math.max(1, parseInt(g('newColPrice').value, 10) || 100);
-    const perPack = Math.min(10, Math.max(1, parseInt(g('newColPer').value, 10) || 5));
+    const perPack = Math.min(10, Math.max(1, parseInt(g('newColPer').value, 10) || CARDS_PER_PACK));
     if(!name){ st.style.color = 'var(--rate-red)'; st.textContent = 'Donne un nom à la collection.'; return; }
     await loadCards();
     const c = {id: cardUid('col-'), name, price, perPack};
@@ -3536,7 +4013,7 @@ function wireBoostersManage(col, cards){
       await loadCards();
       let name = t.name, i = 2;
       while(cardsCatalog.collections.some(c => c.name === name)) name = `${t.name} ${i++}`;
-      const c = {id: cardUid('col-'), name, price: 100, perPack: 5};
+      const c = {id: cardUid('col-'), name, price: 100, perPack: CARDS_PER_PACK, tpl: t.key};
       cardsCatalog.collections.push(c);
       RARITY_KEYS.forEach(k => {
         (t[k] || []).forEach(it => cardsCatalog.cards.push({id: cardUid('card-'), collectionId: c.id, name: it.n, rarity: k, desc: it.d, hue: it.h, image: '', imagePath: ''}));
@@ -3560,17 +4037,19 @@ function wireBoostersManage(col, cards){
     if(!c) return;
     c.name = name;
     c.price = Math.max(1, parseInt(g('colPrice').value, 10) || 100);
-    c.perPack = Math.min(10, Math.max(1, parseInt(g('colPer').value, 10) || 5));
+    c.perPack = Math.min(10, Math.max(1, parseInt(g('colPer').value, 10) || CARDS_PER_PACK));
     await saveCards();
     redraw();
   };
 
   g('fillDescBtn').onclick = async () => {
-    const st = g('colStatus');
-    const n = await fillTemplateDescriptions(col.id);
-    st.style.color = 'var(--rate-green)';
-    st.textContent = n ? `${n} carte${n > 1 ? 's' : ''} complétée${n > 1 ? 's' : ''}.` : 'Rien à compléter.';
-    if(n) drawBoosters();
+    const r = await fillTemplateDescriptions(col.id);
+    const parts = [];
+    if(r.added) parts.push(`${r.added} personnage${r.added > 1 ? 's' : ''} ajouté${r.added > 1 ? 's' : ''}`);
+    if(r.completed) parts.push(`${r.completed} carte${r.completed > 1 ? 's' : ''} complétée${r.completed > 1 ? 's' : ''}`);
+    if(r.added || r.completed) drawBoosters();
+    const st = document.getElementById('colStatus');
+    if(st){ st.style.color = 'var(--rate-green)'; st.textContent = parts.length ? parts.join(' · ') + '.' : 'Rien à compléter.'; }
   };
 
   g('colDeleteBtn').onclick = async () => {
@@ -3621,10 +4100,13 @@ function wireBoostersManage(col, cards){
       try{ await uploadCardImage(card, f); await saveCards(); ok++; }
       catch(e){ failed.push(`${f.name} (${e.message})`); }
     }
-    st.style.color = (unmatched.length || failed.length) ? 'var(--rate-orange)' : 'var(--rate-green)';
-    st.textContent = `${ok} image${ok > 1 ? 's' : ''} associée${ok > 1 ? 's' : ''}` + (unmatched.length ? ` · sans carte : ${unmatched.join(', ')}` : '') + (failed.length ? ` · échecs : ${failed.join(', ')}` : '');
-    if(!failed.length && !unmatched.length) redraw();
-    else { const y = window.scrollY; drawBoostersManage(document.getElementById('boostersBody')); const st2 = document.getElementById('cardStatus'); if(st2){ st2.style.color = 'var(--rate-orange)'; st2.textContent = st.textContent; } window.scrollTo(0, y); }
+    const msg = `${ok} image${ok > 1 ? 's' : ''} associée${ok > 1 ? 's' : ''}` + (unmatched.length ? ` · sans carte : ${unmatched.join(', ')}` : '') + (failed.length ? ` · échecs : ${failed.join(', ')}` : '');
+    if(!failed.length && !unmatched.length){ redraw(); return; }
+    const y = window.scrollY;
+    drawBoostersManage(document.getElementById('boostersBody'));
+    const st2 = document.getElementById('cardStatus');
+    if(st2){ st2.style.color = 'var(--rate-orange)'; st2.textContent = msg; }
+    window.scrollTo(0, y);
   });
 
   document.querySelectorAll('[data-rar]').forEach(sel => {
@@ -3645,7 +4127,7 @@ function wireBoostersManage(col, cards){
     });
   });
   document.querySelectorAll('[data-edit]').forEach(btn => { btn.onclick = () => openCardEditor(btn.dataset.edit); });
-  document.querySelectorAll('.tcgWrap .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, true); });
+  document.querySelectorAll('.tcgWrap .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, true, false); });
   document.querySelectorAll('[data-del]').forEach(btn => {
     btn.onclick = async () => {
       await loadCards();
