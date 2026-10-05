@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kutsu Time</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://xtcnovgytqldzekalqce.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"></noscript>
 <style>
   :root{
     --bg:#0e0e0e; --panel:#161616; --panel-2:#1c1c1c; --panel-3:#262626;
@@ -606,11 +610,16 @@
     display:flex;align-items:center;justify-content:center;font-size:34px;
   }
   .btBlackCover::after{
-    content:'';position:absolute;inset:0;
+    content:'';position:absolute;top:0;bottom:0;left:-8px;right:-8px;
     background:repeating-linear-gradient(90deg, var(--gold) 0 3px, transparent 3px 8px);
-    opacity:0.08;animation:btWave 1s linear infinite;
+    opacity:0.08;animation:btWave .4s linear infinite;will-change:transform;
   }
-  @keyframes btWave{ from{background-position-x:0;} to{background-position-x:40px;} }
+  @keyframes btWave{ from{transform:translateX(0);} to{transform:translateX(8px);} }
+  .btLoading{
+    position:absolute;inset:0;z-index:3;display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.6);color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;letter-spacing:.5px;
+  }
+  button, .btSuggestItem, .btCatChip{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
   .btUnlockBtn{
     background:var(--gold);color:var(--ink);border:none;border-radius:var(--r-pill);
     padding:16px 26px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;cursor:pointer;
@@ -625,9 +634,10 @@
   .btGuessBox{position:relative;max-width:400px;margin:0 auto;}
   .btGuessBox input{
     width:100%;background:#111111;border:1px solid var(--border);border-radius:var(--r-pill);
-    padding:13px 16px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;
+    padding:13px 16px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;
   }
   .btGuessBox input:focus{border-color:var(--gold);}
+
   .btSuggestions{
     position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:10;
     background:var(--panel-2);border:1px solid var(--border);border-radius:var(--r-md);
@@ -639,6 +649,11 @@
   }
   .btSuggestItem:last-child{border-bottom:none;}
   .btSuggestItem:hover{background:var(--panel-3);color:var(--gold);}
+  /* téléphone / tablette : les suggestions s'ouvrent AU-DESSUS du champ pour ne plus masquer le bouton « Valider » */
+  @media (max-width:900px), (hover:none){
+    .btSuggestions{top:auto;bottom:calc(100% + 6px);max-height:34vh;}
+  }
+  @media (prefers-reduced-motion: reduce){ .btBlackCover::after{animation:none;} }
   .btOpt{
     background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
     padding:16px 12px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;color:var(--text);
@@ -769,12 +784,24 @@
   .oddsTable th:first-child, .oddsTable td:first-child{text-align:left;}
   .oddsTable th{color:var(--text-dim);font-weight:400;font-size:9px;}
   .addbtn:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+  .addbtn{max-width:100%;white-space:normal;}
   .dailyBox{
     display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
     padding:14px 18px;margin:0 0 18px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
   }
   .dailyBox.ready{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
   .dailyTitle{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+  .codeItem{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);}
+  .codeVal{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;letter-spacing:3px;min-width:140px;}
+  .codeMeta{flex:1;min-width:180px;font-size:12.5px;color:var(--text-dim);}
+  .codeBtns{display:flex;gap:8px;align-items:center;}
+  #codeGenBtn{margin-top:8px;}
+  @media (max-width:520px){ .codeGenRow{flex-direction:column;gap:0;} }
+  #codeUnit{padding:12px 14px;}
+  .codeBig{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:34px;letter-spacing:6px;color:var(--gold);margin:18px 0 8px;}
+  .codeBox{padding:14px 18px;margin:0 0 14px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);}
+  .codeRow{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+  .codeInput{flex:1;min-width:180px;margin:0 !important;text-transform:uppercase;letter-spacing:2px;font-family:'JetBrains Mono',monospace;}
   .dailyText{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;}
   .dailyBox.ready .dailyText{color:var(--gold);}
   .packArt.img{aspect-ratio:900/1420;padding:0;border-bottom:none;background:var(--panel) center/contain no-repeat;}
@@ -1074,8 +1101,15 @@
     .sidebarLogo{display:none;}
     .sidebarNav{flex-direction:row;flex:1;height:100%;}
     .sidebarLink{
-      flex-direction:column;gap:3px;padding:6px 14px;height:calc(100% - 12px);margin:6px 3px;width:auto;
-      justify-content:center;border-radius:var(--r-md);font-size:11px;
+      flex-direction:column;gap:3px;padding:6px 7px;height:calc(100% - 12px);margin:6px 1px;width:auto;flex:none;
+      justify-content:center;border-radius:var(--r-md);font-size:10.5px;white-space:nowrap;
+    }
+    .sidebar{scrollbar-width:none;}
+    @media (max-width:360px){ .sidebarLink{padding:6px 5px;font-size:10px;} }
+    .sidebar::-webkit-scrollbar{display:none;}
+    .sidebar.moreRight::after{
+      content:'';position:fixed;right:0;bottom:0;width:38px;height:64px;pointer-events:none;
+      background:linear-gradient(to left, var(--panel) 15%, transparent);
     }
     .sidebarLink.active{background:var(--panel-3);}
     .sidebarLink .sIcon{font-size:19px;}
@@ -1085,11 +1119,18 @@
     .sidebar:has(.sidebarLogin) .sidebarBottom{order:-1;}
     .sidebarLogin{white-space:nowrap;}
   }
+  /* écran de chargement : visible dès le premier affichage, avant même que le JavaScript ne tourne */
+  .bootSplash{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;}
+  .bootLogo{font-family:'Space Grotesk',system-ui,sans-serif;font-weight:700;font-size:28px;letter-spacing:4px;line-height:1.1;color:var(--gold);text-align:center;}
+  .bootBar{width:120px;height:3px;border-radius:999px;background:var(--panel-3);overflow:hidden;position:relative;}
+  .bootBar i{position:absolute;top:0;bottom:0;left:0;width:40%;border-radius:999px;background:var(--gold);animation:bootSlide 1.1s ease-in-out infinite;}
+  @keyframes bootSlide{0%{transform:translateX(-100%);}100%{transform:translateX(260%);}}
+  @media (prefers-reduced-motion: reduce){ .bootBar i{animation:none;width:100%;opacity:.5;} }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
-  <div id="app"></div>
+  <div id="app"><div class="bootSplash" id="bootSplash"><div class="bootLogo">KUTSU<br>TIME</div><div class="bootBar"><i></i></div></div></div>
 </div>
 <div id="modalRoot"></div>
 
@@ -1434,9 +1475,21 @@ function goHome(){
   setMode('stream-view');
 }
 
+/* données de fond (catalogue, notes, jeux...) : chargées en parallèle après l'affichage de la page d'arrivée */
+let dataLoaded = true;
+let dataReady = Promise.resolve();
+function loadingScreenHtml(){
+  return `<div class="bootSplash"><div class="bootLogo">KUTSU<br>TIME</div><div class="bootBar"><i></i></div></div>`;
+}
+
 function render(){
   stopWatchTimer();
   stopDailyTimer();
+  if(!dataLoaded && mode !== 'stream-view' && mode !== 'select'){
+    app.innerHTML = loadingScreenHtml();
+    dataReady.then(() => render());
+    return;
+  }
   if(mode === 'select') return renderSelect();
   if(mode === 'creator') return renderCreator();
   if(mode === 'viewer') return renderViewer();
@@ -1500,7 +1553,27 @@ function navHtml(activeKey, ctx){
     </div>
   `;
 }
+/* téléphone : la barre du bas peut défiler. On recentre l'onglet actif (pour qu'on le voie toujours)
+   et une ombre à droite indique qu'il y a d'autres boutons à découvrir en glissant. */
+function fitMobileNav(){
+  const sb = document.querySelector('.sidebar');
+  if(!sb) return;
+  const upd = () => sb.classList.toggle('moreRight', sb.scrollLeft + sb.clientWidth < sb.scrollWidth - 6);
+  const act = sb.querySelector('.sidebarLink.active');
+  if(act && sb.scrollWidth > sb.clientWidth + 2 && window.innerWidth <= 768){
+    const l = act.offsetLeft, r = l + act.offsetWidth;
+    // on ne fait défiler que si l'onglet actif n'est pas déjà entièrement visible
+    if(l < sb.scrollLeft + 4 || r > sb.scrollLeft + sb.clientWidth - 4) sb.scrollLeft = Math.max(0, l - (sb.clientWidth - act.offsetWidth) / 2);
+  }
+  if(sb.__navScroll) sb.removeEventListener('scroll', sb.__navScroll);
+  sb.__navScroll = upd;
+  sb.addEventListener('scroll', upd, {passive: true});
+  upd();
+}
+window.addEventListener('resize', () => fitMobileNav());
+
 function wireNav(ctx){
+  fitMobileNav();
   document.querySelectorAll('.sidebarLink[data-go]').forEach(b => {
     b.onclick = () => {
       if(b.dataset.go === 'stream-view') streamViewFromCreator = (ctx === 'creator');
@@ -3081,6 +3154,9 @@ const DEVIANT_MAX_EXTRA = 6;     // de 1 à 6 cartes en plus
 const HOLO_MULT = 3;
 const MAX_PENDING_FANARTS = 3;
 const DAILY_MS = 24 * 60 * 60 * 1000;      // booster quotidien : 1 toutes les 24 h
+const CODE_PREFIX = 'code:';                // codes cadeaux créés par le créateur (key = code:<CODE>)
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // sans 0/O/1/I pour éviter les confusions
+const MAX_CODE_BOOSTERS = 50;
 const FANART_PREFIX = 'fanart:';
 
 const RARITIES = {
@@ -3313,6 +3389,38 @@ function cardValue(card, holo){
   return holo ? base * HOLO_MULT : base;
 }
 /* ligne de probabilités d'une carte, par position en partant de la fin (1 = dernière carte) */
+/* ----- codes cadeaux : le créateur les génère, chaque viewer peut en utiliser un une seule fois ----- */
+function normCode(s){ return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function fmtCode(norm){ return norm.length === 8 ? norm.slice(0, 4) + '-' + norm.slice(4) : norm; }
+function genCodeNorm(){
+  const arr = new Uint32Array(8);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, v => CODE_ALPHABET[v % CODE_ALPHABET.length]).join('');
+}
+let codeFails = 0, codeLockUntil = 0;
+async function redeemCode(raw){
+  if(!viewerName || isCreatorAccount) return {ok: false, msg: 'Connecte-toi pour utiliser un code.'};
+  const norm = normCode(raw);
+  if(norm.length < 4) return {ok: false, msg: 'Entre ton code.'};
+  if(Date.now() < codeLockUntil) return {ok: false, msg: `Trop d'essais, réessaie dans ${Math.ceil((codeLockUntil - Date.now()) / 1000)} s.`};
+  const fail = (msg) => { codeFails++; if(codeFails >= 5){ codeLockUntil = Date.now() + 60000; codeFails = 0; } return {ok: false, msg}; };
+  const code = await kvGet(CODE_PREFIX + norm);
+  if(!code) return fail('Code invalide.');
+  if(!code.active) return fail('Ce code a été désactivé.');
+  if(Date.now() > code.expiresAt) return {ok: false, msg: 'Ce code a expiré.'};
+  const key = WATCH_PREFIX + viewerName.toLowerCase();
+  const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
+  rec.redeemed = rec.redeemed || {};
+  if(rec.redeemed[norm]) return {ok: false, msg: 'Tu as déjà utilisé ce code.'};
+  rec.redeemed[norm] = Date.now();
+  rec.freeBoosters = (rec.freeBoosters || 0) + (code.boosters || 0);
+  rec.display = viewerName;
+  await kvSet(key, rec);
+  watchMine = rec;
+  codeFails = 0;
+  return {ok: true, boosters: code.boosters || 0};
+}
+
 /* ----- booster quotidien (1 booster offert, au choix, toutes les 24 h) ----- */
 let dailyTimer = null;
 function stopDailyTimer(){ if(dailyTimer){ clearInterval(dailyTimer); dailyTimer = null; } }
@@ -3606,7 +3714,7 @@ async function fillTemplateDescriptions(colId){
 
 async function renderBoosters(){
   const inCreator = boostersViewFromCreator;
-  const valid = inCreator ? ['manage', 'test', 'fanarts', 'board'] : ['open', 'collection', 'fanart', 'board'];
+  const valid = inCreator ? ['manage', 'test', 'codes', 'fanarts', 'board'] : ['open', 'collection', 'fanart', 'board'];
   if(!valid.includes(boostersTab)) boostersTab = valid[0];
   app.innerHTML = `
     <div class="page">
@@ -3627,13 +3735,14 @@ async function renderBoosters(){
 
 function drawBoosters(){
   stopDailyTimer();
+  if(codeStatusTimer && boostersTab !== 'codes'){ clearInterval(codeStatusTimer); codeStatusTimer = null; }
   const inCreator = boostersViewFromCreator;
   const tabsEl = document.getElementById('boosterTabs');
   const body = document.getElementById('boostersBody');
   if(!tabsEl || !body) return;
   const pendingN = fanartList.filter(f => f.status === 'pending').length;
   const tabs = inCreator
-    ? [['manage', 'Gérer'], ['test', 'Tester'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
+    ? [['manage', 'Gérer'], ['test', 'Tester'], ['codes', 'Codes'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
     : [['open', 'Boosters'], ['collection', 'Ma collection'], ['fanart', 'Fan art'], ['board', 'Classement']];
   tabsEl.innerHTML = tabs.map(([k, l]) => `<button class="tab ${boostersTab === k ? 'active' : ''}" data-t="${k}">${l}</button>`).join('');
   tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { boostersTab = b.dataset.t; drawBoosters(); }; });
@@ -3644,6 +3753,7 @@ function drawBoosters(){
   else if(boostersTab === 'fanart') drawBoostersFanartForm(body);
   else if(boostersTab === 'fanarts') drawBoostersFanarts(body);
   else if(boostersTab === 'test') drawBoostersTest(body);
+  else if(boostersTab === 'codes') drawBoostersCodes(body);
   else drawBoostersManage(body);
   window.scrollTo(0, y);
 }
@@ -3665,16 +3775,26 @@ function drawBoostersOpen(body){
       <div class="watchMine">
         <div class="n">${bal}</div>
         <div class="l">${WATCH_CURRENCY}</div>
-        <div class="m">${watchMine && watchMine.packs ? watchMine.packs : 0} boosters ouverts${watchMine && watchMine.gold ? ` · ${watchMine.gold} Gold` : ''}${watchMine && watchMine.deviant ? ` · ${watchMine.deviant} déviant${watchMine.deviant > 1 ? 's' : ''}` : ''}</div>
+        <div class="m">${watchMine && watchMine.packs ? watchMine.packs : 0} boosters ouverts${watchMine && watchMine.freeBoosters ? ` · ${watchMine.freeBoosters} booster${watchMine.freeBoosters > 1 ? 's' : ''} offert${watchMine.freeBoosters > 1 ? 's' : ''}` : ''}${watchMine && watchMine.gold ? ` · ${watchMine.gold} Gold` : ''}${watchMine && watchMine.deviant ? ` · ${watchMine.deviant} déviant${watchMine.deviant > 1 ? 's' : ''}` : ''}</div>
       </div>
     </div>` : '');
+  const vouchers = canPlay && watchMine ? (watchMine.freeBoosters || 0) : 0;
+  const codeBox = canPlay ? `
+    <div class="codeBox">
+      <div class="dailyTitle">Code</div>
+      <div class="codeRow">
+        <input type="text" id="codeInput" class="codeInput" placeholder="Entre ton code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="btn primary" id="codeBtn" style="flex:none;">Valider</button>
+      </div>
+      <div class="hint" id="codeStatus" style="min-height:16px;text-align:left;margin:6px 0 0;"></div>
+    </div>` : '';
   const dailyOn = canPlay && dailyEligibleCols().length > 0 && dailyRemainingMs() <= 0;
   const dailyBox = canPlay ? `
     <div class="dailyBox ${dailyOn ? 'ready' : ''}">
       <div class="dailyTitle">Booster quotidien</div>
       <div class="dailyText" id="dailyText">${dailyTextPlain()}</div>
     </div>` : '';
-  body.innerHTML = head + dailyBox + (cols.length ? `
+  body.innerHTML = head + codeBox + dailyBox + (cols.length ? `
     <div class="packGrid">
       ${cols.map(col => {
         const pr = myProgress(col.id, false);
@@ -3689,8 +3809,9 @@ function drawBoostersOpen(body){
             <div class="packMeta">${col.perPack} cartes par booster${canPlay ? ` · ${pr.owned}/${pr.total} normales · ${ph.owned}/${ph.total} holo` : ` · ${pr.total} cartes`}</div>
             <div class="packOdds">${lastCardOdds(col.id)}</div>
             <details class="oddsBox"><summary>Voir tous les taux</summary>${oddsTableHtml(col)}</details>
+            ${vouchers > 0 ? `<button class="btn primary dailyBtn" data-voucher="${col.id}" style="flex:none;width:100%;">Utiliser un booster offert (${vouchers})</button>` : ''}
             ${dailyOn && col.daily !== false ? `<button class="btn primary dailyBtn" data-daily="${col.id}" style="flex:none;width:100%;">Booster gratuit du jour</button>` : ''}
-            <button class="${dailyOn && col.daily !== false ? 'addbtn' : 'btn primary'}" data-open="${col.id}" style="flex:none;width:100%;" ${canPlay && afford ? '' : 'disabled'}>${label}</button>
+            <button class="${vouchers > 0 || (dailyOn && col.daily !== false) ? 'addbtn' : 'btn primary'}" data-open="${col.id}" style="flex:none;width:100%;" ${canPlay && afford ? '' : 'disabled'}>${label}</button>
           </div>
         </div>`;
       }).join('')}
@@ -3699,6 +3820,23 @@ function drawBoostersOpen(body){
   ` : `<div class="empty"><div>Aucun booster disponible pour l'instant.</div></div>`);
   body.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => openBooster(b.dataset.open); });
   body.querySelectorAll('[data-daily]').forEach(b => { b.onclick = () => openBooster(b.dataset.daily, {daily: true}); });
+  body.querySelectorAll('[data-voucher]').forEach(b => { b.onclick = () => openBooster(b.dataset.voucher, {voucher: true}); });
+  const codeBtn = document.getElementById('codeBtn'), codeInput = document.getElementById('codeInput');
+  if(codeBtn && codeInput){
+    const submit = async () => {
+      const st = document.getElementById('codeStatus');
+      codeBtn.disabled = true;
+      const r = await redeemCode(codeInput.value);
+      codeBtn.disabled = false;
+      if(r.ok){
+        drawBoosters();
+        const st2 = document.getElementById('codeStatus');
+        if(st2){ st2.style.color = 'var(--rate-green)'; st2.textContent = `Code activé : +${r.boosters} booster${r.boosters > 1 ? 's' : ''} offert${r.boosters > 1 ? 's' : ''} !`; }
+      } else if(st){ st.style.color = 'var(--rate-red)'; st.textContent = r.msg; }
+    };
+    codeBtn.onclick = submit;
+    codeInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') submit(); });
+  }
   wireBoosterLogin();
   if(canPlay && dailyEligibleCols().length > 0 && dailyRemainingMs() > 0) dailyTimer = setInterval(dailyTick, 30000);
 }
@@ -3721,7 +3859,10 @@ async function openBooster(collectionId, opts){
     const key = WATCH_PREFIX + viewerName.toLowerCase();
     const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
     const isDaily = !!(opts && opts.daily);
-    if(isDaily){
+    const isVoucher = !!(opts && opts.voucher);
+    if(isVoucher){
+      if((rec.freeBoosters || 0) <= 0){ watchMine = rec; drawBoosters(); return; }
+    } else if(isDaily){
       if(col.daily === false) return;
       if(Date.now() - (rec.dailyAt || 0) < DAILY_MS){ watchMine = rec; drawBoosters(); return; }
     } else if((rec.points || 0) < col.price){ watchMine = rec; drawBoosters(); return; }
@@ -3736,7 +3877,8 @@ async function openBooster(collectionId, opts){
       map[card.id] = had + 1;
       return {card, holo, isNew: had === 0};
     });
-    if(isDaily){ rec.dailyAt = Date.now(); rec.daily = (rec.daily || 0) + 1; }
+    if(isVoucher){ rec.freeBoosters = (rec.freeBoosters || 0) - 1; rec.vouchers = (rec.vouchers || 0) + 1; }
+    else if(isDaily){ rec.dailyAt = Date.now(); rec.daily = (rec.daily || 0) + 1; }
     else rec.points = (rec.points || 0) - col.price;
     rec.packs = (rec.packs || 0) + 1;
     if(variant.type === 'gold') rec.gold = (rec.gold || 0) + 1;
@@ -3744,7 +3886,7 @@ async function openBooster(collectionId, opts){
     rec.display = viewerName;
     await kvSet(key, rec);
     watchMine = rec;
-    showPackOpening(pulled, col, variant, {daily: isDaily});
+    showPackOpening(pulled, col, variant, {daily: isDaily, voucher: isVoucher});
   } finally {
     boosterLock = false;
   }
@@ -3810,6 +3952,7 @@ function showPackOpening(pulled, col, variant, opts){
         <div class="packTitle">${escapeHtml(col.name)}${isTest ? ' · TEST' : ''}</div>
         ${isTest ? `<div class="packTestNote" id="packTestNote">Mode test : gratuit, rien n'est enregistré</div>` : ''}
         ${opts && opts.daily ? `<div class="packTestNote" id="packDailyNote">Booster quotidien offert</div>` : ''}
+        ${opts && opts.voucher ? `<div class="packTestNote" id="packVoucherNote">Booster offert</div>` : ''}
         ${banner}
         <div class="deckLayout" id="deckLayout">
           <div class="deckArea" id="deckArea">
@@ -3899,7 +4042,13 @@ function showPackOpening(pulled, col, variant, opts){
     const nHolo = pulled.filter(p => p.holo).length;
     document.getElementById('packSummary').textContent = `${nNew} nouvelle${nNew > 1 ? 's' : ''} carte${nNew > 1 ? 's' : ''} · ${nDup} doublon${nDup > 1 ? 's' : ''}` + (nHolo ? ` · ${nHolo} holographique${nHolo > 1 ? 's' : ''}` : '');
     document.getElementById('revealAllBtn').style.display = 'none';
-    if(isTest || (watchMine && (watchMine.points || 0) >= col.price)) document.getElementById('packAgainBtn').style.display = '';
+    const voucherMode = !!(opts && opts.voucher);
+    const againOk = isTest || (voucherMode ? (watchMine && (watchMine.freeBoosters || 0) > 0) : (watchMine && (watchMine.points || 0) >= col.price));
+    if(againOk){
+      const ab = document.getElementById('packAgainBtn');
+      ab.style.display = '';
+      if(voucherMode && !isTest) ab.textContent = `Ouvrir un autre booster offert (${watchMine.freeBoosters})`;
+    }
     setState();
   };
 
@@ -4001,7 +4150,7 @@ function showPackOpening(pulled, col, variant, opts){
   document.getElementById('revealAllBtn').onclick = finish;
   const closeIt = () => { document.removeEventListener('keydown', onKey); closeModal(); if(mode === 'boosters') drawBoosters(); };
   document.getElementById('packCloseBtn').onclick = closeIt;
-  document.getElementById('packAgainBtn').onclick = () => { document.removeEventListener('keydown', onKey); closeModal(); if(isTest) openTestBooster(col.id); else openBooster(col.id); };
+  document.getElementById('packAgainBtn').onclick = () => { document.removeEventListener('keydown', onKey); closeModal(); if(isTest) openTestBooster(col.id); else if(opts && opts.voucher) openBooster(col.id, {voucher: true}); else openBooster(col.id); };
 
   placeStack();
   refreshTexts();
@@ -4260,6 +4409,131 @@ function drawBoostersTest(body){
     out.innerHTML = simResultHtml(res);
     run.disabled = false;
   };
+}
+
+/* ----- codes cadeaux (créateur) : génération, liste, désactivation ----- */
+let codeStatusTimer = null;
+async function loadCodeList(){
+  let list = [], uses = {};
+  try{
+    const r1 = await supabaseClient.from('app_data').select('key,value').like('key', CODE_PREFIX + '%');
+    list = ((r1 && r1.data) || []).map(r => r.value).filter(v => v && v.norm).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 30);
+    const r2 = await supabaseClient.from('app_data').select('key,value').like('key', WATCH_PREFIX + '%');
+    ((r2 && r2.data) || []).forEach(row => {
+      const red = (row.value && row.value.redeemed) || {};
+      Object.keys(red).forEach(n => { uses[n] = (uses[n] || 0) + 1; });
+    });
+  }catch(e){ console.error('loadCodeList', e); }
+  return {list, uses};
+}
+
+async function createCode(boosters, durMs, customRaw){
+  const now = Date.now();
+  let norm = '';
+  if(customRaw && customRaw.trim()){
+    norm = normCode(customRaw);
+    if(norm.length < 4) return {ok: false, msg: 'Le code personnalisé doit faire au moins 4 caractères (lettres et chiffres).'};
+    if(await kvGet(CODE_PREFIX + norm)) return {ok: false, msg: 'Ce code existe déjà, choisis-en un autre.'};
+  } else {
+    for(let i = 0; i < 6 && !norm; i++){
+      const c = genCodeNorm();
+      if(!(await kvGet(CODE_PREFIX + c))) norm = c;
+    }
+    if(!norm) return {ok: false, msg: "Impossible de générer un code, réessaie."};
+  }
+  // les codes générés s'affichent « XXXX-XXXX » ; un code personnalisé s'affiche tel que tu l'as choisi (sans séparateur)
+  const rec = {code: (customRaw && customRaw.trim()) ? norm : fmtCode(norm), norm, boosters, createdAt: now, expiresAt: now + durMs, durationMs: durMs, active: true};
+  await kvSet(CODE_PREFIX + norm, rec);
+  const back = await kvGet(CODE_PREFIX + norm);
+  if(!back || back.createdAt !== now) return {ok: false, msg: "Le code n'a pas pu être enregistré : exécute le script schema-boosters.sql dans Supabase (autorisation d'écriture des codes), puis réessaie."};
+  return {ok: true, code: rec};
+}
+
+function codeStatusText(c){
+  if(!c.active) return 'Désactivé';
+  const rem = (c.expiresAt || 0) - Date.now();
+  return rem > 0 ? `Actif · expire dans ${fmtRemaining(rem)}` : 'Expiré';
+}
+
+async function drawBoostersCodes(body){
+  if(!isCreatorAccount){ body.innerHTML = ''; return; }
+  body.innerHTML = '<div class="hint" style="text-align:left;">Chargement...</div>';
+  const {list, uses} = await loadCodeList();
+  if(boostersTab !== 'codes') return;
+  body.innerHTML = `
+    <div class="twitchbox" style="max-width:560px;margin-bottom:22px;">
+      <div class="sectionLabel" style="margin-top:0;">Générateur de code</div>
+      <div class="row2 codeGenRow">
+        <div style="flex:1;"><label>Boosters offerts</label><input type="text" inputmode="numeric" id="codeBoosters" value="1"></div>
+        <div style="flex:1;"><label>Temps pour l'activer</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" inputmode="numeric" id="codeDur" value="30" style="flex:1;min-width:0;">
+            <select id="codeUnit" class="selectBox" style="flex:none;"><option value="60000">minutes</option><option value="3600000">heures</option><option value="86400000">jours</option></select>
+          </div>
+        </div>
+      </div>
+      <label>Code personnalisé (optionnel)</label>
+      <input type="text" id="codeCustom" placeholder="laisse vide pour en générer un automatiquement" autocomplete="off">
+      <div class="hint" id="codeGenStatus" style="min-height:16px;text-align:left;"></div>
+      <button class="btn primary" id="codeGenBtn" style="flex:none;">Générer et activer</button>
+      <div id="codeResult"></div>
+    </div>
+    <div class="sectionLabel">Codes récents</div>
+    <div id="codeList">${list.length ? list.map(c => `
+      <div class="codeItem" data-norm="${escapeHtml(c.norm)}">
+        <div class="codeVal">${escapeHtml(c.code)}</div>
+        <div class="codeMeta">${c.boosters} booster${c.boosters > 1 ? 's' : ''} · <span class="codeSt" data-exp="${c.expiresAt}" data-active="${c.active ? 1 : 0}">${codeStatusText(c)}</span> · ${uses[c.norm] || 0} utilisation${(uses[c.norm] || 0) > 1 ? 's' : ''}</div>
+        <div class="codeBtns">
+          <button class="addbtn" data-copy="${escapeHtml(c.code)}">Copier</button>
+          ${c.active && Date.now() < c.expiresAt ? `<button class="btn ghost" data-off="${escapeHtml(c.norm)}" style="flex:none;color:var(--rate-red);">Désactiver</button>` : ''}
+        </div>
+      </div>`).join('') : `<div class="empty" style="padding:24px 16px;"><div>Aucun code pour l'instant.</div></div>`}</div>
+  `;
+  const g = (id) => document.getElementById(id);
+  const copy = async (text, btn) => {
+    try{ await navigator.clipboard.writeText(text); }catch(e){ /* presse-papiers indisponible : on laisse le code visible */ }
+    if(btn){ const o = btn.textContent; btn.textContent = 'Copié'; setTimeout(() => { btn.textContent = o; }, 1200); }
+  };
+  g('codeGenBtn').onclick = async () => {
+    const st = g('codeGenStatus');
+    const boosters = Math.min(MAX_CODE_BOOSTERS, parseInt(g('codeBoosters').value, 10) || 0);
+    const dur = parseFloat(String(g('codeDur').value).replace(',', '.')) || 0;
+    const durMs = Math.round(dur * parseInt(g('codeUnit').value, 10));
+    if(boosters < 1){ st.style.color = 'var(--rate-red)'; st.textContent = `Choisis entre 1 et ${MAX_CODE_BOOSTERS} boosters.`; return; }
+    if(durMs < 60000){ st.style.color = 'var(--rate-red)'; st.textContent = 'La durée doit être d\'au moins 1 minute.'; return; }
+    if(durMs > 365 * 86400000){ st.style.color = 'var(--rate-red)'; st.textContent = 'La durée ne peut pas dépasser 1 an.'; return; }
+    st.style.color = 'var(--text-dim)'; st.textContent = 'Création...';
+    g('codeGenBtn').disabled = true;
+    const r = await createCode(boosters, durMs, g('codeCustom').value);
+    g('codeGenBtn').disabled = false;
+    if(!r.ok){ st.style.color = 'var(--rate-red)'; st.textContent = r.msg; return; }
+    st.textContent = '';
+    drawBoostersCodes(document.getElementById('boostersBody')).then(() => {
+      const res = document.getElementById('codeResult');
+      if(!res) return;
+      res.innerHTML = `
+        <div class="codeBig" id="codeBig">${escapeHtml(r.code.code)}</div>
+        <div class="hint" style="text-align:left;">${r.code.boosters} booster${r.code.boosters > 1 ? 's' : ''} offert${r.code.boosters > 1 ? 's' : ''} · actif pendant ${fmtRemaining(r.code.durationMs)}</div>
+        <button class="addbtn" id="codeCopyBig">Copier le code</button>`;
+      document.getElementById('codeCopyBig').onclick = (e) => copy(r.code.code, e.target);
+    });
+  };
+  document.querySelectorAll('[data-copy]').forEach(b => { b.onclick = () => copy(b.dataset.copy, b); });
+  document.querySelectorAll('[data-off]').forEach(b => {
+    b.onclick = async () => {
+      const c = await kvGet(CODE_PREFIX + b.dataset.off);
+      if(!c) return;
+      c.active = false; c.deactivatedAt = Date.now();
+      await kvSet(CODE_PREFIX + b.dataset.off, c);
+      drawBoostersCodes(document.getElementById('boostersBody'));
+    };
+  });
+  if(codeStatusTimer) clearInterval(codeStatusTimer);
+  codeStatusTimer = setInterval(() => {
+    const els = document.querySelectorAll('.codeSt');
+    if(!els.length || boostersTab !== 'codes'){ clearInterval(codeStatusTimer); codeStatusTimer = null; return; }
+    els.forEach(el => { el.textContent = codeStatusText({active: el.dataset.active === '1', expiresAt: parseInt(el.dataset.exp, 10)}); });
+  }, 15000);
 }
 
 /* ----- fan arts (cartes Ultime) ----- */
@@ -5112,8 +5386,138 @@ let btLocalRoundTrackId = null;
 let btLocalRoundStartedAt = null;
 let btDraftAnswer = '';
 let btMediaEl = null;
+let btLastSig = '';
+let btPollBusy = false;
+let btMyJoin = false;          // le viewer a cliqué « Rejoindre » dans ce lobby
+let btMyAnswer = null;         // sa réponse de la manche : on la rétablit si un autre joueur l'écrase
+let btVisHandler = null;
+let btPreloadEl = null, btPreloadedId = null;
+const BT_SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
 
 function stopBtPoll(){ if(btPollTimer){ clearInterval(btPollTimer); btPollTimer = null; } }
+
+/* ----- audio : un seul élément média, débloqué par un geste de l'utilisateur ----- */
+function btEnsureMedia(){
+  if(!btMediaEl){
+    btMediaEl = document.createElement('video');
+    btMediaEl.playsInline = true;
+    btMediaEl.setAttribute('playsinline', '');
+    btMediaEl.setAttribute('webkit-playsinline', '');
+    btMediaEl.preload = 'auto';
+    ['playing', 'canplay', 'canplaythrough'].forEach(ev => btMediaEl.addEventListener(ev, () => btSetLoading(false)));
+    ['waiting', 'stalled'].forEach(ev => btMediaEl.addEventListener(ev, () => { if(btMediaEl.dataset.trackId && btMediaEl.dataset.trackId !== '__silent') btSetLoading(true); }));
+  }
+  return btMediaEl;
+}
+function unlockBtAudio(){
+  if(btSoundUnlocked) return;
+  const el = btEnsureMedia();
+  btSoundUnlocked = true;
+  try{
+    if(!el.src){ el.src = BT_SILENT_WAV; el.dataset.trackId = '__silent'; }
+    const pr = el.play();
+    if(pr && pr.catch) pr.catch(() => { btSoundUnlocked = false; });
+  }catch(e){ btSoundUnlocked = false; }
+}
+function btSetLoading(on){
+  const el = document.getElementById('btLoading');
+  if(el) el.style.display = on ? 'flex' : 'none';
+}
+function btRefreshLoading(inCreator){
+  const el = btMediaEl;
+  const active = el && el.dataset.trackId && el.dataset.trackId !== '__silent' && (btSoundUnlocked || inCreator);
+  btSetLoading(!!(active && el.readyState < 3 && !el.error));
+}
+/* la musique suivante est connue à l'avance (pool[0]) : on la met en mémoire pendant la manche en cours */
+function btPreloadNext(g){
+  try{
+    if(!g || g.status === 'finished' || g.status === 'idle') return;
+    if(navigator.connection && navigator.connection.saveData) return;
+    const nid = g.pool && g.pool[0];
+    if(!nid || btPreloadedId === nid) return;
+    const t = btTracks.find(x => x.id === nid);
+    if(!t || !t.audioUrl) return;
+    btPreloadedId = nid;
+    if(!btPreloadEl){ btPreloadEl = document.createElement('audio'); btPreloadEl.preload = 'auto'; btPreloadEl.muted = true; }
+    btPreloadEl.src = t.audioUrl;
+    btPreloadEl.load();
+  }catch(e){}
+}
+
+/* ----- écritures sûres : plusieurs joueurs peuvent écrire en même temps sans s'écraser ----- */
+async function btMutate(mutator, verify, tries){
+  tries = tries || 4;
+  for(let i = 0; i < tries; i++){
+    await loadBtGame();
+    if(!mutator(btGame)) return verify ? verify(btGame) : false;
+    await saveBtGame();
+    await new Promise(r => setTimeout(r, 200 + Math.random() * 350));
+    await loadBtGame();
+    if(!verify || verify(btGame)) return true;
+  }
+  return false;
+}
+function btNewPlayer(){
+  const k = (viewerName || '').toLowerCase();
+  const profile = viewerProfiles[k] || {};
+  return {display: viewerName, avatar: profile.avatar || '', score: 0, answered: false, lastCorrect: null, lastPoints: 0};
+}
+function btApplyAnswer(m, ans){
+  m.answered = true; m.lastCorrect = ans.correct; m.lastPoints = ans.points; m.lastAnswerText = ans.text;
+  m.score = (m.score || 0) + ans.points; m.played = (m.played || 0) + 1;
+}
+/* si l'inscription ou la réponse du joueur a été écrasée par l'écriture d'un autre, on la rétablit toute seule */
+async function btHeal(inCreator){
+  if(inCreator || !viewerName) return;
+  const g = btGame, key = viewerName.toLowerCase();
+  if(g.status === 'lobby' && btMyJoin && !g.players[key]){
+    await btMutate(gg => { if(gg.status !== 'lobby' || gg.players[key]) return false; gg.players[key] = btNewPlayer(); return true; },
+                   gg => gg.status !== 'lobby' || !!gg.players[key]);
+    return;
+  }
+  if(g.status === 'playing' && btMyAnswer && g.currentTrack && btMyAnswer.trackId === g.currentTrack.id){
+    const me = g.players[key];
+    if(me && !me.answered){
+      const ans = btMyAnswer;
+      await btMutate(gg => { const m = gg.players[key]; if(!m || m.answered || gg.status !== 'playing' || !gg.currentTrack || gg.currentTrack.id !== ans.trackId) return false; btApplyAnswer(m, ans); return true; },
+                     gg => { const m = gg.players[key]; return !m || m.answered || gg.status !== 'playing' || !gg.currentTrack || gg.currentTrack.id !== ans.trackId; });
+    }
+  }
+}
+
+/* ce qui oblige à reconstruire l'écran ; tout le reste (scores, « a répondu ») est mis à jour sans toucher au champ ni aux boutons */
+function btStructSig(g){
+  const key = (viewerName || '').toLowerCase();
+  const me = g.players && g.players[key];
+  return [g.status, g.round || 0, g.currentTrack ? g.currentTrack.id : '', me ? (me.answered ? 1 : 0) : -1, Object.keys(g.players || {}).length ? 1 : 0, g.payoutsDone ? 1 : 0].join('|');
+}
+function btLightUpdate(g){
+  const pl = document.getElementById('btPlayers');
+  if(pl) pl.innerHTML = btPlayerRows();
+  const tag = document.getElementById('btRoundTag');
+  if(tag && g.status === 'playing'){
+    const total = Object.keys(g.players).length;
+    const answered = Object.values(g.players).filter(p => p.answered).length;
+    tag.textContent = `Round ${g.round}/${g.roundsTotal || '?'} · ${answered}/${total} ont répondu`;
+  }
+}
+async function btPollTick(inCreator){
+  if(btPollBusy) return;
+  btPollBusy = true;
+  try{
+    if(!document.getElementById('btStageWrap')){ stopBtPoll(); return; }
+    await loadBtGame();
+    await btHeal(inCreator);
+    const g = btGame;
+    btPreloadNext(g);
+    const wrap = document.getElementById('btStageWrap');
+    if(!wrap){ stopBtPoll(); return; }
+    if(btStructSig(g) === btLastSig && wrap.childElementCount > 0){ btLightUpdate(g); return; }
+    const scrollY = window.scrollY;
+    drawBt(inCreator);
+    window.scrollTo(0, scrollY);
+  } finally { btPollBusy = false; }
+}
 
 async function renderBlindtest(){
   const inCreator = btViewFromCreator;
@@ -5122,6 +5526,7 @@ async function renderBlindtest(){
   btLocalRoundTrackId = null;
   btLocalRoundStartedAt = null;
   btDraftAnswer = '';
+  btLastSig = ''; btMyAnswer = null; btMyJoin = false; btPreloadedId = null;
   await loadBtTracks();
   await loadBtPlaylists();
   app.innerHTML = `
@@ -5135,17 +5540,23 @@ async function renderBlindtest(){
   `;
   wireNav(inCreator ? 'creator' : 'viewer');
   drawBt(inCreator);
-  btPollTimer = setInterval(async () => {
-    const active = document.activeElement;
-    const stageEl = document.getElementById('btStageWrap');
-    const inStage = stageEl && stageEl.contains(active);
-    if(active && inStage && (active.tagName === 'SELECT' || (active.tagName === 'INPUT' && btGame.status !== 'playing'))) return;
-    await loadBtGame();
-    await loadBtTracks();
-    const scrollY = window.scrollY;
-    drawBt(inCreator);
-    window.scrollTo(0, scrollY);
-  }, 1000);
+  btPollTimer = setInterval(() => btPollTick(inCreator), 1500);
+  // retour sur l'onglet / l'appli (téléphone): on se met à jour tout de suite et on relance la musique si le système l'a mise en pause
+  if(btVisHandler) document.removeEventListener('visibilitychange', btVisHandler);
+  btVisHandler = () => {
+    if(!document.getElementById('btStageWrap')){ document.removeEventListener('visibilitychange', btVisHandler); btVisHandler = null; return; }
+    if(document.hidden) return;
+    btPollTick(inCreator);
+    const g = btGame;
+    if(btMediaEl && (btSoundUnlocked || inCreator) && g.status === 'playing' && g.currentTrack && btMediaEl.dataset.trackId === g.currentTrack.id && btMediaEl.paused) btMediaEl.play().catch(() => {});
+  };
+  document.addEventListener('visibilitychange', btVisHandler);
+  // le premier toucher n'importe où débloque le son (obligatoire sur téléphone) : plus besoin de rater le début de la musique
+  if(!inCreator){
+    const unlock = () => unlockBtAudio();
+    document.addEventListener('click', unlock, {once: true, capture: true});
+    document.addEventListener('touchend', unlock, {once: true, capture: true});
+  }
 }
 
 function btPlayerRows(){
@@ -5194,6 +5605,8 @@ function drawBt(inCreator){
   const wrap = document.getElementById('btStageWrap');
   if(!wrap){ stopBtPoll(); clearInterval(btTimerTick); if(btMediaEl) btMediaEl.pause(); return; }
   const g = btGame;
+  btLastSig = btStructSig(g);
+  btPreloadNext(g);
   if(g.status !== 'playing') clearInterval(btTimerTick);
 
   if(g.status === 'idle'){
@@ -5298,12 +5711,12 @@ function drawBt(inCreator){
     } else {
       const jb = document.getElementById('btJoin');
       if(jb) jb.onclick = async () => {
-        await loadBtGame();
-        if(btGame.status !== 'lobby'){ drawBt(inCreator); return; }
+        unlockBtAudio();            // geste de l'utilisateur : la musique pourra démarrer toute seule à chaque manche
+        btMyJoin = true;
+        jb.disabled = true; jb.textContent = 'Connexion...';
         const k = (viewerName||'').toLowerCase();
-        const profile = viewerProfiles[k] || {};
-        btGame.players[k] = {display: viewerName, avatar: profile.avatar||'', score:0, answered:false, lastCorrect:null, lastPoints:0};
-        await saveBtGame();
+        await btMutate(gg => { if(gg.status !== 'lobby' || gg.players[k]) return false; gg.players[k] = btNewPlayer(); return true; },
+                       gg => gg.status !== 'lobby' || !!gg.players[k]);
         drawBt(inCreator);
       };
     }
@@ -5325,10 +5738,11 @@ function drawBt(inCreator){
     const timedOut = remainingNow <= 0;
     wrap.innerHTML = `
       <div class="btPlayerBox">
-        <div class="tag" style="margin-bottom:6px;">Round ${g.round}/${g.roundsTotal||'?'} · ${answeredCount}/${totalPlayers} ont répondu</div>
+        <div class="tag" id="btRoundTag" style="margin-bottom:6px;">Round ${g.round}/${g.roundsTotal||'?'} · ${answeredCount}/${totalPlayers} ont répondu</div>
         <div class="btTimer" id="btTimerDisplay" style="color:${remainingNow<=10?'var(--rate-red)':'var(--gold)'};">${remainingNow}s</div>
         <div class="btMediaStage" id="btMediaSlot">
           <div class="btBlackCover" id="btBlackCover"></div>
+          <div class="btLoading" id="btLoading">Chargement de la musique...</div>
         </div>
         ${(!btSoundUnlocked && !inCreator) ? `<button class="btUnlockBtn" id="btUnlock">Activer le son</button>` : ''}
         ${(btSoundUnlocked && !inCreator) ? `
@@ -5342,7 +5756,7 @@ function drawBt(inCreator){
           <button class="btn ghost" id="btReveal" style="width:100%;max-width:260px;margin:14px auto 0;display:block;">Révéler la réponse</button>
         ` : (me && !me.answered && !timedOut ? `
           <div class="btGuessBox" id="btGuessBox">
-            <input type="text" id="btGuessInput" placeholder="Tape le titre que tu penses reconnaître..." autocomplete="off" value="${escapeHtml(btDraftAnswer)}">
+            <input type="text" id="btGuessInput" placeholder="Tape le titre que tu penses reconnaître..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="search" enterkeyhint="send" value="${escapeHtml(btDraftAnswer)}">
             <div class="btSuggestions" id="btSuggestions"></div>
           </div>
           <button class="btn primary" id="btValidateBtn" style="width:100%;max-width:260px;margin:10px auto 0;display:block;">Valider ma réponse</button>
@@ -5351,7 +5765,7 @@ function drawBt(inCreator){
       <div class="sectionLabel">Scores</div>
       <div id="btPlayers">${btPlayerRows()}</div>
     `;
-    if(!btMediaEl){ btMediaEl = document.createElement('video'); btMediaEl.playsInline = true; }
+    btEnsureMedia();
     btMediaEl.style.width = '100%';
     btMediaEl.style.height = '100%';
     btMediaEl.style.objectFit = 'cover';
@@ -5364,6 +5778,7 @@ function drawBt(inCreator){
     }
     const slot = document.getElementById('btMediaSlot');
     if(slot && !slot.contains(btMediaEl)) slot.insertBefore(btMediaEl, slot.firstChild);
+    btRefreshLoading(inCreator);
     const unlockBtn = document.getElementById('btUnlock');
     if(unlockBtn) unlockBtn.onclick = () => {
       btSoundUnlocked = true;
@@ -5381,14 +5796,18 @@ function drawBt(inCreator){
       const guessInput = document.getElementById('btGuessInput');
       const suggBox = document.getElementById('btSuggestions');
       if(guessInput){
-        const poolTracks = btTracks.filter(t => (g.categories||[]).includes(t.category));
-        // une seule entrée par piste : texte "titre" (plein tarif) + texte "large" (nom d'anime/raccourcis/catégorie, x0.5)
-        const trackEntries = poolTracks.map(t => {
-          const anime = impliedAnimeName(t);
-          const fullText = stripAccents((t.title||'').toLowerCase());
-          const wideText = stripAccents([anime, ...(t.aliases||[]), t.category, t.title].filter(Boolean).join(' ').toLowerCase());
-          return {title: t.title, fullText, wideText};
-        });
+        // calculé une seule fois par manche (et non à chaque rafraîchissement) : une entrée par piste, texte « titre » + texte « large »
+        const cacheKey = (g.currentTrack ? g.currentTrack.id : '') + '|' + (g.categories||[]).join(',');
+        if(!window.__btSuggestCache || window.__btSuggestCache.key !== cacheKey){
+          const poolTracks = btTracks.filter(t => (g.categories||[]).includes(t.category));
+          window.__btSuggestCache = {key: cacheKey, entries: poolTracks.map(t => {
+            const anime = impliedAnimeName(t);
+            const fullText = stripAccents((t.title||'').toLowerCase());
+            const wideText = stripAccents([anime, ...(t.aliases||[]), t.category, t.title].filter(Boolean).join(' ').toLowerCase());
+            return {title: t.title, fullText, wideText};
+          })};
+        }
+        const trackEntries = window.__btSuggestCache.entries;
         const renderSuggestions = (q) => {
           if(!q){ suggBox.innerHTML = ''; return; }
           const tokens = q.split(/\s+/).filter(Boolean);
@@ -5404,10 +5823,8 @@ function drawBt(inCreator){
               ${escapeHtml(r.title)}
             </div>
           `).join('');
-          suggBox.querySelectorAll('.btSuggestItem').forEach(item => {
-            item.onclick = () => submitBtAnswer(item.dataset.t, inCreator);
-          });
         };
+        suggBox.onclick = (e) => { const it = e.target.closest('.btSuggestItem'); if(it) submitBtAnswer(it.dataset.t, inCreator); };
         guessInput.addEventListener('input', () => {
           btDraftAnswer = guessInput.value;
           renderSuggestions(stripAccents(guessInput.value.trim().toLowerCase()));
@@ -5530,9 +5947,8 @@ async function startBtRound(inCreator){
     drawBt(inCreator);
     return;
   }
-  const idx = Math.floor(Math.random()*btGame.pool.length);
-  const trackId = btGame.pool[idx];
-  btGame.pool = btGame.pool.filter(id => id !== trackId);
+  const trackId = btGame.pool[0];                       // le pool est déjà mélangé à la création du lobby
+  btGame.pool = btGame.pool.filter(id => id !== trackId);   // la musique suivante (pool[0]) peut donc être préchargée
   const track = btTracks.find(t => t.id === trackId);
   if(!track){ await saveBtGame(); drawBt(inCreator); return; }
 
@@ -5553,6 +5969,16 @@ async function submitBtAnswer(rawText, inCreator){
   if(btSubmitLock) return;
   if(!rawText || !rawText.trim()) return;
   btSubmitLock = true;
+  // retour immédiat : le bouton se verrouille et affiche « Envoi... » (plus besoin de retaper)
+  const btn = document.getElementById('btValidateBtn');
+  const input = document.getElementById('btGuessInput');
+  if(btn){ btn.disabled = true; btn.textContent = 'Envoi...'; }
+  if(input) input.readOnly = true;
+  const restore = () => {
+    const b2 = document.getElementById('btValidateBtn'), i2 = document.getElementById('btGuessInput');
+    if(b2){ b2.disabled = false; b2.textContent = 'Valider ma réponse'; }
+    if(i2) i2.readOnly = false;
+  };
   try{
     await loadBtGame();
     const key = (viewerName||'').toLowerCase();
@@ -5581,14 +6007,19 @@ async function submitBtAnswer(rawText, inCreator){
       const tierMult = tier === 'partial' ? 0.5 : 1;
       points = Math.max(20, Math.round(base * diffMult * tierMult));
     }
-    me.answered = true;
-    me.lastCorrect = correct;
-    me.lastPoints = points;
-  me.lastAnswerText = rawText;
-  btDraftAnswer = '';
-    me.score = (me.score||0) + points;
-    me.played = (me.played || 0) + 1;
-    await saveBtGame();
+    const ans = {trackId: track.id, round: btGame.round, text: rawText, correct, points};
+    btMyAnswer = ans;          // gardée en mémoire : si une autre écriture l'écrase, elle est rétablie toute seule
+    btDraftAnswer = '';
+    const ok = await btMutate(
+      gg => { const m = gg.players[key]; if(!m || m.answered || gg.status !== 'playing' || !gg.currentTrack || gg.currentTrack.id !== ans.trackId) return false; btApplyAnswer(m, ans); return true; },
+      gg => { const m = gg.players[key]; return !!(m && m.answered); });
+    if(!ok){
+      // connexion instable : on laisse la réponse en attente (elle sera renvoyée automatiquement) sans bloquer le joueur
+      restore();
+      const gb = document.getElementById('btGuessBox');
+      if(gb && !document.getElementById('btRetryNote')) gb.insertAdjacentHTML('afterend', '<div class="hint" id="btRetryNote" style="color:var(--rate-orange);">Connexion instable : ta réponse est renvoyée automatiquement...</div>');
+      return;
+    }
     drawBt(inCreator);
   } finally {
     btSubmitLock = false;
@@ -5685,6 +6116,7 @@ function renderUndercover(){
     const inStage = stageEl && stageEl.contains(active);
     if(active && inStage && (active.tagName === 'INPUT' || active.tagName === 'SELECT')) return;
     await loadUc();
+    if(JSON.stringify(ucGame) === ucLastJson) return;      // rien n'a changé : on ne reconstruit pas l'écran (les boutons restent cliquables)
     const scrollY = window.scrollY;
     drawUc(inCreator);
     window.scrollTo(0, scrollY);
@@ -5694,7 +6126,9 @@ function renderUndercover(){
 function ucAlivePlayers(){ return Object.entries(ucGame.players||{}).filter(([,p]) => p.alive); }
 function ucRoleLabel(role){ return role === 'undercover' ? 'Undercover' : role === 'mrwhite' ? 'Mr White' : 'Civil'; }
 
+let ucLastJson = '';
 function drawUc(inCreator){
+  ucLastJson = JSON.stringify(ucGame);
   const wrap = document.getElementById('ucStageWrap');
   if(!wrap){ stopUcPoll(); return; }
   const g = ucGame;
@@ -6326,8 +6760,8 @@ function badgesRowHtml(key){
   `).join('')}</div>`;
 }
 
-async function processSession(){
-  const { data: { session } } = await supabaseClient.auth.getSession();
+async function processSession(sessionPromise){
+  const { data: { session } } = await (sessionPromise || supabaseClient.auth.getSession());
   if(!session) return false;
 
   const meta = session.user.user_metadata || {};
@@ -6339,12 +6773,14 @@ async function processSession(){
     const existing = viewerProfiles[key] || {};
     const display = existing.display || identNick;
     viewerName = display;
+    const before = JSON.stringify(viewerProfiles[key] || null);
     viewerProfiles[key] = {
       display,
       avatar: existing.avatar || meta.avatar_url || '',
       bio: existing.bio || ''
     };
-    await saveProfiles();
+    // on n'écrit le profil que s'il a vraiment changé, et sans bloquer l'affichage de la page
+    if(JSON.stringify(viewerProfiles[key]) !== before) saveProfiles();
   }
 
   if(isCreator){
@@ -6369,25 +6805,21 @@ async function processSession(){
     `;
     return;
   }
-  await loadCatalog();
-  await loadRatings();
-  await loadSchedule();
-  await loadProfiles();
-  await loadSettings();
-  await loadScores();
-  await loadWheel();
-  await loadWheelSuggestions();
-  await loadWheelState();
-  await loadBtTracks();
-  await loadBtPlaylists();
-  await loadBtGame();
-  await loadUc();
-
-  await processSession();
+  // 1) l'essentiel pour la page d'arrivée (Stream), chargé en parallèle : profils, réglages, session
+  const sessionPromise = supabaseClient.auth.getSession();
+  await Promise.all([loadProfiles(), loadSettings(), sessionPromise]);
+  await processSession(sessionPromise);
   streamViewFromCreator = isCreatorAccount;
   mode = 'stream-view';
+  wrapEl.className = 'wrap';
 
-  wrapEl.className = mode === 'select' ? 'wrap narrow' : 'wrap';
+  // 2) tout le reste se charge en parallèle, en arrière-plan : les autres pages attendent ces données si besoin
+  dataLoaded = false;
+  dataReady = Promise.all([
+    loadCatalog(), loadRatings(), loadSchedule(), loadScores(), loadWheel(), loadWheelSuggestions(),
+    loadWheelState(), loadBtTracks(), loadBtPlaylists(), loadBtGame(), loadUc()
+  ]).then(() => { dataLoaded = true; });
+
   render();
 })();
 </script>
