@@ -879,6 +879,9 @@
   .packSummary{min-height:22px;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text);}
   .packBtns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
   .packBanner{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:-6px 0 16px;}
+  .packTestNote{display:inline-block;margin:-10px 0 14px;padding:4px 14px;border-radius:var(--r-pill);background:var(--panel-3);color:var(--text-dim);font-size:12px;font-weight:600;}
+  .simLines{margin-top:14px;font-size:13px;line-height:1.8;color:var(--text);}
+  .simLines div{border-bottom:1px solid var(--border);padding:2px 0;}
   .packBanner.gold{color:#f5b301;}
   .packBanner.deviant{color:#35c0ff;}
   .packOverlay.gold{background:rgba(22,15,0,0.97);}
@@ -3416,7 +3419,7 @@ async function fillTemplateDescriptions(colId){
 
 async function renderBoosters(){
   const inCreator = boostersViewFromCreator;
-  const valid = inCreator ? ['manage', 'fanarts', 'board'] : ['open', 'collection', 'fanart', 'board'];
+  const valid = inCreator ? ['manage', 'test', 'fanarts', 'board'] : ['open', 'collection', 'fanart', 'board'];
   if(!valid.includes(boostersTab)) boostersTab = valid[0];
   app.innerHTML = `
     <div class="page">
@@ -3442,7 +3445,7 @@ function drawBoosters(){
   if(!tabsEl || !body) return;
   const pendingN = fanartList.filter(f => f.status === 'pending').length;
   const tabs = inCreator
-    ? [['manage', 'Gérer'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
+    ? [['manage', 'Gérer'], ['test', 'Tester'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
     : [['open', 'Boosters'], ['collection', 'Ma collection'], ['fanart', 'Fan art'], ['board', 'Classement']];
   tabsEl.innerHTML = tabs.map(([k, l]) => `<button class="tab ${boostersTab === k ? 'active' : ''}" data-t="${k}">${l}</button>`).join('');
   tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { boostersTab = b.dataset.t; drawBoosters(); }; });
@@ -3452,6 +3455,7 @@ function drawBoosters(){
   else if(boostersTab === 'board') drawBoostersBoard(body);
   else if(boostersTab === 'fanart') drawBoostersFanartForm(body);
   else if(boostersTab === 'fanarts') drawBoostersFanarts(body);
+  else if(boostersTab === 'test') drawBoostersTest(body);
   else drawBoostersManage(body);
   window.scrollTo(0, y);
 }
@@ -3537,8 +3541,9 @@ async function openBooster(collectionId){
   }
 }
 
-function showPackOpening(pulled, col, variant){
+function showPackOpening(pulled, col, variant, opts){
   variant = variant || {type: 'normal', extra: 0};
+  const isTest = !!(opts && opts.test);
   const backLabel = variant.type === 'gold' ? 'GOLD' : (variant.type === 'deviant' ? 'DÉVIANT' : 'BOOSTER');
   const banner = variant.type === 'gold' ? `<div class="packBanner gold" id="packBanner">Booster Gold ! ${pulled.length} cartes, Ultime assuré sur la dernière</div>`
     : (variant.type === 'deviant' ? `<div class="packBanner deviant" id="packBanner">Booster Déviant : ${variant.extra} carte${variant.extra > 1 ? 's' : ''} en plus</div>` : '');
@@ -3546,7 +3551,8 @@ function showPackOpening(pulled, col, variant){
   root.innerHTML = `
     <div class="overlay packOverlay ${variant.type}" id="packOverlay">
       <div class="packStage">
-        <div class="packTitle">${escapeHtml(col.name)}</div>
+        <div class="packTitle">${escapeHtml(col.name)}${isTest ? ' · TEST' : ''}</div>
+        ${isTest ? `<div class="packTestNote" id="packTestNote">Mode test : gratuit, rien n'est enregistré</div>` : ''}
         ${banner}
         <div class="packCards">
           ${pulled.map((p, i) => `
@@ -3574,7 +3580,7 @@ function showPackOpening(pulled, col, variant){
     document.getElementById('packSummary').textContent = `${nNew} nouvelle${nNew > 1 ? 's' : ''} carte${nNew > 1 ? 's' : ''} · ${nDup} doublon${nDup > 1 ? 's' : ''}` + (nHolo ? ` · ${nHolo} holographique${nHolo > 1 ? 's' : ''}` : '');
     document.getElementById('revealAllBtn').style.display = 'none';
     const again = document.getElementById('packAgainBtn');
-    if(watchMine && (watchMine.points || 0) >= col.price) again.style.display = '';
+    if(isTest || (watchMine && (watchMine.points || 0) >= col.price)) again.style.display = '';
   };
   const flipOne = (f) => {
     if(f.classList.contains('flipped')) return;
@@ -3589,7 +3595,7 @@ function showPackOpening(pulled, col, variant){
   };
   const closeIt = () => { closeModal(); if(mode === 'boosters') drawBoosters(); };
   document.getElementById('packCloseBtn').onclick = closeIt;
-  document.getElementById('packAgainBtn').onclick = () => { closeModal(); openBooster(col.id); };
+  document.getElementById('packAgainBtn').onclick = () => { closeModal(); if(isTest) openTestBooster(col.id); else openBooster(col.id); };
 }
 
 function recycleValue(colId){
@@ -3692,6 +3698,159 @@ async function drawBoostersBoard(body){
       <div class="lbName">${escapeHtml(r.display)}</div>
       <div class="lbPts">${r.unique} cartes uniques${r.holo ? ` · ${r.holo} holo` : ''}</div>
     </div>`).join('') : `<div class="empty"><div>Personne n'a encore de cartes.</div></div>`;
+}
+
+/* ----- test des boosters (créateur) : gratuit, rien n'est enregistré ----- */
+let testVariant = 'random';
+let testExtra = 0;
+let testSimN = 1000;
+let testOwned = {cards: {}, holo: {}};
+
+function pickTestVariant(col){
+  if(testVariant === 'gold') return {type: 'gold', n: GOLD_CARDS, extra: 0};
+  if(testVariant === 'deviant'){
+    const extra = testExtra || (1 + Math.floor(Math.random() * DEVIANT_MAX_EXTRA));
+    return {type: 'deviant', n: col.perPack + extra, extra};
+  }
+  if(testVariant === 'normal') return {type: 'normal', n: col.perPack, extra: 0};
+  return rollVariant(col);
+}
+
+async function openTestBooster(collectionId){
+  if(!isCreatorAccount || boosterLock) return;
+  boosterLock = true;
+  try{
+    await loadCards();
+    const col = cardsCatalog.collections.find(c => c.id === collectionId);
+    if(!col) return;
+    const variant = pickTestVariant(col);
+    const drawn = drawCards(collectionId, variant.n, {gold: variant.type === 'gold', stretch: variant.type === 'deviant'});
+    if(!drawn.length) return;
+    const pulled = drawn.map(({card, holo}) => {
+      const map = holo ? testOwned.holo : testOwned.cards;
+      const had = map[card.id] || 0;
+      map[card.id] = had + 1;
+      return {card, holo, isNew: had === 0};
+    });
+    showPackOpening(pulled, col, variant, {test: true});
+  } finally {
+    boosterLock = false;
+  }
+}
+
+async function simulateBoosters(colId, N, onProgress){
+  const col = cardsCatalog.collections.find(c => c.id === colId);
+  const cnt = {commune: 0, rare: 0, epique: 0, legendaire: 0, ultime: 0};
+  const holoCnt = {commune: 0, rare: 0, epique: 0, legendaire: 0, ultime: 0};
+  let cards = 0, holo = 0, gold = 0, dev = 0, withLeg = 0, withUlt = 0, withHolo = 0, value = 0;
+  const CHUNK = 4000;
+  for(let done = 0; done < N; done += CHUNK){
+    const end = Math.min(N, done + CHUNK);
+    for(let i = done; i < end; i++){
+      const v = rollVariant(col);
+      if(v.type === 'gold') gold++; else if(v.type === 'deviant') dev++;
+      const pack = drawCards(colId, v.n, {gold: v.type === 'gold', stretch: v.type === 'deviant'});
+      let leg = false, ult = false, hol = false;
+      pack.forEach(x => {
+        cnt[x.card.rarity]++; cards++;
+        if(x.holo){ holo++; holoCnt[x.card.rarity]++; hol = true; }
+        if(x.card.rarity === 'legendaire') leg = true;
+        if(x.card.rarity === 'ultime') ult = true;
+        value += cardValue(x.card, x.holo);
+      });
+      if(leg) withLeg++; if(ult) withUlt++; if(hol) withHolo++;
+    }
+    if(onProgress) onProgress(end / N);
+    await new Promise(r => setTimeout(r, 0));
+  }
+  return {N, cards, cnt, holoCnt, holo, gold, dev, withLeg, withUlt, withHolo, avgValue: value / N, price: col.price};
+}
+
+function simResultHtml(r){
+  const pct = (x, tot) => tot ? (Math.round(x / tot * 10000) / 100).toString().replace('.', ',') + ' %' : '—';
+  return `
+    <table class="oddsTable" style="margin-top:12px;">
+      <thead><tr><th>Rareté</th><th>Cartes</th><th>Part</th><th>dont holo</th></tr></thead>
+      <tbody>${RARITY_KEYS.map(k => `<tr><td>${RARITIES[k].label}</td><td>${r.cnt[k]}</td><td>${pct(r.cnt[k], r.cards)}</td><td>${r.holoCnt[k]}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="simLines">
+      <div>${r.N} boosters · ${r.cards} cartes (${(r.cards / r.N).toFixed(2).replace('.', ',')} par booster)</div>
+      <div>Gold : ${r.gold} (${pct(r.gold, r.N)}) · Déviants : ${r.dev} (${pct(r.dev, r.N)})</div>
+      <div>Au moins une Légendaire : ${r.withLeg} boosters (${pct(r.withLeg, r.N)}) · au moins une Ultime : ${r.withUlt} (${pct(r.withUlt, r.N)})</div>
+      <div>Au moins une holographique : ${r.withHolo} boosters (${pct(r.withHolo, r.N)}) · ${r.holo} cartes holo</div>
+      <div>Valeur de recyclage moyenne si tout est en doublon : ${r.avgValue.toFixed(1).replace('.', ',')} ${WATCH_CURRENCY} pour un prix de ${r.price}</div>
+    </div>`;
+}
+
+function drawBoostersTest(body){
+  if(!isCreatorAccount){ body.innerHTML = ''; return; }
+  const cols = cardsCatalog.collections.filter(c => colCards(c.id).length > 0);
+  const vt = (k, l) => `<button class="tab ${testVariant === k ? 'active' : ''}" data-tv="${k}">${l}</button>`;
+  const ownedN = Object.keys(testOwned.cards).length + Object.keys(testOwned.holo).length;
+  body.innerHTML = `
+    <div class="hint" style="text-align:left;margin:0 0 14px;">Mode test : gratuit et illimité, rien n'est enregistré (ni Ryos, ni collection, ni classement).</div>
+    <div class="sectionLabel" style="margin-top:0;">Type de booster</div>
+    <div class="tabs" id="testVariantTabs" style="margin-bottom:12px;">
+      ${vt('random', 'Aléatoire (taux réels)')}${vt('normal', 'Normal')}${vt('gold', 'Gold')}${vt('deviant', 'Déviant')}
+    </div>
+    ${testVariant === 'deviant' ? `
+      <div style="max-width:260px;margin-bottom:14px;">
+        <label>Cartes en plus</label>
+        <select id="testExtra" class="selectBox" style="width:100%;">
+          <option value="0" ${testExtra === 0 ? 'selected' : ''}>Aléatoire (1 à ${DEVIANT_MAX_EXTRA})</option>
+          ${Array.from({length: DEVIANT_MAX_EXTRA}, (_, i) => `<option value="${i + 1}" ${testExtra === i + 1 ? 'selected' : ''}>+${i + 1}</option>`).join('')}
+        </select>
+      </div>` : ''}
+    ${cols.length ? `
+    <div class="packGrid" style="margin-top:6px;">
+      ${cols.map(col => `
+        <div class="packTile">
+          <div class="packArt"><span>${escapeHtml(col.name)}</span></div>
+          <div class="packInfo">
+            <div class="packName">${escapeHtml(col.name)}</div>
+            <div class="packMeta">${col.perPack} cartes par booster · ${colCards(col.id).length} cartes dans la collection</div>
+            <div class="packOdds">${lastCardOdds(col.id)}</div>
+            <details class="oddsBox"><summary>Voir tous les taux</summary>${oddsTableHtml(col)}</details>
+            <button class="btn primary" data-test-open="${col.id}" style="flex:none;width:100%;">Ouvrir (test)</button>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">
+      <button class="addbtn" id="testResetBtn">Réinitialiser la collection de test</button>
+      <span class="hint" style="margin:0;" id="testOwnedInfo">${ownedN} carte${ownedN > 1 ? 's' : ''} différente${ownedN > 1 ? 's' : ''} dans la collection de test</span>
+    </div>
+
+    <div class="sectionLabel">Simulation</div>
+    <div class="twitchbox" style="max-width:640px;">
+      <label>Collection</label>
+      <select id="simCol" class="selectBox" style="width:100%;margin-bottom:15px;">${cols.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select>
+      <label>Nombre de boosters</label>
+      <select id="simN" class="selectBox" style="width:100%;margin-bottom:15px;">${[100, 1000, 10000, 100000].map(n => `<option value="${n}" ${testSimN === n ? 'selected' : ''}>${n.toLocaleString('fr-FR')}</option>`).join('')}</select>
+      <div class="hint" id="simStatus" style="min-height:16px;text-align:left;"></div>
+      <button class="btn primary" id="simRunBtn" style="flex:none;">Lancer la simulation</button>
+      <div id="simResult"></div>
+    </div>
+    ` : `<div class="empty"><div>Crée d'abord une collection avec des cartes (onglet Gérer).</div></div>`}
+  `;
+  body.querySelectorAll('#testVariantTabs .tab').forEach(b => { b.onclick = () => { testVariant = b.dataset.tv; drawBoosters(); }; });
+  const ex = document.getElementById('testExtra');
+  if(ex) ex.onchange = () => { testExtra = parseInt(ex.value, 10) || 0; };
+  body.querySelectorAll('[data-test-open]').forEach(b => { b.onclick = () => openTestBooster(b.dataset.testOpen); });
+  const rs = document.getElementById('testResetBtn');
+  if(rs) rs.onclick = () => { testOwned = {cards: {}, holo: {}}; drawBoosters(); };
+  const run = document.getElementById('simRunBtn');
+  if(run) run.onclick = async () => {
+    const colId = document.getElementById('simCol').value;
+    const N = parseInt(document.getElementById('simN').value, 10) || 1000;
+    testSimN = N;
+    const st = document.getElementById('simStatus'), out = document.getElementById('simResult');
+    run.disabled = true; out.innerHTML = '';
+    await loadCards();
+    const res = await simulateBoosters(colId, N, (f) => { st.textContent = `Calcul... ${Math.round(f * 100)} %`; });
+    st.textContent = '';
+    out.innerHTML = simResultHtml(res);
+    run.disabled = false;
+  };
 }
 
 /* ----- fan arts (cartes Ultime) ----- */
