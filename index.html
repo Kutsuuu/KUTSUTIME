@@ -769,6 +769,14 @@
   .oddsTable th:first-child, .oddsTable td:first-child{text-align:left;}
   .oddsTable th{color:var(--text-dim);font-weight:400;font-size:9px;}
   .addbtn:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+  .dailyBox{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    padding:14px 18px;margin:0 0 18px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
+  }
+  .dailyBox.ready{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+  .dailyTitle{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+  .dailyText{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;}
+  .dailyBox.ready .dailyText{color:var(--gold);}
   .packArt.img{aspect-ratio:900/1420;padding:0;border-bottom:none;background:var(--panel) center/contain no-repeat;}
   .packArt.img::before{display:none;}
   .packThumb{width:64px;height:100px;flex:none;border-radius:var(--r-sm);background:var(--panel-3) center/contain no-repeat;border:1px solid var(--border);}
@@ -873,9 +881,33 @@
   .flipFront{transform:rotateY(180deg);}
   .flipFront .tcg{width:100%;height:100%;aspect-ratio:auto;}
   .flipBack{
-    border-radius:var(--r-md);background:var(--panel-3);border:2px solid var(--gold);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold);font-size:11px;letter-spacing:3px;
+    position:absolute;inset:0;overflow:hidden;border-radius:var(--r-md);background:hsl(var(--h,25) 30% 11%);
+    border:2px solid hsl(var(--h,25) 80% 55%);display:block;
+  }
+  .flipBack .backPattern{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle, rgba(255,255,255,0.10) 0 1.5px, transparent 2px) 0 0/22px 22px,
+      repeating-linear-gradient(135deg, hsl(var(--h,25) 38% 17%) 0 13px, hsl(var(--h,25) 38% 12%) 13px 26px);
+  }
+  .flipBack .backFrame{position:absolute;inset:8px;border:2px solid hsl(var(--h,25) 80% 60% / .75);border-radius:calc(var(--r-md) - 6px);}
+  .flipBack .backTop, .flipBack .backBottom{
+    position:absolute;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;
+    text-transform:uppercase;color:rgba(255,255,255,0.85);
+  }
+  .flipBack .backTop{top:20px;}
+  .flipBack .backBottom{bottom:20px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;letter-spacing:1.5px;padding:0 18px;}
+  .flipBack .backEmblem{
+    position:absolute;left:50%;top:50%;width:58%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+    background:conic-gradient(from 0deg, hsl(var(--h,25) 90% 62%), hsl(calc(var(--h,25) + 40) 90% 60%), hsl(var(--h,25) 90% 62%), hsl(calc(var(--h,25) - 40) 90% 60%), hsl(var(--h,25) 90% 62%));
+    display:flex;align-items:center;justify-content:center;box-shadow:0 0 22px hsl(var(--h,25) 90% 55% / .45);
+  }
+  .flipBack .backEmblem::before{content:'';position:absolute;inset:7px;border-radius:50%;background:hsl(var(--h,25) 35% 10%);}
+  .flipBack .backEmblem span{position:relative;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:56px;color:#fff;line-height:1;}
+  .flipBack .backTag{
+    position:absolute;left:50%;top:calc(50% + 31%);transform:translateX(-50%);padding:3px 12px;border-radius:var(--r-pill);
+    background:rgba(0,0,0,0.65);border:1px solid hsl(var(--h,25) 90% 62%);color:#fff;font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:2px;font-weight:700;
   }
   .flip.burst{animation:cardBurst .7s ease-out;}
   @keyframes cardBurst{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
@@ -929,6 +961,23 @@
     transition:transform .5s cubic-bezier(.3,.7,.2,1), opacity .3s ease;
   }
   .deckCard.flipped .flipInner{transform:rotateY(180deg);}
+  /* surbrillance faible, identique pour toutes les Épiques et Légendaires, plus forte au 1er clic */
+  .deckCard.glowy::before{
+    content:'';position:absolute;inset:-3px;border-radius:calc(var(--r-md) + 3px);pointer-events:none;
+    box-shadow:0 0 18px 4px rgba(255,240,200,0.32);animation:glowFaint 2.4s ease-in-out infinite;
+  }
+  .deckCard.glowy.lvl1::before{box-shadow:0 0 46px 15px rgba(255,240,200,0.9);animation:glowStrong 0.9s ease-in-out infinite;}
+  .deckCard.lvl1:not(.flipped) .flipInner{animation:chargeShake .45s ease-out;}
+  @keyframes glowFaint{0%,100%{opacity:.6;}50%{opacity:1;}}
+  @keyframes glowStrong{0%,100%{opacity:.85;}50%{opacity:1;}}
+  @keyframes chargeShake{
+    0%{transform:translate(0,0) rotate(0);}
+    20%{transform:translate(-3px,1px) rotate(-.7deg);}
+    40%{transform:translate(3px,-1px) rotate(.7deg);}
+    60%{transform:translate(-2px,1px) rotate(-.4deg);}
+    80%{transform:translate(2px,0) rotate(.3deg);}
+    100%{transform:translate(0,0) rotate(0);}
+  }
   .deckCard.pop{animation:cardPop .6s ease-out;}
   @keyframes cardPop{0%{transform:scale(1);}35%{transform:scale(1.07);}100%{transform:scale(1);}}
   .deckProgress{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-top:40px;position:relative;z-index:300;}
@@ -1009,6 +1058,8 @@
     .fxGlow{animation:none;}
     .deckCard{transition:opacity .2s ease;}
     .deckCard.pop{animation:none;}
+    .deckCard.glowy::before{animation:none;}
+    .deckCard.lvl1:not(.flipped) .flipInner{animation:none;}
   }
 
   /* Barre de navigation en bas façon TikTok / Instagram en mobile */
@@ -1131,10 +1182,29 @@ async function loadSettings(){ creatorSettings = (await kvGet(SETTINGS_KEY)) || 
 async function saveSettings(){ await kvSet(SETTINGS_KEY, creatorSettings); }
 async function loadScores(){ gameScores = (await kvGet(SCORES_KEY)) || {}; }
 async function saveScores(){ await kvSet(SCORES_KEY, gameScores); }
-async function addPoints(key, amount){
+/* ----- mini-jeux : 1 victoire = 1 point au classement, et des Ryos selon la place ----- */
+const DEFAULT_PAYOUT = {first: 100, second: 60, third: 40, other: 20};
+function payoutSettings(){
+  const p = (creatorSettings && creatorSettings.payout) || {};
+  const n = (v, d) => { const x = parseInt(v, 10); return isNaN(x) || x < 0 ? d : x; };
+  return {first: n(p.first, DEFAULT_PAYOUT.first), second: n(p.second, DEFAULT_PAYOUT.second), third: n(p.third, DEFAULT_PAYOUT.third), other: n(p.other, DEFAULT_PAYOUT.other)};
+}
+function payoutForPlace(place, cfg){
+  return place === 1 ? cfg.first : place === 2 ? cfg.second : place === 3 ? cfg.third : cfg.other;
+}
+async function addWins(keys){
+  if(!keys.length) return;
   await loadScores();
-  gameScores[key] = (gameScores[key] || 0) + amount;
+  keys.forEach(k => { gameScores[k] = (gameScores[k] || 0) + 1; });
   await saveScores();
+}
+async function grantRyos(key, display, amount){
+  if(!amount) return;
+  const k = WATCH_PREFIX + key;
+  const rec = (await kvGet(k)) || {points: 0, minutes: 0, lastTick: 0};
+  rec.points = (rec.points || 0) + amount;
+  rec.display = rec.display || display;
+  await kvSet(k, rec);
 }
 async function loadWheel(){ wheelItems = (await kvGet(WHEEL_KEY)) || []; }
 async function saveWheel(){ await kvSet(WHEEL_KEY, wheelItems); }
@@ -1366,6 +1436,7 @@ function goHome(){
 
 function render(){
   stopWatchTimer();
+  stopDailyTimer();
   if(mode === 'select') return renderSelect();
   if(mode === 'creator') return renderCreator();
   if(mode === 'viewer') return renderViewer();
@@ -3009,6 +3080,7 @@ const DEVIANT_CHANCE = 0.02;     // 2 % : booster Déviant
 const DEVIANT_MAX_EXTRA = 6;     // de 1 à 6 cartes en plus
 const HOLO_MULT = 3;
 const MAX_PENDING_FANARTS = 3;
+const DAILY_MS = 24 * 60 * 60 * 1000;      // booster quotidien : 1 toutes les 24 h
 const FANART_PREFIX = 'fanart:';
 
 const RARITIES = {
@@ -3038,6 +3110,7 @@ const HOLO_LAST_SLOTS = SLOT_ODDS.filter(r => r.holo > 0).length;   // holograph
 
 const MARVEL_TEMPLATE = {
   key: 'marvel',
+  hue: 355,
   name: 'Marvel (MCU)',
   legendaire: [
     {n: 'Iron Man', h: 355, d: "Tony Stark, génie milliardaire et inventeur, qui bâtit sa propre armure pour protéger ceux qui comptent."},
@@ -3099,6 +3172,7 @@ const MARVEL_TEMPLATE = {
 
 const HAIKYUU_TEMPLATE = {
   key: 'haikyuu',
+  hue: 28,
   name: 'Haikyu!!',
   legendaire: [
     {n: 'Shoyo Hinata', h: 28, d: "Petit par la taille, immense par l'envie. Le central de Karasuno qui saute plus haut que tout le monde."},
@@ -3160,6 +3234,7 @@ const HAIKYUU_TEMPLATE = {
 
 const MHA_TEMPLATE = {
   key: 'mha',
+  hue: 130,
   name: 'My Hero Academia',
   legendaire: [
     {n: 'Izuku Midoriya', h: 130, d: "Un garçon sans alter qui rêve de devenir un héros. Sa détermination attire l'attention d'All Might."},
@@ -3238,6 +3313,25 @@ function cardValue(card, holo){
   return holo ? base * HOLO_MULT : base;
 }
 /* ligne de probabilités d'une carte, par position en partant de la fin (1 = dernière carte) */
+/* ----- booster quotidien (1 booster offert, au choix, toutes les 24 h) ----- */
+let dailyTimer = null;
+function stopDailyTimer(){ if(dailyTimer){ clearInterval(dailyTimer); dailyTimer = null; } }
+function dailyEligibleCols(){ return cardsCatalog.collections.filter(c => c.daily !== false && colCards(c.id).length > 0); }
+function dailyRemainingMs(){
+  const at = (watchMine && watchMine.dailyAt) || 0;
+  return Math.max(0, at + DAILY_MS - Date.now());
+}
+function fmtRemaining(ms){
+  const m = Math.ceil(ms / 60000);
+  const h = Math.floor(m / 60), mm = m % 60;
+  return h > 0 ? `${h} h ${String(mm).padStart(2, '0')} min` : `${mm} min`;
+}
+function dailyTextPlain(){
+  if(!dailyEligibleCols().length) return 'Aucune collection disponible pour le booster quotidien.';
+  const rem = dailyRemainingMs();
+  return rem > 0 ? `Prochain booster gratuit dans ${fmtRemaining(rem)}` : 'Ton booster gratuit est disponible : choisis une collection ci-dessous.';
+}
+
 function rowAtPos(pos){ return SLOT_ODDS[Math.min(Math.max(pos, 1), SLOT_ODDS.length) - 1]; }
 
 /* booster déviant : la progression est étirée proportionnellement sur toutes les cartes.
@@ -3532,6 +3626,7 @@ async function renderBoosters(){
 }
 
 function drawBoosters(){
+  stopDailyTimer();
   const inCreator = boostersViewFromCreator;
   const tabsEl = document.getElementById('boosterTabs');
   const body = document.getElementById('boostersBody');
@@ -3573,7 +3668,13 @@ function drawBoostersOpen(body){
         <div class="m">${watchMine && watchMine.packs ? watchMine.packs : 0} boosters ouverts${watchMine && watchMine.gold ? ` · ${watchMine.gold} Gold` : ''}${watchMine && watchMine.deviant ? ` · ${watchMine.deviant} déviant${watchMine.deviant > 1 ? 's' : ''}` : ''}</div>
       </div>
     </div>` : '');
-  body.innerHTML = head + (cols.length ? `
+  const dailyOn = canPlay && dailyEligibleCols().length > 0 && dailyRemainingMs() <= 0;
+  const dailyBox = canPlay ? `
+    <div class="dailyBox ${dailyOn ? 'ready' : ''}">
+      <div class="dailyTitle">Booster quotidien</div>
+      <div class="dailyText" id="dailyText">${dailyTextPlain()}</div>
+    </div>` : '';
+  body.innerHTML = head + dailyBox + (cols.length ? `
     <div class="packGrid">
       ${cols.map(col => {
         const pr = myProgress(col.id, false);
@@ -3588,7 +3689,8 @@ function drawBoostersOpen(body){
             <div class="packMeta">${col.perPack} cartes par booster${canPlay ? ` · ${pr.owned}/${pr.total} normales · ${ph.owned}/${ph.total} holo` : ` · ${pr.total} cartes`}</div>
             <div class="packOdds">${lastCardOdds(col.id)}</div>
             <details class="oddsBox"><summary>Voir tous les taux</summary>${oddsTableHtml(col)}</details>
-            <button class="btn primary" data-open="${col.id}" style="flex:none;width:100%;" ${canPlay && afford ? '' : 'disabled'}>${label}</button>
+            ${dailyOn && col.daily !== false ? `<button class="btn primary dailyBtn" data-daily="${col.id}" style="flex:none;width:100%;">Booster gratuit du jour</button>` : ''}
+            <button class="${dailyOn && col.daily !== false ? 'addbtn' : 'btn primary'}" data-open="${col.id}" style="flex:none;width:100%;" ${canPlay && afford ? '' : 'disabled'}>${label}</button>
           </div>
         </div>`;
       }).join('')}
@@ -3596,10 +3698,19 @@ function drawBoostersOpen(body){
     <div class="hint" style="margin-top:18px;">Les cartes les plus rares arrivent en fin de booster · holographiques possibles sur les ${HOLO_LAST_SLOTS} dernières cartes (de ${fmtPct(Math.min(...SLOT_ODDS.filter(r => r.holo > 0).map(r => r.holo)))} à ${fmtPct(Math.max(...SLOT_ODDS.map(r => r.holo)))} selon la carte)<br>À chaque ouverture : ${fmtPct(GOLD_CHANCE * 100)} de booster Gold (${GOLD_CARDS} cartes Légendaires, Ultime assuré sur la dernière) · ${fmtPct(DEVIANT_CHANCE * 100)} de booster Déviant (de 1 à ${DEVIANT_MAX_EXTRA} cartes en plus)</div>
   ` : `<div class="empty"><div>Aucun booster disponible pour l'instant.</div></div>`);
   body.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => openBooster(b.dataset.open); });
+  body.querySelectorAll('[data-daily]').forEach(b => { b.onclick = () => openBooster(b.dataset.daily, {daily: true}); });
   wireBoosterLogin();
+  if(canPlay && dailyEligibleCols().length > 0 && dailyRemainingMs() > 0) dailyTimer = setInterval(dailyTick, 30000);
 }
 
-async function openBooster(collectionId){
+/* met à jour le compte à rebours ; quand les 24 h sont écoulées, la page se redessine avec les boutons gratuits */
+function dailyTick(){
+  const el = document.getElementById('dailyText');
+  if(!el || boostersTab !== 'open'){ stopDailyTimer(); return; }
+  if(dailyRemainingMs() <= 0){ stopDailyTimer(); drawBoosters(); } else el.textContent = dailyTextPlain();
+}
+
+async function openBooster(collectionId, opts){
   if(boosterLock) return;
   if(!viewerName || isCreatorAccount) return;
   boosterLock = true;
@@ -3609,7 +3720,11 @@ async function openBooster(collectionId){
     if(!col) return;
     const key = WATCH_PREFIX + viewerName.toLowerCase();
     const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
-    if((rec.points || 0) < col.price){ watchMine = rec; drawBoosters(); return; }
+    const isDaily = !!(opts && opts.daily);
+    if(isDaily){
+      if(col.daily === false) return;
+      if(Date.now() - (rec.dailyAt || 0) < DAILY_MS){ watchMine = rec; drawBoosters(); return; }
+    } else if((rec.points || 0) < col.price){ watchMine = rec; drawBoosters(); return; }
     const variant = rollVariant(col);
     const drawn = drawCards(collectionId, variant.n, {gold: variant.type === 'gold', stretch: variant.type === 'deviant'});
     if(!drawn.length) return;
@@ -3621,14 +3736,15 @@ async function openBooster(collectionId){
       map[card.id] = had + 1;
       return {card, holo, isNew: had === 0};
     });
-    rec.points = (rec.points || 0) - col.price;
+    if(isDaily){ rec.dailyAt = Date.now(); rec.daily = (rec.daily || 0) + 1; }
+    else rec.points = (rec.points || 0) - col.price;
     rec.packs = (rec.packs || 0) + 1;
     if(variant.type === 'gold') rec.gold = (rec.gold || 0) + 1;
     if(variant.type === 'deviant') rec.deviant = (rec.deviant || 0) + 1;
     rec.display = viewerName;
     await kvSet(key, rec);
     watchMine = rec;
-    showPackOpening(pulled, col, variant);
+    showPackOpening(pulled, col, variant, {daily: isDaily});
   } finally {
     boosterLock = false;
   }
@@ -3684,12 +3800,16 @@ function showPackOpening(pulled, col, variant, opts){
   const banner = variant.type === 'gold' ? `<div class="packBanner gold" id="packBanner">Booster Gold ! ${pulled.length} cartes, Ultime assuré sur la dernière</div>`
     : (variant.type === 'deviant' ? `<div class="packBanner deviant" id="packBanner">Booster Déviant : ${variant.extra} carte${variant.extra > 1 ? 's' : ''} en plus</div>` : '');
   const total = pulled.length;
+  const tplDef = templateForCollection(col);
+  const backHue = variant.type === 'gold' ? 44 : (variant.type === 'deviant' ? 196 : (tplDef && tplDef.hue !== undefined ? tplDef.hue : hashHue(col.name)));
+  const backInitial = ((col.name.match(/[A-Za-zÀ-ÿ0-9]/) || ['?'])[0]).toUpperCase();
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="overlay packOverlay ${variant.type}" id="packOverlay">
       <div class="packStage">
         <div class="packTitle">${escapeHtml(col.name)}${isTest ? ' · TEST' : ''}</div>
         ${isTest ? `<div class="packTestNote" id="packTestNote">Mode test : gratuit, rien n'est enregistré</div>` : ''}
+        ${opts && opts.daily ? `<div class="packTestNote" id="packDailyNote">Booster quotidien offert</div>` : ''}
         ${banner}
         <div class="deckLayout" id="deckLayout">
           <div class="deckArea" id="deckArea">
@@ -3697,7 +3817,14 @@ function showPackOpening(pulled, col, variant, opts){
             ${pulled.map((p, i) => `
               <div class="deckCard" data-i="${i}" data-rarity="${p.card.rarity}" data-holo="${p.holo ? '1' : '0'}" style="--rot:${(i % 2 ? 1 : -1) * (1.2 + (i * 0.37) % 1.1).toFixed(2)}deg;">
                 <div class="flipInner">
-                  <div class="flipFace flipBack"><span>${backLabel}</span></div>
+                  <div class="flipFace flipBack" style="--h:${backHue};">
+                    <div class="backPattern"></div>
+                    <div class="backFrame"></div>
+                    <div class="backTop">KUTSU TIME</div>
+                    <div class="backEmblem"><span>${escapeHtml(backInitial)}</span></div>
+                    <div class="backBottom">${escapeHtml(col.name)}</div>
+                    ${variant.type !== 'normal' ? `<div class="backTag">${backLabel}</div>` : ''}
+                  </div>
                   <div class="flipFace flipFront">${cardTileHtml(p.card, {isNew: p.isNew, holo: p.holo})}</div>
                 </div>
               </div>`).join('')}
@@ -3724,12 +3851,23 @@ function showPackOpening(pulled, col, variant, opts){
   const progress = root.querySelector('#deckProgress');
   const recap = root.querySelector('#packRecap');
   const cards = Array.from(root.querySelectorAll('.deckCard'));
-  let idx = 0, revealed = false, busy = false, finished = false;
+  let idx = 0, revealed = false, busy = false, finished = false, charge = 0;
+  /* Épique et Légendaire : même surbrillance faible (rien ne les distingue), 2 clics pour les retourner.
+     L'Ultime n'a aucune surbrillance (surprise totale) et se retourne en un clic. */
+  const isGlowy = (i) => pulled[i] && (pulled[i].card.rarity === 'epique' || pulled[i].card.rarity === 'legendaire');
 
   const setState = () => {
     overlay.dataset.idx = String(idx);
     overlay.dataset.revealed = revealed ? '1' : '0';
     overlay.dataset.finished = finished ? '1' : '0';
+    overlay.dataset.charge = String(charge);
+  };
+  const refreshGlow = () => {
+    cards.forEach((c, i) => {
+      const on = i === idx && !revealed && !finished && isGlowy(i);
+      c.classList.toggle('glowy', on);
+      c.classList.toggle('lvl1', on && charge >= 1);
+    });
   };
   const placeStack = () => {
     cards.forEach((c, i) => {
@@ -3742,8 +3880,9 @@ function showPackOpening(pulled, col, variant, opts){
   };
   const refreshTexts = () => {
     progress.textContent = `Carte ${Math.min(idx + 1, total)} / ${total}`;
-    hint.textContent = !revealed ? 'Touche la carte pour la révéler'
+    hint.textContent = !revealed ? (charge >= 1 && isGlowy(idx) ? 'Ça brille de plus en plus... touche encore !' : 'Touche la carte pour la révéler')
       : (idx === total - 1 ? 'Touche pour voir le récapitulatif' : 'Touche ou glisse pour passer à la suivante');
+    refreshGlow();
     setState();
   };
 
@@ -3768,6 +3907,7 @@ function showPackOpening(pulled, col, variant, opts){
     if(busy || revealed || finished) return;
     busy = true;
     const top = cards[idx], p = pulled[idx];
+    top.classList.remove('glowy', 'lvl1');
     top.classList.add('flipped');
     const rk = (RARITIES[p.card.rarity] || RARITIES.commune).rank;
     setTimeout(() => {
@@ -3801,7 +3941,7 @@ function showPackOpening(pulled, col, variant, opts){
     top.style.transition = 'transform .55s cubic-bezier(.5,0,.25,1), opacity .5s ease .1s';
     top.style.transform = `translate(${slot.left - base.left}px, ${slot.top - base.top}px) scale(${slot.width / base.width})`;
     top.style.opacity = '0.15';
-    idx++; revealed = false;
+    idx++; revealed = false; charge = 0;
     if(idx < total){ placeStack(); refreshTexts(); }
     setTimeout(() => {
       mini.style.visibility = '';
@@ -3810,7 +3950,18 @@ function showPackOpening(pulled, col, variant, opts){
     }, 580);
   };
 
-  const act = () => { if(!revealed) reveal(); else next(); };
+  const act = () => {
+    if(busy || finished) return;
+    if(!revealed){
+      if(isGlowy(idx) && charge < 1){
+        // 1er clic sur une carte brillante : la lumière devient plus forte, la carte reste face cachée
+        charge++; busy = true; refreshTexts();
+        setTimeout(() => { busy = false; }, 450);
+        return;
+      }
+      reveal();
+    } else next();
+  };
 
   /* glisser (souris ou doigt) ou toucher */
   let drag = null;
@@ -4385,6 +4536,7 @@ function drawBoostersManage(body){
         <div style="flex:1;"><label>Prix du booster (${WATCH_CURRENCY})</label><input type="text" inputmode="numeric" id="colPrice" value="${col.price}"></div>
         <div style="flex:1;"><label>Cartes par booster</label><input type="text" inputmode="numeric" id="colPer" value="${col.perPack}"></div>
       </div>
+      <label class="checkLine"><input type="checkbox" id="colDaily" ${col.daily !== false ? 'checked' : ''}> <span>Disponible dans le booster quotidien</span></label>
       <label>Image du booster (affichée sur le booster que voient les viewers)</label>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:15px;flex-wrap:wrap;">
         <div class="packThumb" id="packThumb" style="${col.packImage ? `background-image:url('${escapeHtml(col.packImage)}')` : ''}"></div>
@@ -4479,6 +4631,7 @@ function wireBoostersManage(col, cards){
     c.name = name;
     c.price = Math.max(1, parseInt(g('colPrice').value, 10) || 100);
     c.perPack = Math.min(10, Math.max(1, parseInt(g('colPer').value, 10) || CARDS_PER_PACK));
+    c.daily = g('colDaily').checked;
     await saveCards();
     redraw();
   };
@@ -4614,14 +4767,14 @@ function leaderboardHtml(){
     .map(([key, pts]) => ({key, pts, display: (viewerProfiles[key] && viewerProfiles[key].display) || key}))
     .sort((a,b) => b.pts - a.pts);
   if(rows.length === 0){
-    return `<div class="empty"><div>Aucun score enregistré pour l'instant. Joue pour apparaître ici !</div></div>`;
+    return `<div class="empty"><div>Aucune victoire enregistrée pour l'instant. Gagne une partie pour apparaître ici !</div></div>`;
   }
   const medals = ['top1','top2','top3'];
   return rows.map((r, i) => `
     <div class="lbRow ${viewerName && r.key === viewerName.toLowerCase() ? 'me' : ''}">
       <div class="lbRank ${medals[i] || ''}">${(i+1)}</div>
       <div class="lbName">${escapeHtml(r.display)}</div>
-      <div class="lbPts">${r.pts} pts</div>
+      <div class="lbPts">${r.pts} victoire${r.pts > 1 ? 's' : ''}</div>
     </div>
   `).join('');
 }
@@ -4640,12 +4793,12 @@ function renderGames(){
       ${!inCreator && viewerName ? `
         <div class="myPointsBox">
           <div class="n">${myPoints}</div>
-          <div class="l">Tes points</div>
+          <div class="l">Tes victoires</div>
         </div>
       ` : ''}
       ${!inCreator && !viewerName ? `
         <div class="myPointsBox" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-          <div class="l">Connecte-toi pour jouer et gagner des points</div>
+          <div class="l">Connecte-toi pour jouer et gagner des Ryos</div>
           <button class="btn primary" id="guestLoginBtn" style="flex:none;">Se connecter</button>
         </div>
       ` : ''}
@@ -4657,7 +4810,22 @@ function renderGames(){
           <div class="gtitle">Undercover</div>
         </div>
       </div>
-      ${inCreator ? `<button class="addbtn" id="manageBtTracks" style="margin-bottom:10px;">Gérer la bibliothèque de musiques</button>` : ''}
+      ${inCreator ? `
+        <button class="addbtn" id="manageBtTracks" style="margin-bottom:18px;">Gérer la bibliothèque de musiques</button>
+        <div class="twitchbox" style="max-width:520px;margin-bottom:24px;">
+          <div class="sectionLabel" style="margin-top:0;">Récompenses des mini-jeux (${WATCH_CURRENCY})</div>
+          <div class="row2">
+            <div style="flex:1;"><label>1re place</label><input type="text" inputmode="numeric" id="payFirst" value="${payoutSettings().first}"></div>
+            <div style="flex:1;"><label>2e place</label><input type="text" inputmode="numeric" id="paySecond" value="${payoutSettings().second}"></div>
+          </div>
+          <div class="row2">
+            <div style="flex:1;"><label>3e place</label><input type="text" inputmode="numeric" id="payThird" value="${payoutSettings().third}"></div>
+            <div style="flex:1;"><label>Autres participants</label><input type="text" inputmode="numeric" id="payOther" value="${payoutSettings().other}"></div>
+          </div>
+          <div class="hint" style="text-align:left;">Une victoire vaut 1 point au classement. Undercover : le camp gagnant reçoit la 1re place, les autres la participation.</div>
+          <div class="hint" id="payStatus" style="min-height:16px;text-align:left;"></div>
+          <button class="btn primary" id="paySaveBtn" style="flex:none;">Enregistrer</button>
+        </div>` : ''}
       <div class="sectionLabel">Classement${inCreator ? ` <button class="pill" id="resetLeaderboard" style="margin-left:10px;">Reset</button>` : ''}</div>
       <div id="leaderboard"></div>
     </div>
@@ -4676,9 +4844,18 @@ function renderGames(){
   if(gl) gl.onclick = () => setMode('select');
   const mbt = document.getElementById('manageBtTracks');
   if(mbt) mbt.onclick = () => setMode('blindtest-admin');
+  const psb = document.getElementById('paySaveBtn');
+  if(psb) psb.onclick = async () => {
+    const v = (id, d) => { const x = parseInt(document.getElementById(id).value, 10); return isNaN(x) || x < 0 ? d : x; };
+    await loadSettings();
+    creatorSettings.payout = {first: v('payFirst', 100), second: v('paySecond', 60), third: v('payThird', 40), other: v('payOther', 20)};
+    await saveSettings();
+    const st = document.getElementById('payStatus');
+    st.style.color = 'var(--rate-green)'; st.textContent = 'Enregistré.';
+  };
   const rlb = document.getElementById('resetLeaderboard');
   if(rlb) rlb.onclick = async () => {
-    if(!confirm('Remettre tous les points du classement général à zéro ?')) return;
+    if(!confirm('Remettre toutes les victoires du classement général à zéro ?')) return;
     gameScores = {};
     await saveScores();
     document.getElementById('leaderboard').innerHTML = leaderboardHtml();
@@ -4980,11 +5157,37 @@ function btPlayerRows(){
       <span class="st" style="color:${btGame.status==='revealed' && p.answered ? (p.lastCorrect ? 'var(--rate-green)' : 'var(--rate-red)') : 'var(--text-dim)'};">
         ${btGame.status==='playing'
           ? (p.answered ? '✓ a répondu' : '…')
-          : (btGame.status==='revealed' && p.answered ? `${p.lastCorrect ? '✓' : '✗'} « ${escapeHtml(p.lastAnswerText||'')} »${p.lastPoints ? ' +'+p.lastPoints+' pts' : ''}` : '')}
+          : (btGame.status==='revealed' && p.answered ? `${p.lastCorrect ? '✓' : '✗'} « ${escapeHtml(p.lastAnswerText||'')} »${p.lastPoints ? ' +'+p.lastPoints+' pts' : ''}`
+            : (btGame.status==='finished' && btGame.payouts && btGame.payouts[key] !== undefined ? `${(btGame.winners||[]).includes(key) ? 'Victoire · ' : ''}+${btGame.payouts[key]} ${WATCH_CURRENCY}` : ''))}
       </span>
       <span class="pts">${p.score||0} pts</span>
     </div>
   `).join('');
+}
+
+/* fin d'un blind test : classement par score (égalités gérées), victoire = 1 point, Ryos selon la place */
+async function finalizeBtGame(){
+  await loadBtGame();
+  if(btGame.payoutsDone){ btGame.status = 'finished'; await saveBtGame(); return; }
+  const creatorKey = (viewerName || '').toLowerCase();
+  const entries = Object.entries(btGame.players || {})
+    .filter(([k, p]) => k !== creatorKey && ((p.played || 0) > 0 || (p.score || 0) > 0))
+    .sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+  const cfg = payoutSettings();
+  const payouts = {}, places = {}, winners = [];
+  let place = 0, prev = null;
+  entries.forEach(([k, p], i) => {
+    const sc = p.score || 0;
+    if(sc !== prev){ place = i + 1; prev = sc; }
+    places[k] = place;
+    payouts[k] = sc > 0 ? payoutForPlace(place, cfg) : cfg.other;      // 0 point = simple participation
+    if(place === 1 && sc > 0) winners.push(k);
+  });
+  btGame.status = 'finished';
+  btGame.payoutsDone = true; btGame.payouts = payouts; btGame.places = places; btGame.winners = winners;
+  await saveBtGame();
+  for(const [k, amount] of Object.entries(payouts)) await grantRyos(k, btGame.players[k].display, amount);
+  await addWins(winners);
 }
 
 function drawBt(inCreator){
@@ -5294,9 +5497,7 @@ function drawBt(inCreator){
     }
     if(inCreator){
       document.getElementById('btFinish').onclick = async () => {
-        await loadBtGame();
-        btGame.status = 'finished';
-        await saveBtGame();
+        await finalizeBtGame();
         drawBt(inCreator);
       };
       const nb = document.getElementById('btNextRound');
@@ -5325,8 +5526,7 @@ async function startBtRound(inCreator){
   await loadBtGame();
   await loadBtTracks();
   if(!btGame.pool || btGame.pool.length === 0){
-    btGame.status = 'finished';
-    await saveBtGame();
+    await finalizeBtGame();
     drawBt(inCreator);
     return;
   }
@@ -5387,8 +5587,8 @@ async function submitBtAnswer(rawText, inCreator){
   me.lastAnswerText = rawText;
   btDraftAnswer = '';
     me.score = (me.score||0) + points;
+    me.played = (me.played || 0) + 1;
     await saveBtGame();
-    if(points > 0) await addPoints(key, points);
     drawBt(inCreator);
   } finally {
     btSubmitLock = false;
@@ -5688,10 +5888,11 @@ function drawUc(inCreator){
       <div id="ucFinalRoles"></div>
       ${inCreator ? `<button class="btn primary" id="ucNewGameBtn" style="width:100%;margin-top:16px;">Nouvelle partie</button>` : ''}
     `;
-    document.getElementById('ucFinalRoles').innerHTML = Object.values(g.players||{}).map(p => `
+    document.getElementById('ucFinalRoles').innerHTML = Object.entries(g.players||{}).map(([k, p]) => `
       <div class="btRoundPlayerRow ${!p.alive?'eliminated':''}">
         <span class="n">${p.alive?'':''}${escapeHtml(p.display)}</span>
         <span class="st" style="color:var(--text-dim);">${ucRoleLabel(p.role)}${p.word ? ' — '+escapeHtml(p.word) : ''}</span>
+        <span class="pts">${g.payouts && g.payouts[k] !== undefined ? `${(g.winners||[]).includes(k) ? 'Victoire · ' : ''}+${g.payouts[k]} ${WATCH_CURRENCY}` : ''}</span>
       </div>
     `).join('');
     if(inCreator){
@@ -5748,6 +5949,24 @@ function ucCheckWinner(){
   return null;
 }
 
+/* fin d'une partie d'Undercover : le camp gagnant reçoit la 1re place et 1 victoire, les autres la participation */
+async function finalizeUcGame(){
+  if(ucGame.payoutsDone) return;
+  const creatorKey = (viewerName || '').toLowerCase();
+  const win = ucGame.winner;
+  const isWinner = (p) => win === 'civilians' ? p.role === 'civilian' : (win === 'undercover' ? (p.role === 'undercover' || p.role === 'mrwhite') : p.role === 'mrwhite');
+  const cfg = payoutSettings();
+  const payouts = {}, winners = [];
+  Object.entries(ucGame.players || {}).forEach(([k, p]) => {
+    if(k === creatorKey) return;
+    if(isWinner(p)){ payouts[k] = cfg.first; winners.push(k); } else payouts[k] = cfg.other;
+  });
+  ucGame.payoutsDone = true; ucGame.payouts = payouts; ucGame.winners = winners;
+  await saveUc();
+  for(const [k, amount] of Object.entries(payouts)) await grantRyos(k, ucGame.players[k].display, amount);
+  await addWins(winners);
+}
+
 async function closeUcVote(inCreator){
   await loadUc();
   const tally = {};
@@ -5766,7 +5985,7 @@ async function closeUcVote(inCreator){
     if(guessed){
       ucGame.status = 'ended';
       ucGame.winner = 'mrwhite';
-      await saveUc();
+      await finalizeUcGame();
       drawUc(inCreator);
       return;
     }
@@ -5776,6 +5995,7 @@ async function closeUcVote(inCreator){
   if(winner){
     ucGame.status = 'ended';
     ucGame.winner = winner;
+    await finalizeUcGame();
   } else {
     ucGame.status = 'playing';
     ucGame.round += 1;
