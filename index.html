@@ -747,7 +747,7 @@
 
 
   /* Boosters, cartes et holographie */
-  .packGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;}
+  .packGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;align-items:start;}
   .packTile{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;}
   .packArt{
     position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;
@@ -769,6 +769,9 @@
   .oddsTable th:first-child, .oddsTable td:first-child{text-align:left;}
   .oddsTable th{color:var(--text-dim);font-weight:400;font-size:9px;}
   .addbtn:disabled{opacity:.4;cursor:not-allowed;filter:none;}
+  .packArt.img{aspect-ratio:900/1420;padding:0;border-bottom:none;background:var(--panel) center/contain no-repeat;}
+  .packArt.img::before{display:none;}
+  .packThumb{width:64px;height:100px;flex:none;border-radius:var(--r-sm);background:var(--panel-3) center/contain no-repeat;border:1px solid var(--border);}
 
   .tcgGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
   .tcg{
@@ -859,7 +862,7 @@
   }
 
   /* ouverture de booster */
-  .packOverlay{align-items:center;background:rgba(5,5,5,0.97);}
+  .packOverlay{align-items:center;background:rgba(5,5,5,0.985);}
   .packStage{width:100%;max-width:900px;margin:auto;text-align:center;}
   .packTitle{font-family:'JetBrains Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--text-dim);font-size:11px;margin-bottom:20px;}
   .packCards{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-bottom:22px;}
@@ -915,6 +918,98 @@
   .faStatus.rejected{background:rgba(229,72,77,0.15);color:var(--rate-red);}
   .checkLine{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5;margin:4px 0 14px;text-transform:none;letter-spacing:0;font-family:'Space Grotesk',sans-serif;color:var(--text);}
   .checkLine input{margin-top:3px;flex:none;}
+
+  /* ouverture de booster : une carte à la fois */
+  .deckLayout{display:flex;align-items:center;justify-content:center;gap:36px;margin:52px 0 10px;}
+  .deckArea{position:relative;width:min(300px,62vw);aspect-ratio:5/7;touch-action:none;cursor:pointer;user-select:none;-webkit-user-select:none;}
+  .deckFx{position:absolute;inset:0;pointer-events:none;z-index:0;}
+  .deckCard{
+    --rot:1deg;position:absolute;inset:0;z-index:100;perspective:1100px;
+    transform:translateY(calc(var(--k,0) * 13px)) scale(calc(1 - var(--k,0) * 0.045)) rotate(calc(var(--k,0) * var(--rot)));
+    transition:transform .5s cubic-bezier(.3,.7,.2,1), opacity .3s ease;
+  }
+  .deckCard.flipped .flipInner{transform:rotateY(180deg);}
+  .deckCard.pop{animation:cardPop .6s ease-out;}
+  @keyframes cardPop{0%{transform:scale(1);}35%{transform:scale(1.07);}100%{transform:scale(1);}}
+  .deckProgress{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-top:40px;position:relative;z-index:300;}
+  .deckHint{font-size:13px;color:var(--text);margin:8px 0 14px;min-height:20px;position:relative;z-index:300;}
+
+  /* tiroir latéral : les cartes déjà révélées */
+  .revealedTray{
+    display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:6px;
+    min-width:54px;min-height:70px;max-height:min(66vh,470px);
+  }
+  .miniWrap{position:relative;width:48px;height:67px;flex:none;border-radius:8px;}
+  .miniWrap .tcg{position:absolute;left:0;top:0;width:150px;height:210px;aspect-ratio:auto;transform:scale(.32) !important;transform-origin:top left;pointer-events:none;}
+  @media (max-width:760px){
+    .deckLayout{flex-direction:column;gap:14px;}
+    .revealedTray{flex-direction:row;max-height:none;width:100%;justify-content:center;min-height:70px;}
+  }
+
+  /* récapitulatif final */
+  .recap{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin:6px 0 18px;}
+  .recapCard{width:clamp(96px,15vw,150px);aspect-ratio:5/7;}
+  .recapCard .tcg{width:100%;height:100%;aspect-ratio:auto;}
+
+  /* brillances : de plus en plus fortes avec la rareté */
+  .fxGlow{
+    position:absolute;inset:-34%;border-radius:50%;
+    background:radial-gradient(circle, var(--fx) 0%, transparent 62%);
+    opacity:.55;animation:fxPulse 1.6s ease-in-out infinite;
+  }
+  .fxGlow.rainbow{
+    background:conic-gradient(from 0deg, #ff3d81, #ffb02e, #4cf2a0, #35c0ff, #a259ff, #ff3d81);
+    -webkit-mask:radial-gradient(circle, #000 0%, transparent 66%);mask:radial-gradient(circle, #000 0%, transparent 66%);
+    animation:fxPulse 1.6s ease-in-out infinite, hueSpin 5s linear infinite;
+  }
+  @keyframes fxPulse{0%,100%{transform:scale(.92);opacity:.5;}50%{transform:scale(1.06);opacity:.85;}}
+  @keyframes hueSpin{to{filter:hue-rotate(360deg);}}
+  .fxRays{
+    position:absolute;inset:-95%;border-radius:50%;
+    background:repeating-conic-gradient(from 0deg, var(--fx) 0 6deg, transparent 6deg 20deg);
+    -webkit-mask:radial-gradient(circle, #000 12%, transparent 62%);mask:radial-gradient(circle, #000 12%, transparent 62%);
+    opacity:.38;animation:raysSpin 9s linear infinite;
+  }
+  .fxRays.rainbow{
+    background:repeating-conic-gradient(from 0deg, #ff3d81 0 5deg, #ffb02e 5deg 10deg, #4cf2a0 10deg 15deg, #35c0ff 15deg 20deg, #a259ff 20deg 25deg, transparent 25deg 30deg);
+  }
+  @keyframes raysSpin{to{transform:rotate(360deg);}}
+  .fxRing{
+    position:absolute;left:50%;top:50%;width:60%;aspect-ratio:1;margin:-30% 0 0 -30%;border-radius:50%;
+    border:4px solid var(--fx);opacity:0;animation:ringOut 1.1s ease-out var(--delay,0ms) forwards;
+  }
+  @keyframes ringOut{0%{transform:scale(.4);opacity:.9;}100%{transform:scale(2.6);opacity:0;}}
+  .spark{
+    position:absolute;left:50%;top:50%;width:var(--s,8px);height:var(--s,8px);
+    margin:calc(var(--s,8px) / -2) 0 0 calc(var(--s,8px) / -2);border-radius:50%;
+    background:var(--c,#fff);box-shadow:0 0 10px var(--c,#fff);opacity:0;
+    animation:sparkOut 1.3s ease-out var(--delay,0ms) forwards;
+  }
+  @keyframes sparkOut{
+    0%{opacity:1;transform:rotate(var(--a)) translateX(0) scale(1);}
+    100%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.2);}
+  }
+  .fxFlash{
+    position:fixed;inset:0;z-index:9999;pointer-events:none;
+    background:radial-gradient(circle at 50% 45%, var(--fx), transparent 72%);animation:flashOut .7s ease-out forwards;
+  }
+  @keyframes flashOut{0%{opacity:1;}100%{opacity:0;}}
+  .fxLabel{
+    position:absolute;left:-90px;right:-90px;top:-50px;text-align:center;white-space:nowrap;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:4px;
+    color:var(--fx);text-shadow:0 0 18px var(--fx);animation:labelIn .6s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+  .fxLabel.rainbow{
+    background:linear-gradient(90deg, #ff3d81, #ffb02e, #4cf2a0, #35c0ff, #a259ff);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;text-shadow:none;
+  }
+  @keyframes labelIn{0%{opacity:0;transform:scale(.4);}100%{opacity:1;transform:scale(1);}}
+  @media (prefers-reduced-motion: reduce){
+    .fxRays, .fxRing, .spark, .fxFlash{display:none;}
+    .fxGlow{animation:none;}
+    .deckCard{transition:opacity .2s ease;}
+    .deckCard.pop{animation:none;}
+  }
 
   /* Barre de navigation en bas façon TikTok / Instagram en mobile */
   @media(max-width:768px){
@@ -3487,7 +3582,7 @@ function drawBoostersOpen(body){
         const label = !canPlay ? `${col.price} ${WATCH_CURRENCY}` : (afford ? `Ouvrir · ${col.price} ${WATCH_CURRENCY}` : `${col.price} ${WATCH_CURRENCY} · il t'en manque ${col.price - bal}`);
         return `
         <div class="packTile">
-          <div class="packArt"><span>${escapeHtml(col.name)}</span></div>
+          ${packArtHtml(col)}
           <div class="packInfo">
             <div class="packName">${escapeHtml(col.name)}</div>
             <div class="packMeta">${col.perPack} cartes par booster${canPlay ? ` · ${pr.owned}/${pr.total} normales · ${ph.owned}/${ph.total} holo` : ` · ${pr.total} cartes`}</div>
@@ -3539,12 +3634,56 @@ async function openBooster(collectionId){
   }
 }
 
+/* effets de révélation (façon coffre Clash Royale) : halo, rayons, anneaux, étincelles, flash et libellé,
+   de plus en plus forts avec la rareté. Les cartes Communes n'ont pas d'effet, les holographiques ajoutent des étincelles. */
+const REVEAL_FX = {
+  rare:       {color: '#3b82f6', sparks: 0,  rings: 0, rays: false, flash: null,                      label: null},
+  epique:     {color: '#a855f7', sparks: 16, rings: 1, rays: false, flash: 'rgba(168,85,247,0.30)',  label: 'ÉPIQUE'},
+  legendaire: {color: '#f5b301', sparks: 30, rings: 2, rays: true,  flash: 'rgba(255,205,80,0.65)',  label: 'LÉGENDAIRE'},
+  ultime:     {color: '#ff5ccd', sparks: 46, rings: 3, rays: true,  flash: 'rgba(255,255,255,0.85)', label: 'ULTIME', rainbow: true}
+};
+
+function clearRevealFx(host, overlay){
+  if(host) host.innerHTML = '';
+  if(overlay) overlay.querySelectorAll('.fxFlash').forEach(e => e.remove());
+}
+
+function playRevealFx(host, overlay, p){
+  clearRevealFx(host, overlay);
+  const cfg = REVEAL_FX[p.card.rarity] || null;
+  const holo = !!p.holo;
+  if(!cfg && !holo) return;
+  const calm = reduceMotionMQ.matches;
+  const color = cfg ? cfg.color : '#ffffff';
+  const rainbow = !!(cfg && cfg.rainbow);
+  const add = (tag, cls, css) => { const el = document.createElement(tag); el.className = cls; if(css) el.style.cssText = css; host.appendChild(el); return el; };
+  if(cfg) add('div', 'fxGlow' + (rainbow ? ' rainbow' : ''), `--fx:${color};`);
+  if(cfg && cfg.rays && !calm) add('div', 'fxRays' + (rainbow ? ' rainbow' : ''), `--fx:${color};`);
+  if(cfg && !calm) for(let i = 0; i < cfg.rings; i++) add('b', 'fxRing', `--fx:${color};--delay:${i * 230}ms;`);
+  if(!calm){
+    const n = (cfg ? cfg.sparks : 0) + (holo ? 10 : 0);
+    for(let i = 0; i < n; i++){
+      const hue = Math.round(Math.random() * 360);
+      const c = (rainbow || (holo && i >= (cfg ? cfg.sparks : 0))) ? `hsl(${hue},95%,68%)` : color;
+      add('i', 'spark', `--a:${(Math.random() * 360).toFixed(1)}deg;--d:${Math.round(150 + Math.random() * 170)}px;--s:${(5 + Math.random() * 9).toFixed(1)}px;--c:${c};--delay:${Math.round(Math.random() * 200)}ms;`);
+    }
+    if(cfg && cfg.flash){
+      const fl = document.createElement('div'); fl.className = 'fxFlash'; fl.style.setProperty('--fx', cfg.flash);
+      overlay.appendChild(fl);
+      setTimeout(() => fl.remove(), 800);
+    }
+  }
+  const label = cfg && cfg.label ? cfg.label + (holo ? ' · HOLO' : '') : (holo ? 'HOLO' : null);
+  if(label) add('div', 'fxLabel' + (rainbow ? ' rainbow' : ''), `--fx:${color};`).textContent = label;
+}
+
 function showPackOpening(pulled, col, variant, opts){
   variant = variant || {type: 'normal', extra: 0};
   const isTest = !!(opts && opts.test);
   const backLabel = variant.type === 'gold' ? 'GOLD' : (variant.type === 'deviant' ? 'DÉVIANT' : 'BOOSTER');
   const banner = variant.type === 'gold' ? `<div class="packBanner gold" id="packBanner">Booster Gold ! ${pulled.length} cartes, Ultime assuré sur la dernière</div>`
     : (variant.type === 'deviant' ? `<div class="packBanner deviant" id="packBanner">Booster Déviant : ${variant.extra} carte${variant.extra > 1 ? 's' : ''} en plus</div>` : '');
+  const total = pulled.length;
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="overlay packOverlay ${variant.type}" id="packOverlay">
@@ -3552,15 +3691,22 @@ function showPackOpening(pulled, col, variant, opts){
         <div class="packTitle">${escapeHtml(col.name)}${isTest ? ' · TEST' : ''}</div>
         ${isTest ? `<div class="packTestNote" id="packTestNote">Mode test : gratuit, rien n'est enregistré</div>` : ''}
         ${banner}
-        <div class="packCards">
-          ${pulled.map((p, i) => `
-            <div class="flip" data-i="${i}" data-rarity="${p.card.rarity}" data-holo="${p.holo ? '1' : '0'}">
-              <div class="flipInner">
-                <div class="flipFace flipBack"><span>${backLabel}</span></div>
-                <div class="flipFace flipFront">${cardTileHtml(p.card, {isNew: p.isNew, holo: p.holo})}</div>
-              </div>
-            </div>`).join('')}
+        <div class="deckLayout" id="deckLayout">
+          <div class="deckArea" id="deckArea">
+            <div class="deckFx" id="deckFx"></div>
+            ${pulled.map((p, i) => `
+              <div class="deckCard" data-i="${i}" data-rarity="${p.card.rarity}" data-holo="${p.holo ? '1' : '0'}" style="--rot:${(i % 2 ? 1 : -1) * (1.2 + (i * 0.37) % 1.1).toFixed(2)}deg;">
+                <div class="flipInner">
+                  <div class="flipFace flipBack"><span>${backLabel}</span></div>
+                  <div class="flipFace flipFront">${cardTileHtml(p.card, {isNew: p.isNew, holo: p.holo})}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+          <div class="revealedTray" id="revealedTray"></div>
         </div>
+        <div class="deckProgress" id="deckProgress"></div>
+        <div class="deckHint" id="deckHint"></div>
+        <div class="recap" id="packRecap" style="display:none;"></div>
         <div class="packSummary" id="packSummary"></div>
         <div class="packBtns">
           <button class="addbtn" id="revealAllBtn">Tout révéler</button>
@@ -3569,31 +3715,145 @@ function showPackOpening(pulled, col, variant, opts){
         </div>
       </div>
     </div>`;
-  const flips = Array.from(root.querySelectorAll('.flip'));
+
+  const overlay = root.querySelector('#packOverlay');
+  const deckArea = root.querySelector('#deckArea');
+  const fxHost = root.querySelector('#deckFx');
+  const tray = root.querySelector('#revealedTray');
+  const hint = root.querySelector('#deckHint');
+  const progress = root.querySelector('#deckProgress');
+  const recap = root.querySelector('#packRecap');
+  const cards = Array.from(root.querySelectorAll('.deckCard'));
+  let idx = 0, revealed = false, busy = false, finished = false;
+
+  const setState = () => {
+    overlay.dataset.idx = String(idx);
+    overlay.dataset.revealed = revealed ? '1' : '0';
+    overlay.dataset.finished = finished ? '1' : '0';
+  };
+  const placeStack = () => {
+    cards.forEach((c, i) => {
+      const k = i - idx;
+      if(k < 0) return;
+      c.style.setProperty('--k', String(Math.min(k, 4)));
+      c.style.zIndex = String(200 - k);
+      c.style.opacity = k > 3 ? '0' : '';
+    });
+  };
+  const refreshTexts = () => {
+    progress.textContent = `Carte ${Math.min(idx + 1, total)} / ${total}`;
+    hint.textContent = !revealed ? 'Touche la carte pour la révéler'
+      : (idx === total - 1 ? 'Touche pour voir le récapitulatif' : 'Touche ou glisse pour passer à la suivante');
+    setState();
+  };
+
   const finish = () => {
-    if(flips.some(f => !f.classList.contains('flipped'))) return;
+    if(finished) return;
+    finished = true; busy = false;
+    clearRevealFx(fxHost, overlay);
+    root.querySelector('#deckLayout').style.display = 'none';
+    progress.style.display = 'none'; hint.style.display = 'none';
+    recap.style.display = '';
+    recap.innerHTML = pulled.map((p, i) => `<div class="recapCard" data-i="${i}" data-rarity="${p.card.rarity}" data-holo="${p.holo ? '1' : '0'}">${cardTileHtml(p.card, {isNew: p.isNew, holo: p.holo})}</div>`).join('');
     const nNew = pulled.filter(p => p.isNew).length;
     const nDup = pulled.length - nNew;
     const nHolo = pulled.filter(p => p.holo).length;
     document.getElementById('packSummary').textContent = `${nNew} nouvelle${nNew > 1 ? 's' : ''} carte${nNew > 1 ? 's' : ''} · ${nDup} doublon${nDup > 1 ? 's' : ''}` + (nHolo ? ` · ${nHolo} holographique${nHolo > 1 ? 's' : ''}` : '');
     document.getElementById('revealAllBtn').style.display = 'none';
-    const again = document.getElementById('packAgainBtn');
-    if(isTest || (watchMine && (watchMine.points || 0) >= col.price)) again.style.display = '';
+    if(isTest || (watchMine && (watchMine.points || 0) >= col.price)) document.getElementById('packAgainBtn').style.display = '';
+    setState();
   };
-  const flipOne = (f) => {
-    if(f.classList.contains('flipped')) return;
-    f.classList.add('flipped');
-    const rk = (RARITIES[f.dataset.rarity] || RARITIES.commune).rank;
-    if(rk >= 2 || f.dataset.holo === '1') f.classList.add('burst');
-    setTimeout(finish, 650);
+
+  const reveal = () => {
+    if(busy || revealed || finished) return;
+    busy = true;
+    const top = cards[idx], p = pulled[idx];
+    top.classList.add('flipped');
+    const rk = (RARITIES[p.card.rarity] || RARITIES.commune).rank;
+    setTimeout(() => {
+      if(finished) return;
+      playRevealFx(fxHost, overlay, p);
+      if((rk >= 2 || p.holo) && !reduceMotionMQ.matches) top.classList.add('pop');
+    }, 320);
+    setTimeout(() => { if(finished) return; revealed = true; busy = false; refreshTexts(); }, 780);
   };
-  flips.forEach(f => { f.onclick = () => flipOne(f); });
-  document.getElementById('revealAllBtn').onclick = () => {
-    flips.filter(f => !f.classList.contains('flipped')).forEach((f, i) => setTimeout(() => flipOne(f), i * 180));
+
+  const makeMini = (p) => {
+    const el = document.createElement('div');
+    el.className = `miniWrap r-${p.card.rarity}`;
+    el.dataset.rarity = p.card.rarity;
+    el.innerHTML = cardTileHtml(p.card, {holo: p.holo});
+    return el;
   };
-  const closeIt = () => { closeModal(); if(mode === 'boosters') drawBoosters(); };
+
+  const next = () => {
+    if(busy || !revealed || finished) return;
+    busy = true;
+    const top = cards[idx], p = pulled[idx];
+    clearRevealFx(fxHost, overlay);
+    top.classList.remove('pop');
+    const mini = makeMini(p);
+    mini.style.visibility = 'hidden';
+    tray.appendChild(mini);
+    const base = deckArea.getBoundingClientRect();
+    const slot = mini.getBoundingClientRect();
+    top.style.transformOrigin = 'top left';
+    top.style.transition = 'transform .55s cubic-bezier(.5,0,.25,1), opacity .5s ease .1s';
+    top.style.transform = `translate(${slot.left - base.left}px, ${slot.top - base.top}px) scale(${slot.width / base.width})`;
+    top.style.opacity = '0.15';
+    idx++; revealed = false;
+    if(idx < total){ placeStack(); refreshTexts(); }
+    setTimeout(() => {
+      mini.style.visibility = '';
+      top.style.display = 'none';
+      if(idx >= total) finish(); else busy = false;
+    }, 580);
+  };
+
+  const act = () => { if(!revealed) reveal(); else next(); };
+
+  /* glisser (souris ou doigt) ou toucher */
+  let drag = null;
+  deckArea.addEventListener('pointerdown', (e) => {
+    if(finished || busy) return;
+    drag = {x: e.clientX, dx: 0, moved: false};
+    try{ deckArea.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  deckArea.addEventListener('pointermove', (e) => {
+    if(!drag) return;
+    drag.dx = e.clientX - drag.x;
+    if(Math.abs(drag.dx) > 8) drag.moved = true;
+    if(drag.moved && cards[idx]){
+      cards[idx].style.transition = 'none';
+      cards[idx].style.transform = `translateX(${drag.dx}px) rotate(${drag.dx / 22}deg)`;
+    }
+  });
+  const endDrag = () => {
+    if(!drag) return;
+    const d = drag; drag = null;
+    const c = cards[idx];
+    if(c){ c.style.transition = ''; c.style.transform = ''; }
+    if(!d.moved || Math.abs(d.dx) > 70) act();
+  };
+  deckArea.addEventListener('pointerup', endDrag);
+  deckArea.addEventListener('pointercancel', () => { drag = null; const c = cards[idx]; if(c){ c.style.transition = ''; c.style.transform = ''; } });
+
+  const onKey = (e) => {
+    if(!document.body.contains(overlay)){ document.removeEventListener('keydown', onKey); return; }
+    if(e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+      if(finished) return;
+      e.preventDefault(); act();
+    }
+  };
+  document.addEventListener('keydown', onKey);
+
+  document.getElementById('revealAllBtn').onclick = finish;
+  const closeIt = () => { document.removeEventListener('keydown', onKey); closeModal(); if(mode === 'boosters') drawBoosters(); };
   document.getElementById('packCloseBtn').onclick = closeIt;
-  document.getElementById('packAgainBtn').onclick = () => { closeModal(); if(isTest) openTestBooster(col.id); else openBooster(col.id); };
+  document.getElementById('packAgainBtn').onclick = () => { document.removeEventListener('keydown', onKey); closeModal(); if(isTest) openTestBooster(col.id); else openBooster(col.id); };
+
+  placeStack();
+  refreshTexts();
 }
 
 function recycleValue(colId){
@@ -3803,7 +4063,7 @@ function drawBoostersTest(body){
     <div class="packGrid" style="margin-top:6px;">
       ${cols.map(col => `
         <div class="packTile">
-          <div class="packArt"><span>${escapeHtml(col.name)}</span></div>
+          ${packArtHtml(col)}
           <div class="packInfo">
             <div class="packName">${escapeHtml(col.name)}</div>
             <div class="packMeta">${col.perPack} cartes par booster · ${colCards(col.id).length} cartes dans la collection</div>
@@ -4033,7 +4293,7 @@ function matchCardByFile(fileName, cards){
   return cands[0] || null;
 }
 
-function resizeImageToBlob(file, maxSide = 800, quality = 0.85){
+function resizeImageToBlob(file, maxSide = 800, quality = 0.85, type = 'image/jpeg'){
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -4044,7 +4304,7 @@ function resizeImageToBlob(file, maxSide = 800, quality = 0.85){
       cv.width = w; cv.height = h;
       cv.getContext('2d').drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      cv.toBlob(b => b ? resolve(b) : reject(new Error('Conversion impossible')), 'image/jpeg', quality);
+      cv.toBlob(b => b ? resolve(b) : reject(new Error('Conversion impossible')), type, quality);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible')); };
     img.src = url;
@@ -4060,6 +4320,24 @@ async function uploadCardImage(card, file){
   if(card.imagePath){ try{ await supabaseClient.storage.from(BT_BUCKET).remove([card.imagePath]); }catch(e){} }
   card.image = data.publicUrl;
   card.imagePath = path;
+}
+
+async function uploadPackImage(col, file){
+  const blob = await resizeImageToBlob(file, 900, 0.9, 'image/webp');   // webp/png : la transparence de l'image est conservée
+  const ext = blob.type === 'image/webp' ? 'webp' : (blob.type === 'image/png' ? 'png' : 'jpg');
+  const path = `packs/${col.id}-${Date.now()}.${ext}`;
+  const { error } = await supabaseClient.storage.from(BT_BUCKET).upload(path, blob, {contentType: blob.type, upsert: true});
+  if(error) throw new Error(error.message);
+  const { data } = supabaseClient.storage.from(BT_BUCKET).getPublicUrl(path);
+  if(col.packImagePath){ try{ await supabaseClient.storage.from(BT_BUCKET).remove([col.packImagePath]); }catch(e){} }
+  col.packImage = data.publicUrl;
+  col.packImagePath = path;
+}
+
+function packArtHtml(col){
+  return col.packImage
+    ? `<div class="packArt img" style="background-image:url('${escapeHtml(col.packImage)}')" role="img" aria-label="${escapeHtml(col.name)}"></div>`
+    : `<div class="packArt"><span>${escapeHtml(col.name)}</span></div>`;
 }
 
 async function removeCardFiles(cards){
@@ -4106,6 +4384,12 @@ function drawBoostersManage(body){
       <div class="row2">
         <div style="flex:1;"><label>Prix du booster (${WATCH_CURRENCY})</label><input type="text" inputmode="numeric" id="colPrice" value="${col.price}"></div>
         <div style="flex:1;"><label>Cartes par booster</label><input type="text" inputmode="numeric" id="colPer" value="${col.perPack}"></div>
+      </div>
+      <label>Image du booster (affichée sur le booster que voient les viewers)</label>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:15px;flex-wrap:wrap;">
+        <div class="packThumb" id="packThumb" style="${col.packImage ? `background-image:url('${escapeHtml(col.packImage)}')` : ''}"></div>
+        <button class="addbtn" id="packImgBtn">${col.packImage ? 'Changer l\'image' : 'Choisir une image'}</button>
+        ${col.packImage ? `<button class="btn ghost" id="packImgRemoveBtn" style="flex:none;">Retirer</button>` : ''}
       </div>
       <div class="hint" id="colStatus" style="min-height:16px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -4209,6 +4493,29 @@ function wireBoostersManage(col, cards){
     if(st){ st.style.color = 'var(--rate-green)'; st.textContent = parts.length ? parts.join(' · ') + '.' : 'Rien à compléter.'; }
   };
 
+  g('packImgBtn').onclick = () => pickFiles(false, async (files) => {
+    const st = g('colStatus');
+    st.style.color = 'var(--text-dim)'; st.textContent = 'Envoi...';
+    try{
+      await loadCards();
+      const c = cardsCatalog.collections.find(x => x.id === col.id);
+      if(!c) return;
+      await uploadPackImage(c, files[0]);
+      await saveCards();
+      drawBoosters();
+    }catch(e){ st.style.color = 'var(--rate-red)'; st.textContent = 'Erreur : ' + e.message; }
+  });
+  const prm = g('packImgRemoveBtn');
+  if(prm) prm.onclick = async () => {
+    await loadCards();
+    const c = cardsCatalog.collections.find(x => x.id === col.id);
+    if(!c) return;
+    if(c.packImagePath){ try{ await supabaseClient.storage.from(BT_BUCKET).remove([c.packImagePath]); }catch(e){} }
+    c.packImage = ''; c.packImagePath = '';
+    await saveCards();
+    drawBoosters();
+  };
+
   g('colDeleteBtn').onclick = async () => {
     if(!confirm(`Supprimer la collection « ${col.name} » et ses ${cards.length} cartes ?`)) return;
     await loadCards();
@@ -4217,6 +4524,7 @@ function wireBoostersManage(col, cards){
     cardsCatalog.collections = cardsCatalog.collections.filter(c => c.id !== col.id);
     await saveCards();
     await removeCardFiles(doomed);
+    if(col.packImagePath){ try{ await supabaseClient.storage.from(BT_BUCKET).remove([col.packImagePath]); }catch(e){} }
     manageColId = null;
     redraw();
   };
