@@ -814,6 +814,59 @@
   .packSummary{min-height:22px;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text);}
   .packBtns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
 
+
+  /* visuel de secours et holographie */
+  .tcg .art.noimg{
+    background:repeating-linear-gradient(135deg, hsl(var(--h) 45% 24%) 0 12px, hsl(var(--h) 45% 19%) 12px 24px);
+  }
+  .tcg .mono{
+    display:flex;align-items:center;justify-content:center;width:54%;aspect-ratio:1;border-radius:50%;
+    background:hsl(var(--h) 65% 54%);color:#0e0e0e;font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;
+  }
+  .tcg.holo{
+    transform:perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+    transition:transform .3s ease, box-shadow .3s ease;will-change:transform;
+  }
+  .tcg.holo.tilting{transition:transform .06s linear;}
+  .tcg .foil, .tcg .glare{position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .25s ease;z-index:2;}
+  .tcg .foil{
+    background:repeating-linear-gradient(115deg, rgba(255,0,128,0.6) 0%, rgba(255,200,0,0.55) 12%, rgba(0,255,170,0.55) 24%, rgba(0,150,255,0.6) 36%, rgba(170,0,255,0.6) 48%, rgba(255,0,128,0.6) 60%);
+    background-size:260% 260%;background-position:var(--bx,50%) var(--by,50%);mix-blend-mode:color-dodge;
+  }
+  .tcg .glare{
+    background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 55%);
+    mix-blend-mode:overlay;
+  }
+  .tcg.r-rare.tilting .glare{opacity:.5;}
+  .tcg.r-epique.tilting .foil{opacity:.36;}
+  .tcg.r-epique.tilting .glare{opacity:.6;}
+  .tcg.r-legendaire .foil{opacity:.22;}
+  .tcg.r-legendaire.tilting .foil{opacity:.6;}
+  .tcg.r-legendaire.tilting .glare{opacity:.75;}
+  .tcg.r-legendaire.tilting::after{opacity:0;}
+  .tcgGrid .tcg{cursor:pointer;}
+  @media (hover:none){
+    .tcg.r-epique .foil{opacity:.3;animation:foilDrift 7s ease-in-out infinite alternate;}
+    .tcg.r-legendaire .foil{opacity:.5;animation:foilDrift 6s ease-in-out infinite alternate;}
+  }
+  @keyframes foilDrift{from{background-position:10% 20%;}to{background-position:90% 80%;}}
+  @media (prefers-reduced-motion: reduce){
+    .tcg.holo{transform:none !important;transition:none;}
+    .tcg .foil{animation:none !important;}
+    .tcg.r-legendaire::after{animation:none;}
+    .flipInner{transition:none;}
+    .flip.burst{animation:none;}
+  }
+
+  .cardDetail{display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:780px;margin:auto;}
+  .cardBig .tcg{width:min(300px,72vw);touch-action:none;cursor:default;}
+  .cardInfo{flex:1;min-width:240px;max-width:360px;text-align:left;--rc:#8b9199;}
+  .cardInfo.r-rare{--rc:#3b82f6;} .cardInfo.r-epique{--rc:#a855f7;} .cardInfo.r-legendaire{--rc:#f5b301;}
+  .cardRar{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--rc);margin-bottom:14px;}
+  .cardDesc{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px;}
+  .cardMeta{font-size:12.5px;color:var(--text-dim);margin-bottom:18px;}
+  .tcgBtns{flex-wrap:wrap;}
+
   /* Barre de navigation en bas façon TikTok / Instagram en mobile */
   @media(max-width:768px){
     .wrap:has(.sidebar){padding-left:clamp(16px,4vw,64px);padding-bottom:86px;padding-top:20px;}
@@ -2809,12 +2862,97 @@ const RARITIES = {
 const RARITY_KEYS = ['commune', 'rare', 'epique', 'legendaire'];
 
 const MARVEL_TEMPLATE = {
+  key: 'marvel',
   name: 'Marvel (MCU)',
-  legendaire: ['Iron Man', 'Captain America', 'Thor', 'Thanos'],
-  epique: ['Hulk', 'Black Widow', 'Spider-Man', 'Black Panther', 'Doctor Strange', 'Loki', 'Star-Lord', 'Captain Marvel'],
-  rare: ['Hawkeye', 'Scarlet Witch', 'Vision', 'Winter Soldier', 'Falcon', 'Ant-Man', 'Wasp', 'Gamora', 'Rocket', 'Groot'],
-  commune: ['Nick Fury', 'Pepper Potts', 'Happy Hogan', 'Peggy Carter', 'Maria Hill', 'Drax', 'Nebula', 'Wong', 'Okoye', 'Shuri']
+  legendaire: [
+    {n: 'Iron Man', h: 355, d: "Tony Stark, génie milliardaire et inventeur, qui bâtit sa propre armure pour protéger ceux qui comptent."},
+    {n: 'Captain America', h: 215, d: "Steve Rogers, soldat des années 40 transformé par un sérum. Un bouclier, un sens du devoir sans faille."},
+    {n: 'Thor', h: 205, d: "Dieu du tonnerre d'Asgard, porteur du marteau Mjolnir. Fier, puissant, et en train d'apprendre l'humilité."},
+    {n: 'Thanos', h: 275, d: "Le Titan qui rêve de rassembler les Pierres d'Infinité. Une menace venue des confins de l'univers."}
+  ],
+  epique: [
+    {n: 'Hulk', h: 125, d: "Le docteur Bruce Banner et son double de colère verte. Une force colossale, parfois difficile à contrôler."},
+    {n: 'Black Widow', h: 350, d: "Natasha Romanoff, espionne d'élite au passé trouble. Redoutable au combat comme dans l'ombre."},
+    {n: 'Spider-Man', h: 358, d: "Peter Parker, lycéen de Queens aux pouvoirs d'araignée. Le héros sympa du quartier qui rêve de grandes choses."},
+    {n: 'Black Panther', h: 270, d: "T'Challa, roi du Wakanda et protecteur de son peuple. Costume en vibranium et honneur à toute épreuve."},
+    {n: 'Doctor Strange', h: 12, d: "Ancien chirurgien de génie devenu Sorcier Suprême. Il veille sur la Terre face aux menaces mystiques."},
+    {n: 'Loki', h: 140, d: "Dieu de la malice, frère adoptif de Thor. Charmeur, rusé, jamais là où on l'attend."},
+    {n: 'Star-Lord', h: 18, d: "Peter Quill, pilleur de l'espace et chef des Gardiens de la Galaxie. Walkman, bagout et grands rêves."},
+    {n: 'Captain Marvel', h: 42, d: "Carol Danvers, pilote devenue héroïne cosmique. L'une des plus puissantes protectrices de la galaxie."}
+  ],
+  rare: [
+    {n: 'Hawkeye', h: 265, d: "Clint Barton, archer sans superpouvoir mais d'une précision redoutable."},
+    {n: 'Scarlet Witch', h: 348, d: "Wanda Maximoff, aux pouvoirs télékinésiques et mentaux qui dépassent ce qu'elle imagine."},
+    {n: 'Vision', h: 48, d: "Intelligence artificielle née d'une Pierre d'Infinité. Calme, logique et étonnamment humain."},
+    {n: 'Winter Soldier', h: 200, d: "Bucky Barnes, ami d'enfance de Steve devenu soldat de l'ombre. Un bras de métal et un passé trouble."},
+    {n: 'Falcon', h: 6, d: "Sam Wilson, ancien militaire équipé d'ailes mécaniques. Loyal, drôle et toujours là pour ses amis."},
+    {n: 'Ant-Man', h: 2, d: "Scott Lang, cambrioleur repenti capable de rétrécir ou de grandir à volonté."},
+    {n: 'Wasp', h: 50, d: "Hope van Dyne, héroïne miniature volante. Agile, déterminée, et experte en combat."},
+    {n: 'Gamora', h: 152, d: "Guerrière d'élite surnommée la femme la plus dangereuse de la galaxie. Elle trace sa propre route."},
+    {n: 'Rocket', h: 26, d: "Raton laveur génétiquement modifié, as de la mécanique et des armes lourdes. Caractère explosif."},
+    {n: 'Groot', h: 102, d: "Arbre extraterrestre au vocabulaire de trois mots. Solide, fidèle et étonnamment tendre."}
+  ],
+  commune: [
+    {n: 'Nick Fury', h: 222, d: "Directeur du S.H.I.E.L.D. et créateur de l'initiative Avengers. Toujours un plan d'avance."},
+    {n: 'Pepper Potts', h: 356, d: "Directrice de Stark Industries et pilier de la vie de Tony. Elle ne se laisse jamais impressionner."},
+    {n: 'Happy Hogan', h: 36, d: "Chauffeur puis responsable de la sécurité de Tony Stark. Fidèle, bougon et dévoué."},
+    {n: 'Peggy Carter', h: 345, d: "Agente britannique de la Réserve scientifique stratégique, cofondatrice du S.H.I.E.L.D."},
+    {n: 'Maria Hill', h: 212, d: "Bras droit de Nick Fury au S.H.I.E.L.D. Calme et efficace sous la pression."},
+    {n: 'Drax', h: 188, d: "Guerrier qui prend tout au pied de la lettre. Redoutable au combat, nul pour les métaphores."},
+    {n: 'Nebula', h: 208, d: "Mercenaire cyborg à la peau bleue, élevée comme une arme. En quête de sa propre place."},
+    {n: 'Wong', h: 176, d: "Gardien de la bibliothèque de Kamar-Taj et maître des arts mystiques. Sérieux, mais pas sans humour."},
+    {n: 'Okoye', h: 4, d: "Générale des Dora Milaje, la garde royale du Wakanda. Lance en main, loyauté inébranlable."},
+    {n: 'Shuri', h: 168, d: "Princesse du Wakanda et prodige technologique. L'esprit brillant derrière les innovations du royaume."}
+  ]
 };
+
+const HAIKYUU_TEMPLATE = {
+  key: 'haikyuu',
+  name: 'Haikyu!!',
+  legendaire: [
+    {n: 'Shoyo Hinata', h: 28, d: "Petit par la taille, immense par l'envie. Le central de Karasuno qui saute plus haut que tout le monde."},
+    {n: 'Tobio Kageyama', h: 222, d: "Passeur prodige de Karasuno, surnommé le Roi du terrain. Une précision hors norme et un caractère intense."},
+    {n: 'Tooru Oikawa', h: 188, d: "Capitaine et passeur d'Aoba Johsai. Service redoutable, charme redoutable, rivalité féroce."},
+    {n: 'Wakatoshi Ushijima', h: 275, d: "As de Shiratorizawa et l'un des meilleurs attaquants du pays. Puissance et calme impressionnants."}
+  ],
+  epique: [
+    {n: 'Kei Tsukishima', h: 52, d: "Central de Karasuno, grand, ironique et très malin. Il lit le jeu comme personne."},
+    {n: 'Yu Nishinoya', h: 38, d: "Libéro de Karasuno, énergie débordante et réflexes hors du commun. Rien ne touche le sol sur son terrain."},
+    {n: 'Daichi Sawamura', h: 18, d: "Capitaine de Karasuno, calme et solide. Celui qui tient toute l'équipe ensemble."},
+    {n: 'Asahi Azumane', h: 8, d: "As de Karasuno, imposant mais sensible. Sa frappe puissante fait trembler les murs adverses."},
+    {n: 'Tetsuro Kuroo', h: 355, d: "Capitaine de Nekoma, central rusé au sourire en coin. Maître du bloc stratégique."},
+    {n: 'Kenma Kozume', h: 48, d: "Passeur de Nekoma, cerveau tranquille. Il analyse tout, sans jamais s'agiter."},
+    {n: 'Kotaro Bokuto', h: 42, d: "As de Fukurodani, solaire et imprévisible. Quand son moral est au sommet, il est injouable."},
+    {n: 'Hajime Iwaizumi', h: 172, d: "Attaquant d'Aoba Johsai et ami d'enfance d'Oikawa. Franc, solide et pas du genre à se laisser faire."}
+  ],
+  rare: [
+    {n: 'Koshi Sugawara', h: 190, d: "Passeur de Karasuno au doux sourire et au grand cœur. Le soutien moral de l'équipe."},
+    {n: 'Ryunosuke Tanaka', h: 14, d: "Ailier de Karasuno, tête brûlée au grand cœur. Il s'enflamme vite, mais jamais sans raison."},
+    {n: 'Tadashi Yamaguchi', h: 150, d: "Serveur de Karasuno et ami de Tsukishima. Son service flottant est redoutable."},
+    {n: 'Keiji Akaashi', h: 230, d: "Passeur de Fukurodani, discret et précis. Il sait exactement comment motiver son as."},
+    {n: 'Satori Tendo', h: 290, d: "Central de Shiratorizawa, surnommé le Guess Monster. Il devine presque chaque attaque."},
+    {n: 'Atsumu Miya', h: 305, d: "Passeur d'Inarizaki, talentueux et exigeant. Il vise toujours la passe parfaite."},
+    {n: 'Osamu Miya', h: 320, d: "Ailier d'Inarizaki et jumeau d'Atsumu. Plus posé, mais tout aussi têtu."},
+    {n: 'Kiyoomi Sakusa', h: 155, d: "As d'Itachiyama, grand, puissant et très exigeant envers lui-même."},
+    {n: 'Lev Haiba', h: 340, d: "Central de Nekoma, très grand et plein d'énergie. Il apprend vite, et ça se voit."},
+    {n: 'Shinsuke Kita', h: 205, d: "Capitaine d'Inarizaki, la discipline incarnée. Chaque geste est travaillé avec soin."}
+  ],
+  commune: [
+    {n: 'Kiyoko Shimizu', h: 330, d: "Manageuse de Karasuno, élégante et réservée. Elle veille sur l'équipe en coulisses."},
+    {n: 'Hitoka Yachi', h: 60, d: "Manageuse de Karasuno, timide mais courageuse. Elle trouve vite sa place."},
+    {n: 'Keishin Ukai', h: 24, d: "Entraîneur de Karasuno, ancien joueur et commerçant du quartier. Il croit en ces corbeaux qui veulent voler."},
+    {n: 'Ittetsu Takeda', h: 90, d: "Conseiller de Karasuno, professeur passionné. Il se bat pour offrir de beaux matchs à l'équipe."},
+    {n: 'Yasufumi Nekomata', h: 10, d: "Entraîneur de Nekoma, vieux malin à l'expérience immense. Rival historique de Karasuno."},
+    {n: 'Morisuke Yaku', h: 2, d: "Libéro de Nekoma, petit et solide en défense. Il stabilise toute la réception."},
+    {n: 'Taketora Yamamoto', h: 348, d: "Ailier de Nekoma, impulsif et motivé. Il rêve de devenir l'as de l'équipe."},
+    {n: 'Issei Matsukawa', h: 196, d: "Central d'Aoba Johsai, grand et malicieux. Un bloc qui fait mal."},
+    {n: 'Takahiro Hanamaki', h: 182, d: "Ailier d'Aoba Johsai et complice de Matsukawa. Toujours une blague en réserve."},
+    {n: 'Eita Semi', h: 262, d: "Passeur de Shiratorizawa, précis et sûr de lui."}
+  ]
+};
+
+const COLLECTION_TEMPLATES = [MARVEL_TEMPLATE, HAIKYUU_TEMPLATE];
+const templateCount = (t) => RARITY_KEYS.reduce((a, k) => a + (t[k] || []).length, 0);
 
 async function loadCards(){
   const v = await kvGet(CARDS_KEY);
@@ -2854,19 +2992,144 @@ function drawCards(collectionId, n){
   return out;
 }
 
+function hashHue(str){
+  let h = 0; const t = String(str || '');
+  for(let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) % 360;
+  return h;
+}
+
 function cardTileHtml(card, o = {}){
   const r = RARITIES[card.rarity] || RARITIES.commune;
   const locked = !!o.locked;
-  const art = (!locked && card.image) ? `style="background-image:url('${escapeHtml(card.image)}')"` : '';
-  const inner = locked ? '?' : (card.image ? '' : posterInitial(card.name));
+  const hue = (card.hue !== undefined && card.hue !== null && card.hue !== '') ? Number(card.hue) : hashHue(card.name);
+  const hasImg = !locked && !!card.image;
+  const artStyle = hasImg ? `style="background-image:url('${escapeHtml(card.image)}')"` : (locked ? '' : `style="--h:${hue}"`);
+  const inner = locked ? '?' : (hasImg ? '' : `<span class="mono">${posterInitial(card.name)}</span>`);
+  const holo = !locked && r.rank >= 1;
   return `
-    <div class="tcg r-${card.rarity} ${locked ? 'locked' : ''}" data-card="${card.id}">
-      <div class="art" ${art}>${inner}</div>
+    <div class="tcg r-${card.rarity} ${locked ? 'locked' : ''} ${holo ? 'holo' : ''}" data-card="${card.id}">
+      <div class="art ${(hasImg || locked) ? '' : 'noimg'}" ${artStyle}>${inner}</div>
       <div class="nm">${escapeHtml(card.name)}</div>
       <div class="rr">${r.label}</div>
+      ${holo ? '<div class="foil"></div><div class="glare"></div>' : ''}
       ${o.count > 1 ? `<span class="cnt">x${o.count}</span>` : ''}
       ${o.isNew ? `<span class="newtag">Nouvelle</span>` : ''}
     </div>`;
+}
+
+/* effet holographique : inclinaison + reflet qui suivent la souris (ou le doigt dans la fiche détaillée) */
+let holoActive = null;
+const reduceMotionMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches: false};
+function holoReset(el){
+  if(!el) return;
+  ['--rx', '--ry', '--mx', '--my', '--bx', '--by'].forEach(v => el.style.removeProperty(v));
+  el.classList.remove('tilting');
+}
+document.addEventListener('pointermove', (e) => {
+  if(reduceMotionMQ.matches) return;
+  const el = (e.target && e.target.closest) ? e.target.closest('.tcg.holo') : null;
+  if(el !== holoActive){ holoReset(holoActive); holoActive = el; }
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  if(!r.width || !r.height) return;
+  const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+  el.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+  el.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+  el.style.setProperty('--bx', (px * 100).toFixed(1) + '%');
+  el.style.setProperty('--by', (py * 100).toFixed(1) + '%');
+  el.style.setProperty('--rx', ((0.5 - py) * 16).toFixed(2) + 'deg');
+  el.style.setProperty('--ry', ((px - 0.5) * 20).toFixed(2) + 'deg');
+  el.classList.add('tilting');
+});
+document.addEventListener('pointerup', (e) => { if(e.pointerType && e.pointerType !== 'mouse'){ holoReset(holoActive); holoActive = null; } });
+document.addEventListener('mouseleave', () => { holoReset(holoActive); holoActive = null; });
+
+function openCardDetail(cardId, preview){
+  const card = cardsCatalog.cards.find(c => c.id === cardId);
+  if(!card) return;
+  const col = cardsCatalog.collections.find(c => c.id === card.collectionId);
+  const r = RARITIES[card.rarity] || RARITIES.commune;
+  const count = preview ? 1 : myCardCount(card.id);
+  const owned = count > 0;
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay packOverlay" id="cardOverlay">
+      <div class="cardDetail">
+        <div class="cardBig">${cardTileHtml(card, {locked: !owned, count: preview ? 0 : count})}</div>
+        <div class="cardInfo r-${card.rarity}">
+          <div class="packTitle" style="text-align:left;margin-bottom:8px;">${escapeHtml(col ? col.name : '')}</div>
+          <h3 style="margin-bottom:4px;">${escapeHtml(card.name)}</h3>
+          <div class="cardRar">${r.label}</div>
+          <div class="cardDesc">${owned ? escapeHtml(card.desc || 'Pas encore de description.') : "Obtiens cette carte pour débloquer sa description."}</div>
+          <div class="cardMeta">${preview ? 'Aperçu' : (owned ? `Exemplaires : ${count}` : 'Pas encore obtenue')}${(!preview && count > 1) ? ` · Recyclage : ${r.value} ${WATCH_CURRENCY} par doublon` : ''}</div>
+          <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>
+        </div>
+      </div>
+    </div>`;
+  const close = () => closeModal();
+  document.getElementById('cardCloseBtn').onclick = close;
+  document.getElementById('cardOverlay').onclick = (e) => { if(e.target.id === 'cardOverlay') close(); };
+}
+
+function openCardEditor(cardId){
+  const card = cardsCatalog.cards.find(c => c.id === cardId);
+  if(!card) return;
+  const hue = (card.hue !== undefined && card.hue !== null && card.hue !== '') ? Number(card.hue) : hashHue(card.name);
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>Modifier la carte</h3>
+        <label>Nom</label>
+        <input type="text" id="edName" value="${escapeHtml(card.name)}">
+        <label>Rareté</label>
+        <select id="edRar" class="selectBox" style="width:100%;margin-bottom:15px;">${RARITY_KEYS.map(k => `<option value="${k}" ${card.rarity === k ? 'selected' : ''}>${RARITIES[k].label}</option>`).join('')}</select>
+        <label>Description</label>
+        <textarea id="edDesc" placeholder="Une ou deux phrases">${escapeHtml(card.desc || '')}</textarea>
+        <label>Teinte du visuel de secours (utilisée quand il n'y a pas d'image)</label>
+        <input type="range" id="edHue" min="0" max="360" value="${hue}" style="width:100%;margin-bottom:8px;">
+        <div id="edSwatch" style="height:14px;border-radius:999px;background:hsl(${hue} 65% 52%);margin-bottom:18px;"></div>
+        <div class="modalbtns">
+          <button class="btn ghost" id="edCancel">Annuler</button>
+          <button class="btn primary" id="edSave">Enregistrer</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('edCancel').onclick = closeModal;
+  document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay') closeModal(); };
+  document.getElementById('edHue').oninput = (e) => { document.getElementById('edSwatch').style.background = `hsl(${e.target.value} 65% 52%)`; };
+  document.getElementById('edSave').onclick = async () => {
+    const name = document.getElementById('edName').value.trim();
+    if(!name) return;
+    await loadCards();
+    const c = cardsCatalog.cards.find(x => x.id === cardId);
+    if(!c) return;
+    c.name = name;
+    c.rarity = document.getElementById('edRar').value;
+    c.desc = document.getElementById('edDesc').value.trim();
+    c.hue = parseInt(document.getElementById('edHue').value, 10);
+    await saveCards();
+    closeModal();
+    drawBoosters();
+  };
+}
+
+async function fillTemplateDescriptions(colId){
+  await loadCards();
+  const index = {};
+  COLLECTION_TEMPLATES.forEach(t => RARITY_KEYS.forEach(k => (t[k] || []).forEach(it => { index[normName(it.n)] = it; })));
+  let n = 0;
+  cardsCatalog.cards.filter(c => c.collectionId === colId).forEach(c => {
+    const it = index[normName(c.name)];
+    if(!it) return;
+    let touched = false;
+    if(!c.desc){ c.desc = it.d; touched = true; }
+    if(c.hue === undefined || c.hue === null || c.hue === ''){ c.hue = it.h; touched = true; }
+    if(touched) n++;
+  });
+  await saveCards();
+  return n;
 }
 
 async function renderBoosters(){
@@ -3077,6 +3340,7 @@ function drawBoostersCollection(body){
     </div>
     <div class="tcgGrid">${shown.map(c => { const n = myCardCount(c.id); return cardTileHtml(c, {locked: n === 0, count: n}); }).join('')}</div>
   `;
+  body.querySelectorAll('.tcgGrid .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, false); });
   body.querySelectorAll('#colTabs .tab').forEach(b => { b.onclick = () => { boostersColId = b.dataset.c; boostersFilter = 'all'; drawBoosters(); }; });
   body.querySelectorAll('#rarFilter .tab').forEach(b => { b.onclick = () => { boostersFilter = b.dataset.r; drawBoosters(); }; });
   const rb = document.getElementById('recycleBtn');
@@ -3196,7 +3460,7 @@ function drawBoostersManage(body){
       <div class="hint" id="newColStatus" style="min-height:16px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn primary" id="newColBtn" style="flex:none;">Créer</button>
-        <button class="addbtn" id="marvelTplBtn">Modèle Marvel (MCU), 32 personnages</button>
+        ${COLLECTION_TEMPLATES.map(t => `<button class="addbtn" id="${t.key}TplBtn">Modèle ${escapeHtml(t.name)}, ${templateCount(t)} personnages</button>`).join('')}
       </div>
     </div>
     ${cols.length ? `<div class="tabs" id="manageTabs" style="margin-bottom:16px;">${cols.map(c => `<button class="tab ${c.id === manageColId ? 'active' : ''}" data-c="${c.id}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
@@ -3212,6 +3476,7 @@ function drawBoostersManage(body){
       <div class="hint" id="colStatus" style="min-height:16px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn primary" id="colSaveBtn" style="flex:none;">Enregistrer</button>
+        <button class="addbtn" id="fillDescBtn">Remplir les descriptions manquantes (modèles)</button>
         <button class="btn ghost" id="colDeleteBtn" style="flex:none;color:var(--rate-red);">Supprimer la collection</button>
       </div>
     </div>
@@ -3238,6 +3503,7 @@ function drawBoostersManage(body){
           <select class="selectBox tcgRar" data-rar="${c.id}">${RARITY_KEYS.map(k => `<option value="${k}" ${c.rarity === k ? 'selected' : ''}>${RARITIES[k].label}</option>`).join('')}</select>
           <div class="tcgBtns">
             <button class="addbtn" data-img="${c.id}">Image</button>
+            <button class="addbtn" data-edit="${c.id}">Infos</button>
             <button class="btn ghost" data-del="${c.id}" style="flex:none;color:var(--rate-red);">Supprimer</button>
           </div>
         </div>`).join('')}
@@ -3265,19 +3531,21 @@ function wireBoostersManage(col, cards){
     redraw();
   };
 
-  g('marvelTplBtn').onclick = async () => {
-    await loadCards();
-    let name = MARVEL_TEMPLATE.name, i = 2;
-    while(cardsCatalog.collections.some(c => c.name === name)) name = `${MARVEL_TEMPLATE.name} ${i++}`;
-    const c = {id: cardUid('col-'), name, price: 100, perPack: 5};
-    cardsCatalog.collections.push(c);
-    RARITY_KEYS.forEach(k => {
-      (MARVEL_TEMPLATE[k] || []).forEach(n => cardsCatalog.cards.push({id: cardUid('card-'), collectionId: c.id, name: n, rarity: k, image: '', imagePath: ''}));
-    });
-    manageColId = c.id;
-    await saveCards();
-    redraw();
-  };
+  COLLECTION_TEMPLATES.forEach(t => {
+    g(t.key + 'TplBtn').onclick = async () => {
+      await loadCards();
+      let name = t.name, i = 2;
+      while(cardsCatalog.collections.some(c => c.name === name)) name = `${t.name} ${i++}`;
+      const c = {id: cardUid('col-'), name, price: 100, perPack: 5};
+      cardsCatalog.collections.push(c);
+      RARITY_KEYS.forEach(k => {
+        (t[k] || []).forEach(it => cardsCatalog.cards.push({id: cardUid('card-'), collectionId: c.id, name: it.n, rarity: k, desc: it.d, hue: it.h, image: '', imagePath: ''}));
+      });
+      manageColId = c.id;
+      await saveCards();
+      redraw();
+    };
+  });
 
   const tabsEl = g('manageTabs');
   if(tabsEl) tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { manageColId = b.dataset.c; redraw(); }; });
@@ -3295,6 +3563,14 @@ function wireBoostersManage(col, cards){
     c.perPack = Math.min(10, Math.max(1, parseInt(g('colPer').value, 10) || 5));
     await saveCards();
     redraw();
+  };
+
+  g('fillDescBtn').onclick = async () => {
+    const st = g('colStatus');
+    const n = await fillTemplateDescriptions(col.id);
+    st.style.color = 'var(--rate-green)';
+    st.textContent = n ? `${n} carte${n > 1 ? 's' : ''} complétée${n > 1 ? 's' : ''}.` : 'Rien à compléter.';
+    if(n) drawBoosters();
   };
 
   g('colDeleteBtn').onclick = async () => {
@@ -3368,6 +3644,8 @@ function wireBoostersManage(col, cards){
       catch(e){ btn.textContent = 'Échec'; console.error(e); }
     });
   });
+  document.querySelectorAll('[data-edit]').forEach(btn => { btn.onclick = () => openCardEditor(btn.dataset.edit); });
+  document.querySelectorAll('.tcgWrap .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, true); });
   document.querySelectorAll('[data-del]').forEach(btn => {
     btn.onclick = async () => {
       await loadCards();
