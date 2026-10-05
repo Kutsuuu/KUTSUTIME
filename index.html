@@ -2906,8 +2906,6 @@ let fanartList = [];
 let fanartDraft = {file: null, preview: ''};
 
 const CARDS_PER_PACK = 6;
-const HOLO_CHANCE = 0.12;        // chance d'être holographique, pour chacune des cartes éligibles (voir SLOT_ODDS)
-
 /* boosters spéciaux : une seule tirée au sort à chaque ouverture */
 const GOLD_CHANCE = 0.0001;      // 0,01 % : booster Gold
 const GOLD_CARDS = 7;            // 5 Légendaires, puis 50 % d'Ultime sur l'avant-dernière, Ultime assuré sur la dernière
@@ -2929,17 +2927,17 @@ const RARITY_KEYS = ['commune', 'rare', 'epique', 'legendaire', 'ultime'];
 
 /* Probabilités (en %) de chaque rareté, carte par carte, en partant de la FIN du booster.
    Index 0 = dernière carte, 1 = avant-dernière, etc. Les cartes au-delà de la 6e en partant de la fin
-   utilisent la dernière ligne. Chaque ligne fait 100 %.
-   - Légendaire : seulement sur les 2 dernières cartes (1 % chacune)
-   - Ultime     : seulement sur la dernière carte (0,05 %) */
-const H_PCT = HOLO_CHANCE * 100;
+   utilisent la dernière ligne. Chaque ligne fait 100 % (la part libérée par une rareté va à Rare).
+   - Légendaire : seulement sur les 2 dernières cartes (1,25 % chacune)
+   - Ultime     : seulement sur la dernière carte (0,05 %)
+   - holo       : chance d'être holographique, seulement sur les 3 dernières cartes (de 5 % à 8 %) */
 const SLOT_ODDS = [
-  {commune: 0,  rare: 55, epique: 43.95, legendaire: 1, ultime: 0.05, holo: H_PCT},
-  {commune: 25, rare: 52, epique: 22,    legendaire: 1, ultime: 0,    holo: H_PCT},
-  {commune: 58, rare: 36, epique: 6,     legendaire: 0, ultime: 0,    holo: H_PCT},
-  {commune: 75, rare: 24, epique: 1,     legendaire: 0, ultime: 0,    holo: 0},
-  {commune: 85, rare: 15, epique: 0,     legendaire: 0, ultime: 0,    holo: 0},
-  {commune: 92, rare: 8,  epique: 0,     legendaire: 0, ultime: 0,    holo: 0}
+  {commune: 0,  rare: 64.75, epique: 33.95, legendaire: 1.25, ultime: 0.05, holo: 8},
+  {commune: 25, rare: 59.75, epique: 14,    legendaire: 1.25, ultime: 0,    holo: 6.5},
+  {commune: 58, rare: 36,    epique: 6,     legendaire: 0,    ultime: 0,    holo: 5},
+  {commune: 75, rare: 24,    epique: 1,     legendaire: 0,    ultime: 0,    holo: 0},
+  {commune: 85, rare: 15,    epique: 0,     legendaire: 0,    ultime: 0,    holo: 0},
+  {commune: 92, rare: 8,     epique: 0,     legendaire: 0,    ultime: 0,    holo: 0}
 ];
 const HOLO_LAST_SLOTS = SLOT_ODDS.filter(r => r.holo > 0).length;   // holographiques : uniquement sur les dernières cartes
 
@@ -3500,7 +3498,7 @@ function drawBoostersOpen(body){
         </div>`;
       }).join('')}
     </div>
-    <div class="hint" style="margin-top:18px;">Les cartes les plus rares arrivent en fin de booster · holographiques possibles sur les ${HOLO_LAST_SLOTS} dernières cartes (${Math.round(HOLO_CHANCE * 100)} % chacune)<br>À chaque ouverture : ${fmtPct(GOLD_CHANCE * 100)} de booster Gold (${GOLD_CARDS} cartes Légendaires, Ultime assuré sur la dernière) · ${fmtPct(DEVIANT_CHANCE * 100)} de booster Déviant (de 1 à ${DEVIANT_MAX_EXTRA} cartes en plus)</div>
+    <div class="hint" style="margin-top:18px;">Les cartes les plus rares arrivent en fin de booster · holographiques possibles sur les ${HOLO_LAST_SLOTS} dernières cartes (de ${fmtPct(Math.min(...SLOT_ODDS.filter(r => r.holo > 0).map(r => r.holo)))} à ${fmtPct(Math.max(...SLOT_ODDS.map(r => r.holo)))} selon la carte)<br>À chaque ouverture : ${fmtPct(GOLD_CHANCE * 100)} de booster Gold (${GOLD_CARDS} cartes Légendaires, Ultime assuré sur la dernière) · ${fmtPct(DEVIANT_CHANCE * 100)} de booster Déviant (de 1 à ${DEVIANT_MAX_EXTRA} cartes en plus)</div>
   ` : `<div class="empty"><div>Aucun booster disponible pour l'instant.</div></div>`);
   body.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => openBooster(b.dataset.open); });
   wireBoosterLogin();
