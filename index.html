@@ -2951,7 +2951,7 @@ async function loadWatchBoard(){
       const k = r.key.slice(WATCH_PREFIX.length);
       const v = r.value || {};
       return {key: k, display: v.display || k, points: v.points || 0, minutes: v.minutes || 0};
-    }).filter(r => r.points > 0).sort((x, y) => y.points - x.points).slice(0, 10);
+    }).filter(r => r.points > 0).sort((x, y) => y.points - x.points);
   }catch(e){ console.error('loadWatchBoard failed', e); }
 }
 
@@ -3104,7 +3104,6 @@ let boostersFilter = 'all';
 let boostersVersion = 'normal';
 let manageColId = null;
 let boosterLock = false;
-let collectorsBoard = [];
 let fanartList = [];
 let fanartDraft = {file: null, preview: ''};
 
@@ -4306,7 +4305,6 @@ async function loadCollectors(){
       return {key: r.key.slice(WATCH_PREFIX.length), display: v.display || r.key.slice(WATCH_PREFIX.length),
               unique: ids.size, holo: Object.keys(holo).length, total, packs: v.packs || 0};
     }).filter(r => r.unique > 0).sort((a, b) => (b.unique - a.unique) || (b.holo - a.holo) || (b.total - a.total));
-    collectorsBoard = allCollectors.slice(0, 10);
   }catch(e){ console.error('loadCollectors failed', e); }
 }
 
@@ -4327,7 +4325,7 @@ async function drawBoostersBoard(body){
   const listEl = document.getElementById('collList'), search = document.getElementById('collSearch');
   const render = () => {
     const q = normName(search.value);
-    const list = q ? allCollectors.filter(r => normName(r.display).includes(q) || normName(r.key).includes(q)).slice(0, 20) : collectorsBoard;
+    const list = q ? allCollectors.filter(r => normName(r.display).includes(q) || normName(r.key).includes(q)) : allCollectors;
     listEl.innerHTML = list.length ? list.map(r => {
       const rank = allCollectors.indexOf(r);
       return `
