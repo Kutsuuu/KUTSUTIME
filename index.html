@@ -3580,6 +3580,7 @@ function hashHue(str){
 function cardTileHtml(card, o = {}){
   const r = RARITIES[card.rarity] || RARITIES.commune;
   const locked = !!o.locked;
+  const showName = !locked || !!o.reveal || isCreatorAccount;       // carte manquante : nom caché
   const holo = !locked && !!o.holo;
   const hue = (card.hue !== undefined && card.hue !== null && card.hue !== '') ? Number(card.hue) : hashHue(card.name);
   const hasImg = !locked && !!card.image;
@@ -3588,7 +3589,7 @@ function cardTileHtml(card, o = {}){
   return `
     <div class="tcg r-${card.rarity} ${locked ? 'locked' : ''} ${holo ? 'holo' : ''}" data-card="${card.id}">
       <div class="art ${(hasImg || locked) ? '' : 'noimg'}" ${artStyle}>${inner}${(!locked && card.artist) ? `<span class="credit">par ${escapeHtml(card.artist)}</span>` : ''}${holo ? '<span class="holotag">HOLO</span>' : ''}</div>
-      <div class="nm">${escapeHtml(card.name)}</div>
+      <div class="nm">${showName ? escapeHtml(card.name) : '?'}</div>
       <div class="rr">${r.label}</div>
       ${holo ? '<div class="foil"></div><div class="glare"></div>' : ''}
       ${o.count > 1 ? `<span class="cnt">x${o.count}</span>` : ''}
@@ -3641,17 +3642,17 @@ function openCardDetail(cardId, preview, startHolo, view){
     root.innerHTML = `
       <div class="overlay packOverlay" id="cardOverlay">
         <div class="cardDetail">
-          <div class="cardBig">${cardTileHtml(card, {locked: !owned, count: preview ? 0 : count, holo: holoView})}</div>
+          <div class="cardBig">${cardTileHtml(card, {locked: !owned, count: preview ? 0 : count, holo: holoView, reveal: ownedAny})}</div>
           <div class="cardInfo r-${card.rarity}">
             <div class="packTitle" style="text-align:left;margin-bottom:8px;">${escapeHtml(col ? col.name : '')}${view ? ' · ' + escapeHtml(view.owner) : ''}</div>
-            <h3 style="margin-bottom:4px;">${escapeHtml(card.name)}</h3>
+            <h3 style="margin-bottom:4px;">${(ownedAny || isCreatorAccount) ? escapeHtml(card.name) : '?'}</h3>
             <div class="cardRar">${r.label}</div>
             <div class="tabs" id="verSwitch" style="margin-bottom:14px;">
               <button class="tab ${!holoView ? 'active' : ''}" data-h="0">Normale${preview ? '' : ` (${nN})`}</button>
               <button class="tab ${holoView ? 'active' : ''}" data-h="1">Holographique${preview ? '' : ` (${nH})`}</button>
             </div>
             <div class="cardDesc">${ownedAny ? escapeHtml(card.desc || 'Pas encore de description.') : "Obtiens cette carte pour débloquer sa description."}</div>
-            ${card.artist ? `<div class="cardMeta">Illustration de ${escapeHtml(card.artist)}</div>` : ''}
+            ${(card.artist && (ownedAny || isCreatorAccount)) ? `<div class="cardMeta">Illustration de ${escapeHtml(card.artist)}</div>` : ''}
             <div class="cardMeta">${preview ? 'Aperçu' : (owned ? `Exemplaires : ${count}` : (view ? 'Pas dans sa collection' : 'Pas encore obtenue'))}${(!preview && !view && count > 1) ? ` · Recyclage : ${cardValue(card, holoView)} ${WATCH_CURRENCY} par doublon` : ''}</div>
             <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>
           </div>
@@ -4276,7 +4277,7 @@ function drawBoostersCollection(body, view){
       <button class="tab ${boostersFilter === 'all' ? 'active' : ''}" data-r="all">Toutes</button>
       ${RARITY_KEYS.map(k => `<button class="tab ${boostersFilter === k ? 'active' : ''}" data-r="${k}">${RARITIES[k].label}</button>`).join('')}
     </div>
-    <div class="tcgGrid">${shown.map(c => { const n = recCount(rec, c.id, isHolo); return cardTileHtml(c, {locked: n === 0, count: n, holo: isHolo}); }).join('')}</div>
+    <div class="tcgGrid">${shown.map(c => { const n = recCount(rec, c.id, isHolo); return cardTileHtml(c, {locked: n === 0, count: n, holo: isHolo, reveal: recCount(rec, c.id, false) + recCount(rec, c.id, true) > 0}); }).join('')}</div>
   `;
   body.querySelectorAll('#colTabs .tab').forEach(b => { b.onclick = () => { boostersColId = b.dataset.c; boostersFilter = 'all'; drawBoosters(); }; });
   body.querySelectorAll('#verTabs .tab').forEach(b => { b.onclick = () => { boostersVersion = b.dataset.v; drawBoosters(); }; });
