@@ -776,6 +776,8 @@
   .codeMeta{flex:1;min-width:180px;font-size:12.5px;color:var(--text-dim);}
   .codeBtns{display:flex;gap:8px;align-items:center;}
   #codeGenBtn{margin-top:8px;}
+  .pcRow{align-items:flex-end;}
+  .pcBox input{margin-bottom:0;}
   @media (max-width:520px){ .codeGenRow{flex-direction:column;gap:0;} }
   #codeUnit{padding:12px 14px;}
   .codeBig{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:34px;letter-spacing:6px;color:var(--gold);margin:18px 0 8px;}
@@ -1560,7 +1562,7 @@ function wireNav(ctx){
     const q = document.getElementById('navQuit');
     if(q) q.onclick = async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if(session) await supabaseClient.auth.signOut();
+      if(session) await supabaseClient.auth.signOut(); twForget();
       viewerName = null;
       isCreatorAccount = false;
       goHome();
@@ -2912,7 +2914,7 @@ function openCreatorSettings(){
   document.getElementById('cancelBtn').onclick = closeModal;
   document.getElementById('overlay').onclick = (e) => { if(e.target.id==='overlay') closeModal(); };
   document.getElementById('logoutBtn').onclick = async () => {
-    await supabaseClient.auth.signOut();
+    await supabaseClient.auth.signOut(); twForget();
     isCreatorAccount = false;
     viewerName = null;
     closeModal();
@@ -2924,6 +2926,208 @@ function openCreatorSettings(){
     closeModal();
     if(mode === 'stream-view') render();
   };
+}
+
+/* ---------- POINTS DE CHAÎNE TWITCH -> RYOS ----------
+   Le créateur autorise le site (une fois par live, ~4 h) puis crée des récompenses de chaîne « N Ryos ».
+   Pendant que le site est ouvert sur son compte, chaque récompense utilisée est créditée au viewer puis validée chez Twitch.
+   Rien n'est perdu si le site est fermé : les échanges en attente sont traités à la prochaine ouverture. */
+const TW_SCOPES = 'channel:read:redemptions channel:manage:redemptions';
+const TW_TOKEN_KEY = 'kutsu_tw_token';
+const PC_POLL_MS = 10000;
+let twState = {status: 'none', login: '', userId: '', clientId: ''};     // none | ok | noscope | expired | error
+let pcTimer = null, pcBusy = false;
+let pcStats = {count: 0, ryos: 0, last: ''};
+
+function twToken(){ try{ return sessionStorage.getItem(TW_TOKEN_KEY) || ''; }catch(e){ return ''; } }
+function twForget(){ try{ sessionStorage.removeItem(TW_TOKEN_KEY); }catch(e){} stopPcTimer(); twState = {status: 'none', login: '', userId: '', clientId: ''}; }
+
+async function twValidate(){
+  const tok = twToken();
+  if(!tok){ twState = {status: 'none', login: '', userId: '', clientId: ''}; return twState; }
+  try{
+    const res = await fetch('https://id.twitch.tv/oauth2/validate', {headers: {Authorization: 'OAuth ' + tok}});
+    if(res.status === 401){ twState = {status: 'expired', login: '', userId: '', clientId: ''}; return twState; }
+    const j = await res.json();
+    const scopes = j.scopes || [];
+    const okScope = scopes.includes('channel:manage:redemptions');
+    twState = {status: okScope ? 'ok' : 'noscope', login: j.login || '', userId: j.user_id || '', clientId: j.client_id || ''};
+  }catch(e){ twState = {status: 'error', login: '', userId: '', clientId: ''}; }
+  return twState;
+}
+async function twApi(method, path, params, body){
+  const res = await fetch('https://api.twitch.tv/helix/' + path + '?' + new URLSearchParams(params), {
+    method,
+    headers: Object.assign({Authorization: 'Bearer ' + twToken(), 'Client-Id': twState.clientId}, body ? {'Content-Type': 'application/json'} : {}),
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(res.status === 204) return {};
+  const j = await res.json().catch(() => ({}));
+  if(!res.ok){
+    const err = new Error(j.message || ('Erreur Twitch ' + res.status));
+    err.status = res.status;
+    if(res.status === 401){ twState.status = 'expired'; stopPcTimer(); renderPcPanel(); }
+    throw err;
+  }
+  return j;
+}
+async function twConnect(){
+  await supabaseClient.auth.signInWithOAuth({provider: 'twitch', options: {scopes: TW_SCOPES, redirectTo: window.location.origin + window.location.pathname}});
+}
+
+/* crédit d'une récompense : une seule fois par échange (marqué dans la ligne du viewer), puis vérifié car le viewer écrit aussi dans cette ligne */
+async function creditRedemption(key, display, redId, amount){
+  const k = WATCH_PREFIX + key;
+  for(let attempt = 0; attempt < 3; attempt++){
+    const rec = (await kvGet(k)) || {points: 0, minutes: 0, lastTick: 0};
+    rec.pcRedeemed = rec.pcRedeemed || {};
+    if(rec.pcRedeemed[redId]) return attempt === 0 ? 'dup' : 'ok';
+    rec.points = (rec.points || 0) + amount;
+    rec.pcTotal = (rec.pcTotal || 0) + amount;
+    rec.display = rec.display || display;
+    rec.pcRedeemed[redId] = Date.now();
+    const ids = Object.keys(rec.pcRedeemed);
+    if(ids.length > 40) ids.sort((a, b) => rec.pcRedeemed[a] - rec.pcRedeemed[b]).slice(0, ids.length - 40).forEach(i => { delete rec.pcRedeemed[i]; });
+    await kvSet(k, rec);
+    await sleepMs(900);
+    const back = await kvGet(k);
+    if(back && back.pcRedeemed && back.pcRedeemed[redId]) return 'ok';
+  }
+  return 'fail';
+}
+async function pcHandle(red, rw){
+  const login = String(red.user_login || '').toLowerCase(), disp = String(red.user_name || '').toLowerCase();
+  const key = [login, disp].find(k => k && viewerProfiles[k]) || login || disp;
+  if(!key) return;
+  const r = await creditRedemption(key, red.user_name || red.user_login, red.id, rw.ryos);
+  if(r === 'fail') return;                       // on réessaiera au prochain passage, l'échange reste en attente chez Twitch
+  await twApi('PATCH', 'channel_points/custom_rewards/redemptions', {id: red.id, broadcaster_id: twState.userId, reward_id: rw.id}, {status: 'FULFILLED'});
+  if(r === 'ok'){
+    pcStats.count++; pcStats.ryos += rw.ryos; pcStats.last = `${red.user_name || red.user_login} : +${rw.ryos} ${WATCH_CURRENCY}`;
+    const el = document.getElementById('pcStats');
+    if(el) el.textContent = pcStatsText();
+  }
+}
+function pcStatsText(){ return pcStats.count ? `Cette session : ${pcStats.count} échange${pcStats.count > 1 ? 's' : ''}, ${pcStats.ryos} ${WATCH_CURRENCY} crédités (dernier : ${pcStats.last}).` : 'Aucun échange traité pour l\'instant.'; }
+async function pcPoll(){
+  if(pcBusy || !isCreatorAccount || twState.status !== 'ok') return;
+  const rewards = (creatorSettings.pointRewards || []).filter(r => r.enabled !== false);
+  if(!rewards.length || creatorSettings.pointsExchangeOn === false) return;
+  pcBusy = true;
+  try{
+    for(const rw of rewards){
+      let r;
+      try{ r = await twApi('GET', 'channel_points/custom_rewards/redemptions', {broadcaster_id: twState.userId, reward_id: rw.id, status: 'UNFULFILLED', first: '50'}); }
+      catch(e){ if(e.status === 401) return; continue; }       // récompense supprimée sur Twitch ou erreur passagère : on passe à la suivante
+      const list = r.data || [];
+      if(!list.length) continue;
+      await loadProfiles();
+      for(const red of list){
+        try{ await pcHandle(red, rw); }catch(e){ if(e.status === 401) return; console.error('pcHandle', e); }
+      }
+    }
+  } finally { pcBusy = false; }
+}
+function startPcTimer(){
+  stopPcTimer();
+  if(!isCreatorAccount || twState.status !== 'ok') return;
+  pcTimer = setInterval(pcPoll, PC_POLL_MS);
+  pcPoll();
+}
+function stopPcTimer(){ if(pcTimer){ clearInterval(pcTimer); pcTimer = null; } }
+async function pcInit(){
+  await twValidate();
+  renderPcPanel();
+  startPcTimer();
+}
+
+async function pcCreateReward(ryos, cost, perStream){
+  const body = {title: `${ryos} Ryos`, cost, prompt: `Échange tes points de chaîne contre ${ryos} ${WATCH_CURRENCY} sur le site (crédités automatiquement pendant le live).`, is_enabled: true, is_user_input_required: false};
+  if(perStream){ body.is_max_per_user_per_stream_enabled = true; body.max_per_user_per_stream = perStream; }
+  const r = await twApi('POST', 'channel_points/custom_rewards', {broadcaster_id: twState.userId}, body);
+  const rw = (r.data || [])[0];
+  if(!rw) throw new Error('Twitch n\'a pas renvoyé la récompense.');
+  await loadSettings();
+  creatorSettings.pointRewards = (creatorSettings.pointRewards || []).concat([{id: rw.id, title: rw.title, cost, ryos, perStream: perStream || 0, enabled: true}]);
+  await saveSettings();
+}
+
+/* ligne d'info côté viewer (page Stream) */
+function pcInfoHtml(){
+  const rewards = (creatorSettings.pointRewards || []).filter(r => r.enabled !== false);
+  if(!rewards.length || creatorSettings.pointsExchangeOn === false) return '';
+  return `<div class="hint pcInfo" style="text-align:left;margin:10px 0 0;">Points de chaîne : ${rewards.map(r => `${Number(r.cost).toLocaleString('fr-FR')} points = ${r.ryos} ${WATCH_CURRENCY}`).join(' · ')} (récompenses de chaîne sur Twitch, crédités pendant le live).</div>`;
+}
+
+function renderPcPanel(){
+  const el = document.getElementById('pcPanel');
+  if(!el || !isCreatorAccount) return;
+  const rewards = creatorSettings.pointRewards || [];
+  const on = creatorSettings.pointsExchangeOn !== false;
+  const st = twState.status;
+  const line = {
+    none: 'Pas encore connecté : autorise le site à gérer tes récompenses de points de chaîne (chaîne Affilié ou Partenaire requise).',
+    ok: `Connecté à Twitch (${escapeHtml(twState.login)}). Garde le site ouvert pendant le live : les échanges sont traités toutes les ${PC_POLL_MS / 1000} s.`,
+    noscope: "Autorisation incomplète : reconnecte-toi en acceptant la gestion des récompenses.",
+    expired: 'Connexion Twitch expirée (environ 4 h) : reconnecte-toi pour reprendre les échanges.',
+    error: 'Impossible de joindre Twitch pour le moment. Réessaie dans un instant.'
+  }[st];
+  el.innerHTML = `
+    <div class="twitchbox pcBox" style="max-width:640px;margin-top:26px;">
+      <div class="sectionLabel" style="margin-top:0;">Points de chaîne → ${WATCH_CURRENCY}</div>
+      <div class="hint" id="pcStatus" style="text-align:left;color:${st === 'ok' ? 'var(--rate-green)' : 'var(--text-dim)'};">${line}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px;">
+        <button class="btn primary" id="pcConnect" style="flex:none;">${st === 'ok' ? 'Reconnecter Twitch' : 'Connecter Twitch'}</button>
+        ${st === 'ok' ? `<button class="addbtn" id="pcToggle">${on ? 'Mettre les échanges en pause' : 'Reprendre les échanges'}</button>` : ''}
+      </div>
+      ${rewards.length ? `<div class="sectionLabel">Récompenses créées</div>${rewards.map(r => `
+        <div class="codeItem" data-pc="${escapeHtml(r.id)}">
+          <div class="codeVal" style="font-size:15px;letter-spacing:0;min-width:110px;">${escapeHtml(r.title)}</div>
+          <div class="codeMeta">${Number(r.cost).toLocaleString('fr-FR')} points de chaîne → ${r.ryos} ${WATCH_CURRENCY}${r.perStream ? ` · max ${r.perStream} par viewer et par live` : ''} · ${r.enabled === false ? 'en pause' : 'active'}</div>
+          <div class="codeBtns"><button class="addbtn" data-pc-toggle="${escapeHtml(r.id)}" ${st === 'ok' ? '' : 'disabled'}>${r.enabled === false ? 'Reprendre' : 'Mettre en pause'}</button><button class="btn ghost" data-pc-del="${escapeHtml(r.id)}" style="flex:none;color:var(--rate-red);" ${st === 'ok' ? '' : 'disabled'}>Supprimer</button></div>
+        </div>`).join('')}` : ''}
+      ${st === 'ok' ? `
+        <div class="sectionLabel">Nouvelle récompense</div>
+        <div class="row2 codeGenRow pcRow">
+          <div style="flex:1;"><label>${WATCH_CURRENCY} donnés</label><input type="text" inputmode="numeric" id="pcRyos" value="100"></div>
+          <div style="flex:1;"><label>Coût en points de chaîne</label><input type="text" inputmode="numeric" id="pcCost" value="1000"></div>
+          <div style="flex:1;"><label>Max par viewer et par live (option)</label><input type="text" inputmode="numeric" id="pcMax" placeholder="illimité"></div>
+        </div>
+        <div class="hint" id="pcMsg" style="min-height:16px;text-align:left;"></div>
+        <button class="btn primary" id="pcCreate" style="flex:none;">Créer la récompense sur Twitch</button>` : ''}
+      <div class="hint" id="pcStats" style="text-align:left;margin-top:12px;">${pcStatsText()}</div>
+    </div>`;
+  const g = (id) => document.getElementById(id);
+  g('pcConnect').onclick = () => twConnect();
+  if(g('pcToggle')) g('pcToggle').onclick = async () => { await loadSettings(); creatorSettings.pointsExchangeOn = !(creatorSettings.pointsExchangeOn !== false); await saveSettings(); renderPcPanel(); if(creatorSettings.pointsExchangeOn !== false) pcPoll(); };
+  if(g('pcCreate')) g('pcCreate').onclick = async () => {
+    const msg = g('pcMsg'), bad = (t) => { msg.style.color = 'var(--rate-red)'; msg.textContent = t; };
+    const ryos = parseInt(g('pcRyos').value, 10), cost = parseInt(g('pcCost').value, 10), max = parseInt(g('pcMax').value, 10) || 0;
+    if(!(ryos >= 1 && ryos <= 100000)) return bad(`Choisis entre 1 et 100 000 ${WATCH_CURRENCY}.`);
+    if(!(cost >= 1 && cost <= 1000000)) return bad('Le coût doit être entre 1 et 1 000 000 de points.');
+    g('pcCreate').disabled = true; msg.style.color = 'var(--text-dim)'; msg.textContent = 'Création...';
+    try{ await pcCreateReward(ryos, cost, max); renderPcPanel(); }
+    catch(e){ g('pcCreate').disabled = false; bad(e.message || 'Création impossible.'); }
+  };
+  el.querySelectorAll('[data-pc-toggle]').forEach(b => { b.onclick = async () => {
+    const id = b.dataset.pcToggle; b.disabled = true;
+    await loadSettings();
+    const rw = (creatorSettings.pointRewards || []).find(r => r.id === id); if(!rw) return renderPcPanel();
+    const enable = rw.enabled === false;
+    try{ await twApi('PATCH', 'channel_points/custom_rewards', {broadcaster_id: twState.userId, id}, {is_enabled: enable}); rw.enabled = enable; await saveSettings(); }
+    catch(e){ const m = document.getElementById('pcStatus'); if(m) m.textContent = e.message; }
+    renderPcPanel();
+  }; });
+  el.querySelectorAll('[data-pc-del]').forEach(b => { b.onclick = async () => {
+    const id = b.dataset.pcDel;
+    if(!confirm('Supprimer cette récompense sur Twitch ? Les échanges en attente seront remboursés aux viewers.')) return;
+    b.disabled = true;
+    try{ await twApi('DELETE', 'channel_points/custom_rewards', {broadcaster_id: twState.userId, id}); }catch(e){ if(e.status !== 404){ const m = document.getElementById('pcStatus'); if(m) m.textContent = e.message; renderPcPanel(); return; } }
+    await loadSettings();
+    creatorSettings.pointRewards = (creatorSettings.pointRewards || []).filter(r => r.id !== id);
+    await saveSettings();
+    renderPcPanel();
+  }; });
 }
 
 /* ---------- STREAM (lecteur Twitch intégré) ---------- */
@@ -2995,7 +3199,7 @@ function drawWatchPanel(){
       <div class="lbPts">${r.points} ${WATCH_CURRENCY}</div>
     </div>`).join('') : `<div class="empty" style="padding:24px 16px;"><div>Personne n'a encore de ${WATCH_CURRENCY}.</div></div>`;
 
-  barEl.innerHTML = `<div class="watchBar">${left}${status}</div>`;
+  barEl.innerHTML = `<div class="watchBar">${left}${status}</div>${inCreator ? '' : pcInfoHtml()}`;
   boardEl.innerHTML = `
     <div class="sectionLabel">Classement ${WATCH_CURRENCY}</div>
     ${board}
@@ -3089,9 +3293,11 @@ function renderStreamView(){
         </div>
         <div id="watchBoard"></div>
       `}
+      ${(inCreator && isCreatorAccount) ? '<div id="pcPanel"></div>' : ''}
     </div>
   `;
   wireNav(inCreator ? 'creator' : 'viewer');
+  renderPcPanel();
   if(channel) startWatchTimer();
 }
 
@@ -7230,6 +7436,8 @@ async function processSession(sessionPromise){
   if(isCreator){
     isCreatorAccount = true;
     mode = 'creator';
+    // jeton Twitch (uniquement pour le créateur, uniquement dans cet onglet) : sert à gérer les récompenses de points de chaîne
+    if(session.provider_token){ try{ sessionStorage.setItem(TW_TOKEN_KEY, session.provider_token); }catch(e){} }
   } else if(identNick){
     mode = 'viewer';
   }
@@ -7256,6 +7464,7 @@ async function processSession(sessionPromise){
   streamViewFromCreator = isCreatorAccount;
   mode = 'stream-view';
   wrapEl.className = 'wrap';
+  if(isCreatorAccount) pcInit();
 
   // 2) tout le reste se charge en parallèle, en arrière-plan : les autres pages attendent ces données si besoin
   dataLoaded = false;
