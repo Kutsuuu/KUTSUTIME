@@ -750,16 +750,25 @@
   .lbRow.clickable{cursor:pointer;}
   .lbRow.clickable:hover{border-color:var(--gold);}
   .lbGo{font-size:12px;font-weight:600;color:var(--gold);flex:none;}
-  .sellBox{margin:4px 0 16px;padding:12px 14px;background:var(--panel-3);border-radius:var(--r-md);}
-  .sellRow{display:flex;gap:10px;align-items:center;margin-top:6px;}
-  .sellRow input{flex:1;min-width:0;margin:0 !important;}
   .marketNote{padding:10px 16px;margin:0 0 14px;border-radius:var(--r-md);background:rgba(63,174,92,0.14);color:var(--rate-green);font-weight:600;font-size:13.5px;}
-  .mkFilters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
-  .mkFilters .collSearch{flex:1 1 200px;margin:0;}
-  .mkFilters .selectBox{flex:1 1 150px;}
   .mkGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;margin-bottom:10px;}
   .mkItem{display:flex;flex-direction:column;gap:7px;}
   .mkItem .tcg{cursor:pointer;}
+  .mkGrid.shop{grid-template-columns:repeat(3,minmax(0,1fr));max-width:760px;}
+  @media (max-width:560px){ .mkGrid.shop{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;} }
+  .mkGrid.small{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;}
+  .mkItem.selectable .tcg{cursor:pointer;}
+  .mkItem.selected .tcg{outline:3px solid var(--gold);outline-offset:2px;}
+  .tradeRow{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 16px;margin-bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);}
+  .tradeWho{font-weight:600;min-width:140px;font-size:14px;}
+  .tradePair{display:flex;align-items:center;gap:14px;}
+  .tradePair .mkItem{width:104px;}
+  .tradeArrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);}
+  .tradeSt{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:700;background:var(--panel-3);color:var(--text-dim);}
+  .tradeSt.accepted{background:rgba(63,174,92,0.15);color:var(--rate-green);}
+  .tradeSt.refused, .tradeSt.cancelled, .tradeSt.expired{background:rgba(229,72,77,0.12);color:var(--rate-red);}
+  .tradeCols{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:760px){ .tradeCols{grid-template-columns:1fr;} }
   .mkPrice{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--gold);text-align:center;}
   .mkSeller{font-size:11.5px;color:var(--text-dim);text-align:center;margin-top:-4px;}
   .codeItem{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);}
@@ -3109,7 +3118,7 @@ const DEVIANT_MAX_EXTRA = 6;     // de 1 à 6 cartes en plus
 const HOLO_MULT = 3;
 const MAX_PENDING_FANARTS = 3;
 const DAILY_MS = 24 * 60 * 60 * 1000;      // booster quotidien : 1 toutes les 24 h
-const APP_BUILD = 'v. 6 oct. 2026 · marché, brouillons';   // affiché en bas du menu : permet de vérifier quelle version est en ligne
+const APP_BUILD = 'v. 6 oct. 2026 · boutique, échanges';   // affiché en bas du menu : permet de vérifier quelle version est en ligne
 const CODE_PREFIX = 'code:';                // codes cadeaux créés par le créateur (key = code:<CODE>)
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // sans 0/O/1/I pour éviter les confusions
 const MAX_CODE_BOOSTERS = 50;
@@ -3127,12 +3136,12 @@ const RARITY_KEYS = ['commune', 'rare', 'epique', 'legendaire', 'ultime'];
 /* Probabilités (en %) de chaque rareté, carte par carte, en partant de la FIN du booster.
    Index 0 = dernière carte, 1 = avant-dernière, etc. Les cartes au-delà de la 6e en partant de la fin
    utilisent la dernière ligne. Chaque ligne fait 100 % (la part libérée par une rareté va à Rare).
-   - Légendaire : seulement sur les 2 dernières cartes (1,33 % chacune)
+   - Légendaire : seulement sur les 2 dernières cartes (0,75 % sur la 5e, 1,33 % sur la dernière)
    - Ultime     : seulement sur la dernière carte (0,05 %)
    - holo       : chance d'être holographique, seulement sur les 3 dernières cartes (de 5 % à 8 %) */
 const SLOT_ODDS = [
   {commune: 0,  rare: 64.67, epique: 33.95, legendaire: 1.33, ultime: 0.05, holo: 8},
-  {commune: 25, rare: 59.67, epique: 14,    legendaire: 1.33, ultime: 0,    holo: 6.5},
+  {commune: 25, rare: 60.25, epique: 14,    legendaire: 0.75, ultime: 0,    holo: 6.5},
   {commune: 58, rare: 36,    epique: 6,     legendaire: 0,    ultime: 0,    holo: 5},
   {commune: 75, rare: 24,    epique: 1,     legendaire: 0,    ultime: 0,    holo: 0},
   {commune: 85, rare: 15,    epique: 0,     legendaire: 0,    ultime: 0,    holo: 0},
@@ -3606,7 +3615,6 @@ function openCardDetail(cardId, preview, startHolo, view){
     const count = holoView ? nH : nN;
     const owned = count > 0;
     const ownedAny = preview || (nN + nH) > 0;
-    const canSell = !preview && !view && !!viewerName && !isCreatorAccount && count > 1 && isPublished(col);
     root.innerHTML = `
       <div class="overlay packOverlay" id="cardOverlay">
         <div class="cardDetail">
@@ -3622,12 +3630,6 @@ function openCardDetail(cardId, preview, startHolo, view){
             <div class="cardDesc">${ownedAny ? escapeHtml(card.desc || 'Pas encore de description.') : "Obtiens cette carte pour débloquer sa description."}</div>
             ${card.artist ? `<div class="cardMeta">Illustration de ${escapeHtml(card.artist)}</div>` : ''}
             <div class="cardMeta">${preview ? 'Aperçu' : (owned ? `Exemplaires : ${count}` : (view ? 'Pas dans sa collection' : 'Pas encore obtenue'))}${(!preview && !view && count > 1) ? ` · Recyclage : ${cardValue(card, holoView)} ${WATCH_CURRENCY} par doublon` : ''}</div>
-            ${canSell ? `
-              <div class="sellBox">
-                <label>Mettre un doublon en vente</label>
-                <div class="sellRow"><input type="text" inputmode="numeric" id="sellPrice" placeholder="Prix en ${WATCH_CURRENCY}" value="${Math.max(1, cardValue(card, holoView) * 2)}"><button class="btn primary" id="sellBtn" style="flex:none;">Vendre</button></div>
-                <div class="hint" id="sellMsg" style="min-height:16px;text-align:left;">Valeur de recyclage : ${cardValue(card, holoView)} ${WATCH_CURRENCY}</div>
-              </div>` : ''}
             <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>
           </div>
         </div>
@@ -3636,17 +3638,6 @@ function openCardDetail(cardId, preview, startHolo, view){
     document.getElementById('cardCloseBtn').onclick = close;
     document.getElementById('cardOverlay').onclick = (e) => { if(e.target.id === 'cardOverlay') close(); };
     document.querySelectorAll('#verSwitch .tab').forEach(b => { b.onclick = () => { holoView = b.dataset.h === '1'; draw(); }; });
-    const sb = document.getElementById('sellBtn');
-    if(sb) sb.onclick = async () => {
-      const msg = document.getElementById('sellMsg');
-      const price = parseInt(document.getElementById('sellPrice').value, 10);
-      if(!(price >= 1 && price <= MARKET_MAX_PRICE)){ msg.style.color = 'var(--rate-red)'; msg.textContent = `Prix entre 1 et ${MARKET_MAX_PRICE} ${WATCH_CURRENCY}.`; return; }
-      sb.disabled = true; msg.style.color = 'var(--text-dim)'; msg.textContent = 'Mise en vente...';
-      const res = await createListing(card.id, holoView, price);
-      if(!res.ok){ sb.disabled = false; msg.style.color = 'var(--rate-red)'; msg.textContent = res.msg; return; }
-      marketNote = `Annonce créée : ${card.name}${holoView ? ' (holo)' : ''} à ${price} ${WATCH_CURRENCY}.`;
-      closeModal(); boostersTab = 'market'; drawBoosters();
-    };
   };
   draw();
 }
@@ -3732,7 +3723,7 @@ async function fillTemplateDescriptions(colId){
 
 async function renderBoosters(){
   const inCreator = boostersViewFromCreator;
-  const valid = inCreator ? ['manage', 'test', 'codes', 'fanarts', 'board'] : ['open', 'collection', 'market', 'fanart', 'board'];
+  const valid = inCreator ? ['manage', 'test', 'codes', 'shop', 'fanarts', 'board'] : ['open', 'collection', 'shop', 'trade', 'fanart', 'board'];
   if(!valid.includes(boostersTab)) boostersTab = valid[0];
   app.innerHTML = `
     <div class="page">
@@ -3745,15 +3736,15 @@ async function renderBoosters(){
     </div>
   `;
   wireNav(inCreator ? 'creator' : 'viewer');
-  boostersViewUser = null; marketNote = '';
+  boostersViewUser = null; tradeNote = ''; shopNote = ''; tradeDraft = null;
   await loadCards();
   await loadWatchMine();
   if(inCreator) await loadFanarts();
   else if(viewerName){
-    // le vendeur encaisse ses ventes dès qu'il ouvre la page Boosters
-    await loadMarket();
-    const cl = await claimSales();
-    if(cl.n) marketNote = `Tes ventes : ${cl.n} carte${cl.n > 1 ? 's' : ''} vendue${cl.n > 1 ? 's' : ''}, +${cl.total} ${WATCH_CURRENCY} !`;
+    // le proposeur récupère le résultat de ses échanges dès qu'il ouvre la page Boosters
+    await loadTrades();
+    const cl = await claimTrades();
+    if(cl.note) tradeNote = cl.note;
   }
   drawBoosters();
 }
@@ -3767,14 +3758,15 @@ function drawBoosters(){
   if(!tabsEl || !body) return;
   const pendingN = fanartList.filter(f => f.status === 'pending').length;
   const tabs = inCreator
-    ? [['manage', 'Gérer'], ['test', 'Tester'], ['codes', 'Codes'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
-    : [['open', 'Boosters'], ['collection', 'Ma collection'], ['market', 'Marché'], ['fanart', 'Fan art'], ['board', 'Classement']];
+    ? [['manage', 'Gérer'], ['test', 'Tester'], ['codes', 'Codes'], ['shop', 'Boutique'], ['fanarts', 'Fan arts' + (pendingN ? ` (${pendingN})` : '')], ['board', 'Classement']]
+    : [['open', 'Boosters'], ['collection', 'Ma collection'], ['shop', 'Boutique'], ['trade', 'Échanges'], ['fanart', 'Fan art'], ['board', 'Classement']];
   tabsEl.innerHTML = tabs.map(([k, l]) => `<button class="tab ${boostersTab === k ? 'active' : ''}" data-t="${k}">${l}</button>`).join('');
   tabsEl.querySelectorAll('.tab').forEach(b => { b.onclick = () => { boostersTab = b.dataset.t; boostersViewUser = null; drawBoosters(); }; });
   const y = window.scrollY;
   if(boostersTab === 'open') drawBoostersOpen(body);
   else if(boostersTab === 'collection') drawBoostersCollection(body);
-  else if(boostersTab === 'market') drawBoostersMarket(body);
+  else if(boostersTab === 'shop') drawBoostersShop(body);
+  else if(boostersTab === 'trade') drawBoostersTrade(body);
   else if(boostersTab === 'board') drawBoostersBoard(body);
   else if(boostersTab === 'fanart') drawBoostersFanartForm(body);
   else if(boostersTab === 'fanarts') drawBoostersFanarts(body);
@@ -3820,7 +3812,7 @@ function drawBoostersOpen(body){
       <div class="dailyTitle">Booster quotidien</div>
       <div class="dailyText" id="dailyText">${dailyTextPlain()}</div>
     </div>` : '';
-  const saleNote = canPlay && marketNote ? `<div class="marketNote">${escapeHtml(marketNote)}</div>` : '';
+  const saleNote = canPlay && tradeNote ? `<div class="marketNote">${escapeHtml(tradeNote)}</div>` : '';
   body.innerHTML = head + saleNote + codeBox + dailyBox + (cols.length ? `
     <div class="packGrid">
       ${cols.map(col => {
@@ -4217,14 +4209,12 @@ async function recycleDuplicates(colId){
 }
 
 /* ===== consultation des collections des autres + marché (cartes contre Ryos) ===== */
-const MARKET_PREFIX = 'market:';
-const MARKET_MAX_LISTINGS = 10;
-const MARKET_MAX_PRICE = 99999;
 let boostersViewUser = null;     // {key, display} : on regarde la collection de ce viewer
 let allCollectors = [];
-let marketAll = [];
-let marketFilter = {col: 'all', rar: 'all', ver: 'all', q: ''};
-let marketNote = '';
+let tradeAll = [];
+let tradeNote = '';
+let shopNote = '';
+let tradeDraft = null;          // {to:{key,display}, give, want} : échange en cours de préparation
 const sleepMs = (ms) => new Promise(r => setTimeout(r, ms));
 
 function recCount(rec, cardId, holo){ const m = rec && (holo ? rec.holo : rec.cards); return (m && m[cardId]) || 0; }
@@ -4248,7 +4238,7 @@ function drawBoostersCollection(body, view){
   const recycle = view ? 0 : recycleValue(col.id);
   const shown = boostersFilter === 'all' ? cards : cards.filter(c => c.rarity === boostersFilter);
   body.innerHTML = `
-    ${view ? `<div class="albumHead"><button class="addbtn" id="albumBack">Retour au classement</button><div class="albumOwner">Collection de ${escapeHtml(view.owner)}</div></div>` : ''}
+    ${view ? `<div class="albumHead"><button class="addbtn" id="albumBack">Retour au classement</button><div class="albumOwner">Collection de ${escapeHtml(view.owner)}</div>${(view.key && viewerName && !isCreatorAccount && view.key !== viewerName.toLowerCase()) ? `<button class="btn primary" id="albumTrade" style="flex:none;">Proposer un échange</button>` : ''}</div>` : ''}
     ${cols.length > 1 ? `<div class="tabs" id="colTabs" style="margin-bottom:14px;">${cols.map(c => `<button class="tab ${c.id === col.id ? 'active' : ''}" data-c="${c.id}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
     <div class="tabs" id="verTabs" style="margin-bottom:14px;">
       <button class="tab ${!isHolo ? 'active' : ''}" data-v="normal">Normales</button>
@@ -4271,6 +4261,8 @@ function drawBoostersCollection(body, view){
   body.querySelectorAll('.tcgGrid .tcg').forEach(t => { t.onclick = () => openCardDetail(t.dataset.card, false, isHolo, view || null); });
   const back = document.getElementById('albumBack');
   if(back) back.onclick = () => { boostersViewUser = null; drawBoosters(); };
+  const atr = document.getElementById('albumTrade');
+  if(atr) atr.onclick = () => { tradeDraft = {to: {key: view.key, display: view.owner}, give: null, want: null}; boostersViewUser = null; boostersTab = 'trade'; drawBoosters(); };
   const rb = document.getElementById('recycleBtn');
   if(rb) rb.onclick = () => {
     if(confirm(`Recycler tes doublons contre ${recycle} ${WATCH_CURRENCY} ? Tu gardes un exemplaire de chaque carte et de chaque version.`)) recycleDuplicates(col.id);
@@ -4299,7 +4291,7 @@ async function drawBoostersBoard(body){
   if(boostersViewUser){
     const rec = (await kvGet(WATCH_PREFIX + boostersViewUser.key)) || {};
     if(boostersTab !== 'board' || !boostersViewUser) return;
-    drawBoostersCollection(body, {rec, owner: boostersViewUser.display});
+    drawBoostersCollection(body, {rec, owner: boostersViewUser.display, key: boostersViewUser.key});
     return;
   }
   await loadCollectors();
@@ -4330,193 +4322,350 @@ async function drawBoostersBoard(body){
   render();
 }
 
-/* ===== marché : on met un doublon en vente contre des Ryos, un autre viewer l'achète ===== */
-async function loadMarket(){
-  try{
-    const { data, error } = await supabaseClient.from('app_data').select('key,value').like('key', MARKET_PREFIX + '%');
-    if(error){ console.error('loadMarket', error); return; }
-    marketAll = (data || []).map(r => r.value).filter(v => v && v.id);
-  }catch(e){ console.error('loadMarket failed', e); }
+/* ===== boutique du jour : 6 cartes tirées au hasard, identiques pour tout le monde, renouvelées chaque jour à minuit (heure de Paris) ===== */
+const SHOP_SLOTS = ['commune', 'commune', 'rare', 'rare', 'epique', 'top'];       // le dernier emplacement est la « belle carte » du jour
+const SHOP_TOP_ODDS = {legendaire: 0.7, epique: 0.2, ultime: 0.1};
+const SHOP_HOLO_CHANCE = 0.2;                                                    // chance qu'une offre (Rare et au-dessus) soit holographique, prix x3
+const SHOP_DEFAULT_PRICES = {commune: 30, rare: 120, epique: 450, legendaire: 2500, ultime: 8000};
+function shopPrices(){
+  const p = (creatorSettings && creatorSettings.shopPrices) || {};
+  return Object.fromEntries(RARITY_KEYS.map(k => [k, Math.max(1, parseInt(p[k], 10) || SHOP_DEFAULT_PRICES[k])]));
 }
-function marketCardOk(l){
-  const c = cardsCatalog.cards.find(x => x.id === l.cardId);
-  const col = c && cardsCatalog.collections.find(k => k.id === c.collectionId);
-  return !!(c && col && isPublished(col));
+const parisFmt = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'});
+function parisParts(ms){ const o = {}; parisFmt.formatToParts(new Date(ms === undefined ? Date.now() : ms)).forEach(p => { o[p.type] = p.value; }); return o; }
+function shopDayKey(ms){ const o = parisParts(ms); return `${o.year}-${o.month}-${o.day}`; }
+function shopResetInMs(ms){ const o = parisParts(ms); return (86400 - (parseInt(o.hour, 10) * 3600 + parseInt(o.minute, 10) * 60 + parseInt(o.second, 10))) * 1000; }
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function strSeed(str){ let h = 2166136261; for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+/* même jour + même catalogue = mêmes offres pour tous les viewers (tirage « graine » : aucun serveur nécessaire) */
+function generateShop(dayKey){
+  const ok = new Set(cardsCatalog.collections.filter(isPublished).map(c => c.id));
+  const pool = cardsCatalog.cards.filter(c => ok.has(c.collectionId)).sort((a, b) => a.id < b.id ? -1 : 1);
+  if(!pool.length) return [];
+  const rnd = mulberry32(strSeed('kutsu-shop|' + dayKey));
+  const prices = shopPrices();
+  const present = RARITY_KEYS.filter(k => pool.some(c => c.rarity === k));
+  const used = new Set(), offers = [];
+  SHOP_SLOTS.forEach((slot, i) => {
+    let rarity = slot;
+    if(slot === 'top'){
+      let r = rnd(); rarity = 'epique';
+      for(const k of Object.keys(SHOP_TOP_ODDS)){ r -= SHOP_TOP_ODDS[k]; if(r <= 0){ rarity = k; break; } }
+    }
+    rarity = bestAvailable(rarity, present);
+    const holo = i >= 2 && rnd() < SHOP_HOLO_CHANCE;
+    let list = pool.filter(c => c.rarity === rarity && !used.has(c.id + (holo ? 'h' : 'n')));
+    if(!list.length) list = pool.filter(c => c.rarity === rarity);
+    const card = list[Math.floor(rnd() * list.length)];
+    used.add(card.id + (holo ? 'h' : 'n'));
+    offers.push({slot: i, cardId: card.id, holo, rarity: card.rarity, price: prices[card.rarity] * (holo ? HOLO_MULT : 1)});
+  });
+  return offers;
 }
 
-/* mise en vente : la carte quitte la collection du vendeur (séquestre) et reste en attente dans l'annonce */
-async function createListing(cardId, holo, price){
+/* achat : tout se passe dans la ligne du viewer (une offre ne s'achète qu'une fois par viewer et par jour) */
+async function buyShopOffer(dayKey, slot){
   if(!viewerName || isCreatorAccount) return {ok: false, msg: 'Connecte-toi avec un compte viewer.'};
-  price = parseInt(price, 10);
-  if(!(price >= 1 && price <= MARKET_MAX_PRICE)) return {ok: false, msg: `Le prix doit être entre 1 et ${MARKET_MAX_PRICE} ${WATCH_CURRENCY}.`};
-  const me = viewerName.toLowerCase(), key = WATCH_PREFIX + me;
-  await loadMarket();
-  if(marketAll.filter(l => l.sellerKey === me && l.status === 'open').length >= MARKET_MAX_LISTINGS) return {ok: false, msg: `Tu as déjà ${MARKET_MAX_LISTINGS} annonces en cours.`};
+  if(dayKey !== shopDayKey()) return {ok: false, msg: 'La boutique vient d\'être renouvelée : recharge la page.'};
+  const o = generateShop(dayKey)[slot];
+  if(!o) return {ok: false, msg: 'Offre introuvable.'};
+  const key = WATCH_PREFIX + viewerName.toLowerCase();
   const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
-  const map = holo ? (rec.holo = rec.holo || {}) : (rec.cards = rec.cards || {});
-  if((map[cardId] || 0) < 2) return {ok: false, msg: 'Tu ne peux vendre que des doublons (il te faut au moins 2 exemplaires).'};
-  map[cardId]--;
+  rec.shopBought = rec.shopBought || {};
+  if(rec.shopBought[dayKey] && rec.shopBought[dayKey][slot]) return {ok: false, msg: "Tu as déjà acheté cette carte aujourd'hui."};
+  if((rec.points || 0) < o.price) return {ok: false, msg: `Il te manque ${o.price - (rec.points || 0)} ${WATCH_CURRENCY}.`};
+  rec.points -= o.price;
+  bumpCard(rec, o.cardId, o.holo, 1);
+  rec.shopBought[dayKey] = Object.assign({}, rec.shopBought[dayKey], {[slot]: true});
+  Object.keys(rec.shopBought).sort().slice(0, -3).forEach(k => { delete rec.shopBought[k]; });     // on ne garde que les 3 derniers jours
   rec.display = viewerName;
   await kvSet(key, rec);
-  const id = cardUid('mk-');
-  const listing = {id, sellerKey: me, seller: viewerName, cardId, holo: !!holo, price, status: 'open', createdAt: Date.now()};
-  await kvSet(MARKET_PREFIX + id, listing);
-  const back = await kvGet(MARKET_PREFIX + id);
-  if(!back){
+  watchMine = rec;
+  return {ok: true, card: cardsCatalog.cards.find(c => c.id === o.cardId), holo: o.holo, price: o.price};
+}
+
+async function drawBoostersShop(body){
+  if(!viewerName){ body.innerHTML = boosterLoginPrompt('Connecte-toi pour voir la boutique.'); wireBoosterLogin(); return; }
+  const isViewer = !isCreatorAccount;
+  const dayKey = shopDayKey();
+  const offers = generateShop(dayKey);
+  const bought = (isViewer && watchMine && watchMine.shopBought && watchMine.shopBought[dayKey]) || {};
+  const bal = isViewer && watchMine ? (watchMine.points || 0) : 0;
+  const prices = shopPrices();
+  body.innerHTML = `
+    ${isViewer ? `<div class="watchBar" style="margin:0 0 14px;"><div class="watchMine"><div class="n">${bal}</div><div class="l">${WATCH_CURRENCY}</div></div></div>` : ''}
+    <div class="dailyBox"><div class="dailyTitle">Boutique du jour</div><div class="dailyText" id="shopReset">Nouvelle sélection dans ${fmtRemaining(shopResetInMs())}</div></div>
+    ${shopNote ? `<div class="marketNote" id="shopNote">${escapeHtml(shopNote)}</div>` : ''}
+    <div class="hint" id="shopMsg" style="min-height:18px;text-align:left;"></div>
+    ${offers.length ? `<div class="mkGrid shop">${offers.map(o => {
+      const card = cardsCatalog.cards.find(c => c.id === o.cardId);
+      const done = !!bought[o.slot], afford = bal >= o.price;
+      return `<div class="mkItem" data-slot="${o.slot}">${cardTileHtml(card, {holo: o.holo})}<div class="mkPrice">${o.price} ${WATCH_CURRENCY}</div>
+        ${isViewer ? `<button class="btn primary" data-shopbuy="${o.slot}" ${done || !afford ? 'disabled' : ''}>${done ? 'Acheté' : (afford ? 'Acheter' : `Il te manque ${o.price - bal}`)}</button>` : ''}</div>`;
+    }).join('')}</div>` : `<div class="empty"><div>Aucune carte en boutique pour l'instant.</div></div>`}
+    ${isCreatorAccount ? `
+    <div class="twitchbox" style="max-width:560px;margin-top:26px;">
+      <div class="sectionLabel" style="margin-top:0;">Prix de la boutique (${WATCH_CURRENCY})</div>
+      <div class="hint" style="text-align:left;">6 cartes par jour : 2 Communes, 2 Rares, 1 Épique et 1 belle carte (Légendaire 70 %, Épique 20 %, Ultime 10 %). Une offre Rare ou mieux est holographique 1 fois sur 5 (prix x${HOLO_MULT}).</div>
+      ${RARITY_KEYS.map(k => `<label>${RARITIES[k].label}</label><input type="text" inputmode="numeric" id="shopPrice-${k}" value="${prices[k]}">`).join('')}
+      <div class="hint" id="shopPriceMsg" style="min-height:16px;text-align:left;"></div>
+      <button class="btn primary" id="shopPriceSave" style="flex:none;">Enregistrer les prix</button>
+    </div>` : ''}`;
+  body.querySelectorAll('.mkItem .tcg').forEach(t => { t.onclick = () => { const o = offers[parseInt(t.closest('.mkItem').dataset.slot, 10)]; if(o) openCardDetail(o.cardId, true, o.holo); }; });
+  body.querySelectorAll('[data-shopbuy]').forEach(b => {
+    b.onclick = async () => {
+      if(b.dataset.armed !== '1'){
+        b.dataset.armed = '1'; const o = b.textContent; b.textContent = "Confirmer l'achat";
+        setTimeout(() => { if(b.isConnected){ b.dataset.armed = '0'; b.textContent = o; } }, 4000);
+        return;
+      }
+      b.disabled = true; b.textContent = 'Achat...';
+      const r = await buyShopOffer(dayKey, parseInt(b.dataset.shopbuy, 10));
+      shopNote = r.ok ? `Carte achetée : ${r.card.name}${r.holo ? ' (holo)' : ''} pour ${r.price} ${WATCH_CURRENCY}.` : '';
+      drawBoostersShop(document.getElementById('boostersBody')).then(() => { if(!r.ok){ const m = document.getElementById('shopMsg'); if(m){ m.style.color = 'var(--rate-red)'; m.textContent = r.msg; } } });
+    };
+  });
+  const sv = document.getElementById('shopPriceSave');
+  if(sv) sv.onclick = async () => {
+    await loadSettings();
+    creatorSettings.shopPrices = Object.fromEntries(RARITY_KEYS.map(k => [k, Math.max(1, parseInt(document.getElementById('shopPrice-' + k).value, 10) || SHOP_DEFAULT_PRICES[k])]));
+    await saveSettings();
+    drawBoostersShop(document.getElementById('boostersBody')).then(() => { const m = document.getElementById('shopPriceMsg'); if(m){ m.style.color = 'var(--rate-green)'; m.textContent = 'Prix enregistrés.'; } });
+  };
+}
+
+/* ===== échanges : un viewer propose un échange de doublons à un autre, carte contre carte (même rareté, même version) ===== */
+const TRADE_PREFIX = 'trade:';
+const TRADE_MAX_OPEN = 5;
+const TRADE_TTL = 7 * 24 * 3600 * 1000;
+const TRADE_STATUS = {open: 'En attente', accepted: 'Acceptée', refused: 'Refusée', cancelled: 'Annulée', expired: 'Expirée'};
+
+function bumpCard(rec, cardId, holo, delta){
+  const m = holo ? (rec.holo = rec.holo || {}) : (rec.cards = rec.cards || {});
+  m[cardId] = Math.max(0, (m[cardId] || 0) + delta);
+  if(!m[cardId]) delete m[cardId];
+}
+async function loadTrades(){
+  try{
+    const { data, error } = await supabaseClient.from('app_data').select('key,value').like('key', TRADE_PREFIX + '%');
+    if(error){ console.error('loadTrades', error); return; }
+    tradeAll = (data || []).map(r => r.value).filter(v => v && v.id);
+  }catch(e){ console.error('loadTrades failed', e); }
+}
+function tradeExpired(t){ return t.status === 'open' && Date.now() - (t.createdAt || 0) > TRADE_TTL; }
+function dupList(rec){
+  const out = [];
+  [false, true].forEach(h => {
+    const m = (h ? rec.holo : rec.cards) || {};
+    Object.keys(m).forEach(id => {
+      if(m[id] < 2) return;
+      const card = cardsCatalog.cards.find(c => c.id === id);
+      if(card && isPublished(cardsCatalog.collections.find(k => k.id === card.collectionId))) out.push({card, holo: h, count: m[id]});
+    });
+  });
+  return out.sort((a, b) => (RARITIES[b.card.rarity].rank - RARITIES[a.card.rarity].rank) || a.card.name.localeCompare(b.card.name));
+}
+
+/* proposition : la carte donnée part en séquestre dans la proposition (elle revient si l'échange est refusé, annulé ou expire) */
+async function createTrade(to, give, want){
+  if(!viewerName || isCreatorAccount) return {ok: false, msg: 'Connecte-toi avec un compte viewer.'};
+  const me = viewerName.toLowerCase(), key = WATCH_PREFIX + me;
+  if(!to || to.key === me) return {ok: false, msg: 'Choisis un autre viewer.'};
+  const cg = cardsCatalog.cards.find(c => c.id === give.cardId), cw = cardsCatalog.cards.find(c => c.id === want.cardId);
+  if(!cg || !cw) return {ok: false, msg: 'Carte introuvable.'};
+  if(!isPublished(cardsCatalog.collections.find(k => k.id === cg.collectionId)) || !isPublished(cardsCatalog.collections.find(k => k.id === cw.collectionId))) return {ok: false, msg: "Cette carte n'est pas échangeable."};
+  if(cg.rarity !== cw.rarity || !!give.holo !== !!want.holo) return {ok: false, msg: 'Un échange se fait entre deux cartes de même rareté et de même version (normale ou holographique).'};
+  await loadTrades();
+  if(tradeAll.filter(t => t.fromKey === me && t.status === 'open' && !tradeExpired(t)).length >= TRADE_MAX_OPEN) return {ok: false, msg: `Tu as déjà ${TRADE_MAX_OPEN} échanges en attente.`};
+  const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
+  if(recCount(rec, give.cardId, !!give.holo) < 2) return {ok: false, msg: 'Tu ne peux échanger que des doublons (il te faut au moins 2 exemplaires).'};
+  bumpCard(rec, give.cardId, !!give.holo, -1);
+  rec.display = viewerName;
+  await kvSet(key, rec);
+  const id = cardUid('tr-');
+  const trade = {id, fromKey: me, from: viewerName, toKey: to.key, to: to.display, give: {cardId: give.cardId, holo: !!give.holo}, want: {cardId: want.cardId, holo: !!want.holo}, status: 'open', createdAt: Date.now()};
+  await kvSet(TRADE_PREFIX + id, trade);
+  if(!(await kvGet(TRADE_PREFIX + id))){
     const r2 = (await kvGet(key)) || rec;
-    const m2 = holo ? (r2.holo = r2.holo || {}) : (r2.cards = r2.cards || {});
-    m2[cardId] = (m2[cardId] || 0) + 1;
+    bumpCard(r2, give.cardId, !!give.holo, 1);
     await kvSet(key, r2);
     watchMine = r2;
-    return {ok: false, msg: "L'annonce n'a pas pu être enregistrée (la carte t'a été rendue). Le créateur doit exécuter le script schema-boosters.sql dans Supabase."};
+    return {ok: false, msg: "La proposition n'a pas pu être enregistrée (ta carte t'a été rendue). Le créateur doit exécuter le script schema-boosters.sql dans Supabase."};
   }
   watchMine = rec;
-  return {ok: true, listing};
+  return {ok: true, trade};
 }
 
-/* achat : on réserve l'annonce, on vérifie après un court délai que personne d'autre ne l'a réservée, puis on paie */
-async function buyListing(id){
+/* acceptation : on réserve l'échange, on vérifie après un court délai qu'il n'a pas été annulé, puis on échange nos cartes */
+async function acceptTrade(id){
   if(!viewerName || isCreatorAccount) return {ok: false, msg: 'Connecte-toi avec un compte viewer.'};
   const me = viewerName.toLowerCase(), key = WATCH_PREFIX + me;
-  const l = await kvGet(MARKET_PREFIX + id);
-  if(!l || l.status !== 'open') return {ok: false, msg: "Cette annonce n'est plus disponible."};
-  if(l.sellerKey === me) return {ok: false, msg: "C'est ta propre annonce."};
-  const card = cardsCatalog.cards.find(c => c.id === l.cardId);
-  if(!card) return {ok: false, msg: 'Carte introuvable.'};
-  const rec0 = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
-  if((rec0.points || 0) < l.price) return {ok: false, msg: `Il te manque ${l.price - (rec0.points || 0)} ${WATCH_CURRENCY}.`};
+  const t = await kvGet(TRADE_PREFIX + id);
+  if(!t || t.toKey !== me || t.status !== 'open') return {ok: false, msg: "Cet échange n'est plus disponible."};
+  if(tradeExpired(t)) return {ok: false, msg: 'Cet échange a expiré.'};
+  const rec0 = (await kvGet(key)) || {};
+  if(recCount(rec0, t.want.cardId, t.want.holo) < 2) return {ok: false, msg: 'Il te faut au moins 2 exemplaires de la carte demandée.'};
   const nonce = cardUid('n-');
-  await kvSet(MARKET_PREFIX + id, Object.assign({}, l, {status: 'sold', buyerKey: me, buyer: viewerName, claimId: nonce, soldAt: Date.now()}));
+  await kvSet(TRADE_PREFIX + id, Object.assign({}, t, {status: 'accepted', claimId: nonce, resolvedAt: Date.now()}));
   await sleepMs(450 + Math.random() * 350);
-  const l2 = await kvGet(MARKET_PREFIX + id);
-  if(!l2 || l2.status !== 'sold' || l2.claimId !== nonce) return {ok: false, msg: "Quelqu'un a été plus rapide : l'annonce n'est plus disponible."};
+  const t2 = await kvGet(TRADE_PREFIX + id);
+  if(!t2 || t2.status !== 'accepted' || t2.claimId !== nonce) return {ok: false, msg: "Cet échange n'est plus disponible (il vient d'être annulé)."};
   const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
-  if((rec.points || 0) < l.price){
-    await kvSet(MARKET_PREFIX + id, l);            // plus assez de Ryos : l'annonce est remise en vente
-    return {ok: false, msg: `Il te manque ${l.price - (rec.points || 0)} ${WATCH_CURRENCY}.`};
-  }
-  rec.points -= l.price;
-  const map = l.holo ? (rec.holo = rec.holo || {}) : (rec.cards = rec.cards || {});
-  map[l.cardId] = (map[l.cardId] || 0) + 1;
-  rec.bought = (rec.bought || 0) + 1;
+  if(recCount(rec, t.want.cardId, t.want.holo) < 2){ await kvSet(TRADE_PREFIX + id, t); return {ok: false, msg: 'Il te faut au moins 2 exemplaires de la carte demandée.'}; }
+  bumpCard(rec, t.want.cardId, t.want.holo, -1);
+  bumpCard(rec, t.give.cardId, t.give.holo, 1);
+  rec.tradesDone = (rec.tradesDone || 0) + 1;
   rec.display = viewerName;
   await kvSet(key, rec);
   watchMine = rec;
-  return {ok: true, card, holo: l.holo, price: l.price};
+  return {ok: true, trade: t};
 }
-
-async function cancelListing(id){
+async function refuseTrade(id){
+  if(!viewerName || isCreatorAccount) return {ok: false, msg: 'Connecte-toi avec un compte viewer.'};
+  const t = await kvGet(TRADE_PREFIX + id);
+  if(!t || t.toKey !== viewerName.toLowerCase() || t.status !== 'open') return {ok: false, msg: "Cet échange n'est plus disponible."};
+  await kvSet(TRADE_PREFIX + id, Object.assign({}, t, {status: 'refused', resolvedAt: Date.now()}));
+  return {ok: true};
+}
+async function cancelTrade(id){
   if(!viewerName || isCreatorAccount) return {ok: false, msg: 'Connecte-toi avec un compte viewer.'};
   const me = viewerName.toLowerCase(), key = WATCH_PREFIX + me;
-  const l = await kvGet(MARKET_PREFIX + id);
-  if(!l || l.sellerKey !== me || l.status !== 'open') return {ok: false, msg: "Cette annonce n'est plus en vente."};
-  await kvSet(MARKET_PREFIX + id, Object.assign({}, l, {status: 'cancelled', cancelledAt: Date.now()}));
+  const t = await kvGet(TRADE_PREFIX + id);
+  if(!t || t.fromKey !== me || t.status !== 'open') return {ok: false, msg: "Cet échange n'est plus en attente."};
+  await kvSet(TRADE_PREFIX + id, Object.assign({}, t, {status: 'cancelled', resolvedAt: Date.now()}));
   await sleepMs(450 + Math.random() * 350);
-  const l2 = await kvGet(MARKET_PREFIX + id);
-  if(!l2 || l2.status !== 'cancelled') return {ok: false, msg: 'Trop tard : la carte vient d\'être vendue.'};
+  const t2 = await kvGet(TRADE_PREFIX + id);
+  if(t2 && t2.status === 'accepted') return {ok: false, msg: "Trop tard : l'échange vient d'être accepté."};
+  if(!t2 || (t2.status !== 'cancelled' && t2.status !== 'refused')) return {ok: false, msg: "Impossible d'annuler pour l'instant."};
   const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
-  const map = l.holo ? (rec.holo = rec.holo || {}) : (rec.cards = rec.cards || {});
-  map[l.cardId] = (map[l.cardId] || 0) + 1;
+  bumpCard(rec, t.give.cardId, t.give.holo, 1);
+  rec.tradesClaimed = Object.assign({}, rec.tradesClaimed, {[id]: Date.now()});
   rec.display = viewerName;
   await kvSet(key, rec);
   watchMine = rec;
   return {ok: true};
 }
-
-/* le vendeur encaisse ses ventes la prochaine fois qu'il ouvre le site (une seule fois par vente) */
-async function claimSales(){
-  if(!viewerName || isCreatorAccount) return {n: 0, total: 0};
+/* le proposeur récupère le résultat de ses propositions la prochaine fois qu'il ouvre le site (une seule fois par échange) */
+async function claimTrades(){
+  if(!viewerName || isCreatorAccount) return {note: ''};
   const me = viewerName.toLowerCase(), key = WATCH_PREFIX + me;
-  const sold = marketAll.filter(l => l.sellerKey === me && l.status === 'sold');
-  if(!sold.length) return {n: 0, total: 0};
+  const mine = tradeAll.filter(t => t.fromKey === me);
+  if(!mine.length) return {note: ''};
   const rec = (await kvGet(key)) || {points: 0, minutes: 0, lastTick: 0};
-  rec.salesClaimed = rec.salesClaimed || {};
-  const pending = sold.filter(l => !rec.salesClaimed[l.id]);
-  if(!pending.length) return {n: 0, total: 0};
-  const total = pending.reduce((a, l) => a + (l.price || 0), 0);
-  pending.forEach(l => { rec.salesClaimed[l.id] = Date.now(); });
-  rec.points = (rec.points || 0) + total;
-  rec.sold = (rec.sold || 0) + pending.length;
+  rec.tradesClaimed = rec.tradesClaimed || {};
+  const got = [], back = [];
+  for(const t of mine){
+    if(rec.tradesClaimed[t.id]) continue;
+    let st = t.status;
+    if(st === 'open' && tradeExpired(t)){
+      await kvSet(TRADE_PREFIX + t.id, Object.assign({}, t, {status: 'expired', resolvedAt: Date.now()}));
+      await sleepMs(450 + Math.random() * 350);
+      const t2 = await kvGet(TRADE_PREFIX + t.id);
+      if(!t2 || t2.status !== 'expired') continue;
+      st = 'expired';
+    }
+    if(st === 'accepted'){ bumpCard(rec, t.want.cardId, t.want.holo, 1); rec.tradesClaimed[t.id] = Date.now(); got.push(t); }
+    else if(st === 'refused' || st === 'cancelled' || st === 'expired'){ bumpCard(rec, t.give.cardId, t.give.holo, 1); rec.tradesClaimed[t.id] = Date.now(); back.push(t); }
+  }
+  if(!got.length && !back.length) return {note: ''};
+  rec.tradesDone = (rec.tradesDone || 0) + got.length;
   rec.display = viewerName;
   await kvSet(key, rec);
   watchMine = rec;
-  return {n: pending.length, total};
+  const nm = (ref) => { const c = cardsCatalog.cards.find(x => x.id === ref.cardId); return (c ? c.name : '?') + (ref.holo ? ' (holo)' : ''); };
+  const parts = [];
+  got.forEach(t => parts.push(`${t.to} a accepté ton échange : tu reçois ${nm(t.want)} contre ${nm(t.give)}.`));
+  if(back.length) parts.push(`${back.length} carte${back.length > 1 ? 's' : ''} de tes propositions non conclues ${back.length > 1 ? 'sont revenues' : 'est revenue'} dans ta collection.`);
+  return {note: parts.join(' ')};
 }
 
-async function drawBoostersMarket(body){
-  if(!viewerName || isCreatorAccount){ body.innerHTML = boosterLoginPrompt('Connecte-toi pour utiliser le marché.'); wireBoosterLogin(); return; }
+async function drawBoostersTrade(body){
+  if(!viewerName || isCreatorAccount){ body.innerHTML = boosterLoginPrompt('Connecte-toi pour échanger des cartes.'); wireBoosterLogin(); return; }
   body.innerHTML = '<div class="hint" style="text-align:left;">Chargement...</div>';
-  await loadMarket();
-  const claim = await claimSales();
-  if(claim.n) marketNote = `Tes ventes : ${claim.n} carte${claim.n > 1 ? 's' : ''} vendue${claim.n > 1 ? 's' : ''}, +${claim.total} ${WATCH_CURRENCY} !`;
-  if(boostersTab !== 'market') return;
+  await loadTrades();
+  const cl = await claimTrades();
+  if(cl.note) tradeNote = cl.note;
+  if(!tradeDraft) await loadCollectors();
   const me = viewerName.toLowerCase();
-  const bal = watchMine ? (watchMine.points || 0) : 0;
-  const open = marketAll.filter(l => l.status === 'open' && marketCardOk(l)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  const mine = open.filter(l => l.sellerKey === me);
-  const others = open.filter(l => l.sellerKey !== me);
-  const cols = cardsCatalog.collections.filter(isPublished);
-  const tileFor = (l) => {
-    const c = cardsCatalog.cards.find(x => x.id === l.cardId);
-    return cardTileHtml(c, {holo: l.holo});
-  };
+  const theirRec = (tradeDraft && tradeDraft.to) ? ((await kvGet(WATCH_PREFIX + tradeDraft.to.key)) || {}) : null;
+  if(boostersTab !== 'trade') return;
+  const incoming = tradeAll.filter(t => t.toKey === me && t.status === 'open' && !tradeExpired(t)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const sent = tradeAll.filter(t => t.fromKey === me).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10);
+  const tile = (ref) => { const c = cardsCatalog.cards.find(x => x.id === ref.cardId); return c ? cardTileHtml(c, {holo: ref.holo}) : ''; };
+  const pair = (t, label) => `<div class="tradePair"><div class="mkItem">${tile(t.give)}</div><div class="tradeArrow">contre</div><div class="mkItem">${tile(t.want)}${label ? `<div class="mkSeller">${label}</div>` : ''}</div></div>`;
   body.innerHTML = `
-    <div class="watchBar" style="margin:0 0 14px;"><div class="watchMine"><div class="n">${bal}</div><div class="l">${WATCH_CURRENCY}</div><div class="m">${open.length} annonce${open.length > 1 ? 's' : ''} en vente</div></div></div>
-    ${marketNote ? `<div class="marketNote" id="marketNote">${escapeHtml(marketNote)}</div>` : ''}
-    <div class="hint" style="text-align:left;margin:0 0 16px;">Pour vendre un doublon : va dans « Ma collection », clique sur la carte, puis « Vendre ». La carte reste en séquestre jusqu'à la vente, et tu es payé la prochaine fois que tu ouvres le site.</div>
-    <div class="sectionLabel" style="margin-top:0;">Mes annonces (${mine.length}/${MARKET_MAX_LISTINGS})</div>
-    ${mine.length ? `<div class="mkGrid">${mine.map(l => `
-      <div class="mkItem" data-id="${l.id}">${tileFor(l)}<div class="mkPrice">${l.price} ${WATCH_CURRENCY}</div>
-        <button class="btn ghost" data-cancel="${l.id}" style="flex:none;">Retirer de la vente</button></div>`).join('')}</div>` : `<div class="hint" style="text-align:left;">Aucune annonce en cours.</div>`}
-    <div class="sectionLabel">Annonces des autres viewers</div>
-    <div class="mkFilters">
-      <input type="text" id="mkSearch" class="collSearch" placeholder="Chercher une carte" value="${escapeHtml(marketFilter.q)}" autocomplete="off">
-      <select id="mkCol" class="selectBox"><option value="all">Toutes les collections</option>${cols.map(c => `<option value="${c.id}" ${marketFilter.col === c.id ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}</select>
-      <select id="mkRar" class="selectBox"><option value="all">Toutes les raretés</option>${RARITY_KEYS.map(k => `<option value="${k}" ${marketFilter.rar === k ? 'selected' : ''}>${RARITIES[k].label}</option>`).join('')}</select>
-      <select id="mkVer" class="selectBox"><option value="all">Normales et holo</option><option value="normal" ${marketFilter.ver === 'normal' ? 'selected' : ''}>Normales</option><option value="holo" ${marketFilter.ver === 'holo' ? 'selected' : ''}>Holographiques</option></select>
-    </div>
-    <div class="hint" id="marketMsg" style="min-height:18px;text-align:left;"></div>
-    <div id="mkList"></div>`;
-  const msg = (t, ok) => { const m = document.getElementById('marketMsg'); if(m){ m.style.color = ok ? 'var(--rate-green)' : 'var(--rate-red)'; m.textContent = t; } };
-  const renderList = () => {
-    const q = normName(marketFilter.q);
-    const list = others.filter(l => {
-      const c = cardsCatalog.cards.find(x => x.id === l.cardId);
-      return (marketFilter.col === 'all' || c.collectionId === marketFilter.col) && (marketFilter.rar === 'all' || c.rarity === marketFilter.rar)
-        && (marketFilter.ver === 'all' || (marketFilter.ver === 'holo') === !!l.holo) && (!q || normName(c.name).includes(q));
-    });
-    const el = document.getElementById('mkList');
-    el.innerHTML = list.length ? `<div class="mkGrid">${list.map(l => `
-      <div class="mkItem" data-id="${l.id}">${tileFor(l)}<div class="mkPrice">${l.price} ${WATCH_CURRENCY}</div><div class="mkSeller">par ${escapeHtml(l.seller)}</div>
-        <button class="btn primary" data-buy="${l.id}" ${bal >= l.price ? '' : 'disabled'}>${bal >= l.price ? 'Acheter' : `Il te manque ${l.price - bal}`}</button></div>`).join('')}</div>`
-      : `<div class="empty" style="padding:24px 16px;"><div>Aucune annonce ne correspond.</div></div>`;
-    el.querySelectorAll('.mkItem .tcg').forEach(t => { t.onclick = () => { const l = open.find(x => x.id === t.closest('.mkItem').dataset.id); if(l) openCardDetail(l.cardId, true, !!l.holo); }; });
-    el.querySelectorAll('[data-buy]').forEach(b => {
-      b.onclick = async () => {
-        if(b.dataset.armed !== '1'){
-          b.dataset.armed = '1'; const o = b.textContent; b.textContent = "Confirmer l'achat";
-          setTimeout(() => { if(b.isConnected){ b.dataset.armed = '0'; b.textContent = o; } }, 4000);
-          return;
-        }
-        b.disabled = true; b.textContent = 'Achat...';
-        const r = await buyListing(b.dataset.buy);
-        if(r.ok){ marketNote = `Carte achetée : ${r.card.name}${r.holo ? ' (holo)' : ''} pour ${r.price} ${WATCH_CURRENCY}.`; drawBoostersMarket(document.getElementById('boostersBody')); }
-        else { await loadMarket(); msg(r.msg, false); drawBoostersMarket(document.getElementById('boostersBody')).then(() => msg(r.msg, false)); }
+    ${tradeNote ? `<div class="marketNote" id="tradeNoteBox">${escapeHtml(tradeNote)}</div>` : ''}
+    <div class="hint" id="tradeMsg" style="min-height:18px;text-align:left;"></div>
+    <div class="sectionLabel" style="margin-top:0;">Échanges reçus (${incoming.length})</div>
+    ${incoming.length ? incoming.map(t => {
+      const lack = recCount(watchMine, t.want.cardId, t.want.holo) < 2;
+      return `<div class="tradeRow" data-id="${t.id}"><div class="tradeWho">${escapeHtml(t.from)} te propose</div>${pair(t, 'ta carte')}
+        <div class="codeBtns"><button class="btn primary" data-accept="${t.id}" style="flex:none;" ${lack ? 'disabled' : ''}>${lack ? 'Il te faut un doublon' : 'Accepter'}</button><button class="btn ghost" data-refuse="${t.id}" style="flex:none;">Refuser</button></div></div>`;
+    }).join('') : `<div class="hint" style="text-align:left;">Aucun échange en attente.</div>`}
+    <div class="sectionLabel">Mes propositions</div>
+    ${sent.length ? sent.map(t => `<div class="tradeRow" data-id="${t.id}"><div class="tradeWho">Pour ${escapeHtml(t.to)}<br><span class="tradeSt ${t.status}">${TRADE_STATUS[t.status] || t.status}</span></div>${pair(t, `chez ${escapeHtml(t.to)}`)}
+      ${t.status === 'open' ? `<div class="codeBtns"><button class="btn ghost" data-cancel-trade="${t.id}" style="flex:none;">Annuler</button></div>` : ''}</div>`).join('') : `<div class="hint" style="text-align:left;">Tu n'as encore rien proposé.</div>`}
+    <div class="sectionLabel">Nouvel échange</div>
+    <div id="tradeNew"></div>`;
+  const msg = (t, ok) => { const m = document.getElementById('tradeMsg'); if(m){ m.style.color = ok ? 'var(--rate-green)' : 'var(--rate-red)'; m.textContent = t; } };
+  const redraw = () => drawBoostersTrade(document.getElementById('boostersBody'));
+  body.querySelectorAll('.mkItem .tcg').forEach(t => { t.onclick = (e) => e.stopPropagation(); });
+  body.querySelectorAll('[data-accept]').forEach(b => { b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Échange...';
+    const r = await acceptTrade(b.dataset.accept);
+    const gc = r.ok && cardsCatalog.cards.find(c => c.id === r.trade.give.cardId);
+    tradeNote = r.ok ? `Échange conclu : tu reçois ${gc ? gc.name : 'la carte'}${r.trade.give.holo ? ' (holo)' : ''} de la part de ${r.trade.from}.` : '';
+    redraw().then(() => { if(!r.ok) msg(r.msg, false); });
+  }; });
+  body.querySelectorAll('[data-refuse]').forEach(b => { b.onclick = async () => { b.disabled = true; const r = await refuseTrade(b.dataset.refuse); tradeNote = r.ok ? 'Échange refusé.' : ''; redraw().then(() => { if(!r.ok) msg(r.msg, false); }); }; });
+  body.querySelectorAll('[data-cancel-trade]').forEach(b => { b.onclick = async () => { b.disabled = true; b.textContent = '...'; const r = await cancelTrade(b.dataset.cancelTrade); tradeNote = r.ok ? 'Proposition annulée : la carte est revenue dans ta collection.' : ''; redraw().then(() => { if(!r.ok) msg(r.msg, false); }); }; });
+
+  /* ----- nouvel échange ----- */
+  const box = document.getElementById('tradeNew');
+  const drawNew = () => {
+    if(!tradeDraft || !tradeDraft.to){
+      box.innerHTML = `<input type="text" id="tradeSearch" class="collSearch" placeholder="Chercher un viewer (pseudo)" autocomplete="off"><div id="tradeUsers"></div>`;
+      const list = document.getElementById('tradeUsers'), search = document.getElementById('tradeSearch');
+      const render = () => {
+        const q = normName(search.value);
+        const users = allCollectors.filter(r => r.key !== me && (!q || normName(r.display).includes(q) || normName(r.key).includes(q))).slice(0, 12);
+        list.innerHTML = users.length ? users.map(r => `<div class="lbRow clickable" data-user="${escapeHtml(r.key)}" data-name="${escapeHtml(r.display)}"><div class="lbName">${escapeHtml(r.display)}</div><div class="lbPts">${r.unique} cartes uniques</div><div class="lbGo">Échanger</div></div>`).join('') : `<div class="empty" style="padding:20px 16px;"><div>${q ? 'Aucun viewer trouvé.' : "Aucun autre viewer n'a de cartes pour l'instant."}</div></div>`;
+        list.querySelectorAll('.lbRow').forEach(row => { row.onclick = () => { tradeDraft = {to: {key: row.dataset.user, display: row.dataset.name}, give: null, want: null}; redraw(); }; });
       };
-    });
-  };
-  renderList();
-  document.getElementById('mkSearch').oninput = (e) => { marketFilter.q = e.target.value; renderList(); };
-  ['mkCol', 'mkRar', 'mkVer'].forEach(id => { document.getElementById(id).onchange = (e) => { marketFilter[id === 'mkCol' ? 'col' : id === 'mkRar' ? 'rar' : 'ver'] = e.target.value; renderList(); }; });
-  body.querySelectorAll('.mkGrid [data-cancel]').forEach(b => {
-    b.onclick = async () => {
-      b.disabled = true; b.textContent = '...';
-      const r = await cancelListing(b.dataset.cancel);
-      if(r.ok) marketNote = 'Annonce retirée : la carte est revenue dans ta collection.';
-      drawBoostersMarket(document.getElementById('boostersBody')).then(() => { if(!r.ok) msg(r.msg, false); });
+      search.oninput = render; render();
+      return;
+    }
+    const mine = dupList(watchMine || {}), theirs = dupList(theirRec || {});
+    const g = tradeDraft.give;
+    const gCard = g ? cardsCatalog.cards.find(c => c.id === g.cardId) : null;
+    const theirShown = gCard ? theirs.filter(d => d.card.rarity === gCard.rarity && d.holo === !!g.holo) : theirs;
+    const selTile = (d, side, sel) => `<div class="mkItem selectable ${sel ? 'selected' : ''}" data-side="${side}" data-card="${d.card.id}" data-holo="${d.holo ? 1 : 0}">${cardTileHtml(d.card, {holo: d.holo, count: d.count})}</div>`;
+    const w = tradeDraft.want;
+    box.innerHTML = `
+      <div class="albumHead"><div class="albumOwner">Échange avec ${escapeHtml(tradeDraft.to.display)}</div><button class="addbtn" id="tradeChange">Changer de viewer</button></div>
+      <div class="hint" style="text-align:left;margin:0 0 14px;">Un échange se fait entre deux doublons de même rareté et de même version. Ta carte est mise de côté jusqu'à la réponse (elle revient si c'est refusé, annulé ou sans réponse sous 7 jours).</div>
+      <div class="tradeCols">
+        <div><div class="sectionLabel" style="margin-top:0;">Tu donnes</div>${mine.length ? `<div class="mkGrid small">${mine.map(d => selTile(d, 'give', g && g.cardId === d.card.id && !!g.holo === d.holo)).join('')}</div>` : `<div class="hint" style="text-align:left;">Tu n'as aucun doublon à échanger pour l'instant.</div>`}</div>
+        <div><div class="sectionLabel" style="margin-top:0;">Tu reçois</div>${theirShown.length ? `<div class="mkGrid small">${theirShown.map(d => selTile(d, 'want', w && w.cardId === d.card.id && !!w.holo === d.holo)).join('')}</div>` : `<div class="hint" style="text-align:left;">${g ? `${escapeHtml(tradeDraft.to.display)} n'a pas de doublon de cette rareté et de cette version.` : `${escapeHtml(tradeDraft.to.display)} n'a aucun doublon à échanger pour l'instant.`}</div>`}</div>
+      </div>
+      <button class="btn primary" id="tradeSend" style="flex:none;margin-top:16px;" ${(g && w) ? '' : 'disabled'}>Proposer l'échange</button>`;
+    document.getElementById('tradeChange').onclick = () => { tradeDraft = null; redraw(); };
+    box.querySelectorAll('.mkItem.selectable').forEach(el => { el.onclick = () => {
+      const ref = {cardId: el.dataset.card, holo: el.dataset.holo === '1'};
+      if(el.dataset.side === 'give'){ tradeDraft.give = ref; if(tradeDraft.want){ const wc = cardsCatalog.cards.find(c => c.id === tradeDraft.want.cardId), gc = cardsCatalog.cards.find(c => c.id === ref.cardId); if(!wc || wc.rarity !== gc.rarity || tradeDraft.want.holo !== ref.holo) tradeDraft.want = null; } }
+      else tradeDraft.want = ref;
+      drawNew();
+    }; });
+    document.getElementById('tradeSend').onclick = async () => {
+      const sb = document.getElementById('tradeSend'); sb.disabled = true; sb.textContent = 'Envoi...';
+      const to = tradeDraft.to;
+      const r = await createTrade(to, tradeDraft.give, tradeDraft.want);
+      if(r.ok){ tradeNote = `Proposition envoyée à ${to.display}. Tu seras prévenu à ta prochaine visite.`; tradeDraft = null; }
+      redraw().then(() => { if(!r.ok) msg(r.msg, false); });
     };
-  });
-  body.querySelectorAll('.mkGrid .mkItem .tcg').forEach(t => { if(!t.closest('#mkList')){ t.onclick = () => { const l = open.find(x => x.id === t.closest('.mkItem').dataset.id); if(l) openCardDetail(l.cardId, true, !!l.holo); }; } });
+  };
+  drawNew();
 }
 
 /* ----- test des boosters (créateur) : gratuit, rien n'est enregistré ----- */
