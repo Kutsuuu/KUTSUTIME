@@ -391,6 +391,10 @@ to{transform:translateX(8px)}
 .mkItem.selectable .tcg{cursor:pointer}
 .mkItem.selected .tcg{outline:3px solid var(--gold);outline-offset:2px}
 .tradeRow{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 16px;margin-bottom:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg)}
+.tradeScroll{max-height:min(48vh,420px);overflow-y:auto;overscroll-behavior:contain;padding:10px 10px 0;margin:0 0 6px;border:1px solid var(--border);border-radius:var(--r-lg);background:rgba(255,255,255,.02);scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.tradeScroll .tradeRow{margin-bottom:10px}
+.tradeScroll::-webkit-scrollbar{width:8px}
+.tradeScroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
 .tradeWho{font-weight:600;min-width:140px;font-size:14px}
 .tradePair{display:flex;align-items:center;gap:14px}
 .tradePair .mkItem{width:104px}
@@ -439,7 +443,7 @@ to{transform:translateX(8px)}
 .packArt.img::before{display:none}
 .packThumb{width:64px;height:100px;flex:none;border-radius:var(--r-sm);background:var(--panel-3) center/contain no-repeat;border:1px solid var(--border)}
 .tcgGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
-.tcg{--rc:#8b9199;position:relative;aspect-ratio:5/7;border-radius:var(--r-md);padding:6px;background:var(--panel);border:2px solid var(--rc);display:flex;flex-direction:column;overflow:hidden}
+.tcg{--rc:#8b9199;position:relative;aspect-ratio:5/7;border-radius:var(--r-md);padding:6px;background:var(--panel);background:linear-gradient(180deg,var(--panel) 52%,color-mix(in srgb,var(--rc) 17%,var(--panel)));border:2px solid var(--rc);display:flex;flex-direction:column;overflow:hidden}
 .tcg.r-commune{--rc:#8b9199}
 .tcg.r-rare{--rc:#3b82f6;box-shadow:0 0 10px rgba(59,130,246,.3)}
 .tcg.r-epique{--rc:#a855f7;box-shadow:0 0 14px rgba(168,85,247,.38)}
@@ -450,17 +454,44 @@ to{transform:translateX(8px)}
 to{--ang:360deg}
 }
 .tcg .art{position:relative;flex:1;min-height:0;border-radius:calc(var(--r-md) - 6px);background:#111 center 25%/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;color:var(--text-dim)}
+.tcg .art{box-shadow:inset 0 0 0 1px rgba(255,255,255,.13)}
+.tcg .art::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.1) 0,rgba(255,255,255,0) 22%,rgba(0,0,0,0) 62%,rgba(0,0,0,.34) 100%)}
 .tcg .art.noimg{background:repeating-linear-gradient(135deg,hsl(var(--h) 45% 24%) 0 12px,hsl(var(--h) 45% 19%) 12px 24px)}
 .tcg .mono{display:flex;align-items:center;justify-content:center;width:54%;aspect-ratio:1;border-radius:50%;background:hsl(var(--h) 65% 54%);color:#0e0e0e;font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700}
-.tcg .credit{position:absolute;left:6px;bottom:6px;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.68);color:#fff;border-radius:var(--r-pill);padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400}
-.tcg .holotag{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.68);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:var(--r-pill);padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px}
-.tcg .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;padding:6px 4px 1px;text-align:center;line-height:1.2}
-.tcg .rr{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--rc);padding-bottom:3px}
-.tcg .cnt{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.75);border-radius:var(--r-pill);padding:2px 9px;font-size:11px;font-weight:700;z-index:3}
-.tcg .newtag{position:absolute;top:10px;left:10px;background:var(--gold);color:#fff;border-radius:var(--r-pill);padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;z-index:3}
-.tcg.locked{opacity:.5;box-shadow:none}
+.tcg .credit{z-index:1;position:absolute;left:6px;bottom:6px;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.68);color:#fff;border-radius:var(--r-pill);padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400}
+.tcg .holotag{z-index:1;position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.68);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:var(--r-pill);padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px}
+.tcg .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;padding:7px 4px 1px;text-align:center;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1}
+.tcg .rr{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--rc);padding-bottom:3px;white-space:nowrap;position:relative;z-index:1}
+.tcg .rr::before{content:var(--st,'');letter-spacing:1px;margin-right:6px;font-size:8px;vertical-align:1px;opacity:.95}
+.tcg.r-commune{--st:'★'}
+.tcg.r-rare{--st:'★★'}
+.tcg.r-epique{--st:'★★★'}
+.tcg.r-legendaire{--st:'★★★★'}
+.tcg.r-ultime{--st:'★★★★★'}
+.cardBig .tcg .nm,.flipFront .tcg .nm{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cardBig .tcg .nm{font-size:16px;padding-top:9px}
+.cardBig .tcg .rr{font-size:10.5px;padding-bottom:5px}
+.tcg .cnt{position:absolute;top:9px;right:9px;background:rgba(0,0,0,.78);border:1px solid rgba(255,255,255,.22);border-radius:var(--r-pill);padding:1px 8px;font-size:11px;font-weight:700;z-index:3}
+.tcg .newtag{position:absolute;top:9px;left:9px;background:linear-gradient(135deg,#ffd45a,#f59e0b);color:#1a1200;border-radius:var(--r-pill);padding:2px 8px;font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;z-index:3;box-shadow:0 0 10px rgba(245,179,1,.55)}
+.batchItem .tcg .newtag,.recapCard .tcg .newtag{top:5px;left:5px;font-size:7px;padding:1px 5px;letter-spacing:.3px}
+.batchItem .tcg .cnt,.recapCard .tcg .cnt{top:5px;right:5px;font-size:9px;padding:0 6px}
+.batchItem .tcg.bothbadge .cnt,.recapCard .tcg.bothbadge .cnt{top:19px}
+.batchItem .tcg .nm,.recapCard .tcg .nm{font-size:11px;padding-top:5px}
+.batchItem .tcg .rr,.recapCard .tcg .rr{font-size:7.5px;letter-spacing:1px}
+.batchItem .tcg .rr::before,.recapCard .tcg .rr::before{display:none}
+.tcg.locked{opacity:.58;box-shadow:none;filter:saturate(.7)}
+.tcg.locked .art{background:repeating-linear-gradient(135deg,#171717 0 9px,#111 9px 18px);color:var(--rc);text-shadow:0 0 18px var(--rc)}
+.tcg.locked .art::after{background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.05),rgba(0,0,0,.35))}
 .tcg.locked.r-ultime{animation:none}
 .tcgGrid .tcg{cursor:pointer}
+.mkItem .tcg:not(.holo),.tcgGrid .tcg:not(.holo){transition:transform .18s ease,box-shadow .18s ease}
+@media (hover:hover){
+.mkItem .tcg:not(.holo):not(.locked):hover,.tcgGrid .tcg:not(.holo):not(.locked):hover{transform:translateY(-5px) scale(1.025)}
+.tcgGrid .tcg.r-commune:not(.holo):not(.locked):hover{box-shadow:0 8px 18px rgba(0,0,0,.45)}
+.tcgGrid .tcg.r-rare:not(.holo):not(.locked):hover{box-shadow:0 8px 22px rgba(59,130,246,.5)}
+.tcgGrid .tcg.r-epique:not(.holo):not(.locked):hover{box-shadow:0 8px 24px rgba(168,85,247,.55)}
+.tcgGrid .tcg.r-legendaire:not(.holo):not(.locked):hover{box-shadow:0 8px 28px rgba(245,179,1,.65)}
+}
 .tcgWrap{display:flex;flex-direction:column;gap:8px}
 .modal.acctModal{max-width:560px;color-scheme:dark}
 .acctList{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
@@ -506,7 +537,53 @@ to{--ang:360deg}
 .stockRow .addbtn{flex:1;min-width:0;padding:9px 6px;font-size:12.5px}
 .luckBox{margin:0 0 14px;padding:10px 16px;border-radius:var(--r-md);background:rgba(63,174,92,.14);border:1px solid rgba(63,174,92,.35);color:var(--text);font-size:13.5px}
 .luckBox b{color:var(--rate-green)}
-.potCard{border-left:4px solid hsl(var(--ph),60%,50%)}
+.luckBox{display:flex;align-items:center;gap:12px}
+.luckIco{flex:none;width:30px;height:40px;display:block}
+.luckIco svg{width:100%;height:100%;display:block}
+.potGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:760px;margin:0 0 8px}
+.potTile{--pc:hsl(var(--ph) 70% 56%);position:relative;display:flex;flex-direction:column;padding:6px;border:2px solid var(--pc);border-radius:var(--r-md);background:var(--panel);overflow:hidden;box-shadow:0 0 16px hsl(var(--ph) 85% 50% / .32);transition:transform .25s ease,box-shadow .25s ease}
+.potTile:hover{transform:translateY(-3px);box-shadow:0 6px 24px hsl(var(--ph) 85% 50% / .5)}
+.potTile.t-p3{border-color:transparent;background:linear-gradient(var(--panel),var(--panel)) padding-box,conic-gradient(from var(--ang),#f5b301,#ffe08a,#f5b301,#ff9d2e,#f5b301) border-box;animation:ultSpin 6s linear infinite;box-shadow:0 0 24px rgba(245,179,1,.5)}
+.potTile.blocked{opacity:.55;filter:saturate(.55)}
+.potArt{position:relative;aspect-ratio:1/1.08;border-radius:calc(var(--r-md) - 6px);overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 62%,hsl(var(--ph) 70% 28%) 0,hsl(var(--ph) 45% 13%) 62%,#0d0d0d 100%)}
+.potArt::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 10px,transparent 10px 20px);pointer-events:none}
+.potArt svg{position:relative;width:82%;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55));transition:transform .4s cubic-bezier(.3,.7,.2,1)}
+.potTile:hover .potArt svg{transform:translateY(-5px) rotate(-3deg) scale(1.05)}
+.potTile::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 50%,transparent 62%);background-size:250% 100%;background-position:200% 0;animation:tcgShine 5s linear infinite}
+.potTile.t-p1::after{animation-duration:7s}
+.potTile .nm{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;padding:8px 4px 1px;text-align:center;line-height:1.2}
+.potTile .rr{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;text-align:center;color:var(--pc);padding-bottom:6px}
+.potFx{display:flex;flex-direction:column;gap:3px;padding:0 6px 8px}
+.potFxRow{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-dim)}
+.potFxRow .dot{width:8px;height:8px;border-radius:50%;background:var(--rc);box-shadow:0 0 6px var(--rc);flex:none}
+.potFxRow b{margin-left:auto;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px}
+.potBuy{margin-top:auto;display:flex;flex-direction:column;gap:7px;padding:2px 4px 4px;position:relative;z-index:3}
+.potBuy .btn{width:100%;flex:none;padding:10px 8px;font-size:13px}
+.potOn{position:absolute;top:10px;left:10px;z-index:4;background:var(--gold);color:#fff;border-radius:var(--r-pill);padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.potBub{animation:potBub 3.2s ease-in infinite}
+.potSpk{transform-box:fill-box;transform-origin:center;animation:potSpk 2.4s ease-in-out infinite}
+@keyframes potBub{
+0%{transform:translateY(0);opacity:0}
+15%{opacity:.85}
+100%{transform:translateY(-34px);opacity:0}
+}
+@keyframes potSpk{
+0%,100%{transform:scale(.4);opacity:.25}
+50%{transform:scale(1);opacity:1}
+}
+@media (max-width:640px){
+.potGrid{grid-template-columns:1fr;gap:12px}
+.potTile{display:grid;grid-template-columns:116px minmax(0,1fr);grid-template-areas:'art nm' 'art rr' 'art fx' 'buy buy';column-gap:10px;align-items:start}
+.potTile .potArt{grid-area:art;aspect-ratio:auto;height:100%;min-height:150px}
+.potTile .nm{grid-area:nm;text-align:left;padding:6px 4px 0 0;font-size:14.5px}
+.potTile .rr{grid-area:rr;text-align:left;padding-bottom:4px}
+.potTile .potFx{grid-area:fx;padding:0 4px 6px 0}
+.potTile .potBuy{grid-area:buy;padding-top:6px}
+}
+@media (prefers-reduced-motion:reduce){
+.potBub,.potSpk,.potTile.t-p3,.potTile::after{animation:none}
+.potTile:hover .potArt svg{transform:none}
+}
 .wkBanner{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .modal.recModal{max-width:620px;color-scheme:dark}
 .recHint{font-size:12.5px;color:var(--text-dim);line-height:1.55;margin:-6px 0 14px}
@@ -587,6 +664,7 @@ to{background-position:90% 80%}
 }
 @media (prefers-reduced-motion:reduce){
 .tcg.holo{transform:none!important;transition:none}
+.mkItem .tcg:not(.holo):hover,.tcgGrid .tcg:not(.holo):hover{transform:none!important}
 .tcg .foil{animation:none!important}
 .tcg.holo.r-legendaire::after{animation:none}
 .tcg.r-ultime{animation:none}
@@ -630,13 +708,14 @@ to{background-position:90% 80%}
 .packOverlay.v-epic .flipBack{border-color:#b36bff;color:#b36bff;box-shadow:0 0 18px rgba(179,107,255,.4)}
 .packOverlay.v-deviant .flipBack{border-color:#35c0ff;color:#35c0ff;box-shadow:0 0 18px rgba(53,192,255,.4)}
 .cardDetail{display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:780px;margin:auto}
-.cardBig .tcg{width:min(300px,72vw);touch-action:none;cursor:default}
+.cardBig .tcg{width:min(320px,74vw);touch-action:none;cursor:default}
 .cardInfo{flex:1;min-width:240px;max-width:360px;text-align:left;--rc:#8b9199}
 .cardInfo.r-rare{--rc:#3b82f6}
 .cardInfo.r-epique{--rc:#a855f7}
 .cardInfo.r-legendaire{--rc:#f5b301}
 .cardInfo.r-ultime{--rc:#ff5ccd}
-.cardRar{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--rc);margin-bottom:14px}
+.cardRar{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--rc);margin-bottom:14px;padding:3px 11px;border:1px solid var(--rc);border-radius:var(--r-pill);background:color-mix(in srgb,var(--rc) 12%,transparent)}
+.cardRar .st{font-size:9px;letter-spacing:1px}
 .cardDesc{font-size:14.5px;line-height:1.6;color:var(--text);margin-bottom:14px}
 .cardMeta{font-size:12.5px;color:var(--text-dim);margin-bottom:10px}
 .faRow{display:flex;gap:14px;align-items:center;padding:12px 14px;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md)}
@@ -655,7 +734,7 @@ to{background-position:90% 80%}
 .deckLayout{display:flex;align-items:center;justify-content:center;gap:36px;margin:52px 0 10px}
 .deckArea{position:relative;width:min(300px,62vw);aspect-ratio:5/7;touch-action:none;cursor:pointer;user-select:none;-webkit-user-select:none}
 .deckFx{position:absolute;inset:0;pointer-events:none;z-index:0}
-.deckCard{--rot:1deg;position:absolute;inset:0;z-index:100;perspective:1100px;transform:translateY(calc(var(--k,0) * 13px)) scale(calc(1 - var(--k,0) * .045)) rotate(calc(var(--k,0) * var(--rot)));transition:transform .5s cubic-bezier(.3,.7,.2,1),opacity .3s ease}
+.deckCard{--rot:1deg;position:absolute;inset:0;z-index:100;perspective:1100px;transform:translateY(calc(var(--k,0) * 13px)) scale(calc(1 - var(--k,0) * .045)) rotate(calc(var(--k,0) * var(--rot)));transition:transform .33s cubic-bezier(.3,.7,.2,1),opacity .2s ease}
 .deckCard.flipped .flipInner{transform:rotateY(180deg)}
 .deckCard.glowy::before{content:'';position:absolute;inset:-3px;border-radius:calc(var(--r-md) + 3px);pointer-events:none;box-shadow:0 0 18px 4px rgba(255,240,200,.32);animation:glowFaint 2.4s ease-in-out infinite}
 .deckCard.glowy.lvl1::before{box-shadow:0 0 46px 15px rgba(255,240,200,.9);animation:glowStrong .9s ease-in-out infinite}
@@ -676,11 +755,39 @@ to{background-position:90% 80%}
 80%{transform:translate(2px,0) rotate(.3deg)}
 100%{transform:translate(0,0) rotate(0)}
 }
+.deckCard.glowy.lvl2::before{box-shadow:0 0 70px 26px rgba(255,200,60,.95),0 0 130px 52px rgba(255,150,20,.45);animation:glowStrong .5s ease-in-out infinite}
+.deckCard.lvl2:not(.flipped) .flipInner{animation:chargeShake2 .5s ease-in-out infinite}
+@keyframes chargeShake2{
+0%,100%{transform:translate(0,-8px) rotate(0) scale(1.035)}
+20%{transform:translate(-4px,-10px) rotate(-1.1deg) scale(1.04)}
+40%{transform:translate(4px,-7px) rotate(1deg) scale(1.035)}
+60%{transform:translate(-3px,-10px) rotate(-.8deg) scale(1.045)}
+80%{transform:translate(3px,-8px) rotate(.8deg) scale(1.04)}
+}
+.packOverlay{transition:box-shadow .5s ease}
+.packOverlay.charge1{box-shadow:inset 0 0 140px rgba(0,0,0,.65)}
+.packOverlay.charge2{box-shadow:inset 0 0 180px rgba(255,160,0,.28),inset 0 0 70px rgba(0,0,0,.75)}
 .deckCard.pop{animation:cardPop .6s ease-out}
+.deckCard.pop.big{animation:cardPopBig .75s ease-out}
 @keyframes cardPop{
 0%{transform:scale(1)}
 35%{transform:scale(1.07)}
 100%{transform:scale(1)}
+}
+@keyframes cardPopBig{
+0%{transform:scale(.96)}
+28%{transform:scale(1.14)}
+55%{transform:scale(1.05)}
+100%{transform:scale(1)}
+}
+.packStage.shake{animation:stageShake .5s ease-out}
+@keyframes stageShake{
+0%,100%{transform:translate(0,0)}
+12%{transform:translate(-8px,4px)}
+28%{transform:translate(7px,-5px)}
+44%{transform:translate(-5px,3px)}
+60%{transform:translate(4px,-2px)}
+78%{transform:translate(-2px,1px)}
 }
 .deckProgress{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-top:40px;position:relative;z-index:300}
 .deckHint{font-size:13px;color:var(--text);margin:8px 0 14px;min-height:20px;position:relative;z-index:300}
@@ -726,8 +833,59 @@ to{transform:rotate(360deg)}
 .fxLabel{position:absolute;left:-90px;right:-90px;top:-50px;text-align:center;white-space:nowrap;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:4px;color:var(--fx);text-shadow:0 0 18px var(--fx);animation:labelIn .6s cubic-bezier(.2,1.4,.4,1) forwards}
 .fxLabel.rainbow{background:linear-gradient(90deg,#ff3d81,#ffb02e,#4cf2a0,#35c0ff,#a259ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;text-shadow:none}
 @keyframes labelIn{
-0%{opacity:0;transform:scale(.4)}
-100%{opacity:1;transform:scale(1)}
+0%{opacity:0;transform:scale(.4);letter-spacing:18px}
+100%{opacity:1;transform:scale(1);letter-spacing:4px}
+}
+.fxLabel.big{font-size:34px;top:-62px;letter-spacing:6px}
+.fxCharge{position:absolute;left:50%;top:50%;width:135%;aspect-ratio:1;margin:-67.5% 0 0 -67.5%;border-radius:50%;border:3px solid var(--fx);opacity:0;animation:chargeIn .5s ease-in forwards}
+@keyframes chargeIn{
+0%{transform:scale(1.25);opacity:0}
+30%{opacity:.9}
+100%{transform:scale(.55);opacity:0}
+}
+.fxIn{position:absolute;left:50%;top:50%;width:var(--s,6px);height:var(--s,6px);margin:calc(var(--s,6px)/ -2) 0 0 calc(var(--s,6px)/ -2);border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);opacity:0;animation:inOut .55s ease-in var(--delay,0ms) forwards}
+@keyframes inOut{
+0%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.6)}
+30%{opacity:1}
+100%{opacity:0;transform:rotate(var(--a)) translateX(0) scale(1.1)}
+}
+.fxRays.charging{opacity:.3;animation:raysSpin 4s linear infinite}
+.fxBurst{position:absolute;left:50%;top:50%;width:170%;aspect-ratio:1;margin:-85% 0 0 -85%;border-radius:50%;background:radial-gradient(circle,#fff 0,var(--fx) 26%,transparent 64%);opacity:0;animation:burstOut .7s ease-out forwards;mix-blend-mode:screen}
+@keyframes burstOut{
+0%{transform:scale(.2);opacity:.95}
+100%{transform:scale(1.5);opacity:0}
+}
+.fxShock{position:absolute;left:50%;top:50%;width:70%;aspect-ratio:1;margin:-35% 0 0 -35%;border-radius:50%;border:2px solid #fff;box-shadow:0 0 18px var(--fx),inset 0 0 18px var(--fx);opacity:0;animation:shockOut .9s cubic-bezier(.1,.7,.3,1) var(--delay,0ms) forwards}
+@keyframes shockOut{
+0%{transform:scale(.3);opacity:1}
+100%{transform:scale(3.4);opacity:0}
+}
+.fxConf{position:absolute;top:-6%;width:8px;height:14px;background:var(--c);opacity:0;animation:confFall var(--t,1.8s) ease-in var(--delay,0ms) forwards}
+@keyframes confFall{
+0%{opacity:1;transform:translate(0,0) rotate(0)}
+85%{opacity:1}
+100%{opacity:0;transform:translate(var(--x),560px) rotate(var(--r))}
+}
+.qtyBar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.qtyLab{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-right:4px}
+.qtyBtn{min-width:54px;padding:8px 16px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--panel);color:var(--text);font:700 13px 'Space Grotesk',sans-serif;cursor:pointer;transition:background .15s,border-color .15s}
+.qtyBtn:hover{border-color:var(--gold)}
+.qtyBtn.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.batchStage{max-width:980px}
+.batchChips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 14px}
+.batchChip{display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:var(--r-pill);background:var(--panel-3);font-size:12.5px}
+.batchChip .dot{width:8px;height:8px;border-radius:50%;background:var(--rc);box-shadow:0 0 6px var(--rc)}
+.batchChip b{font-family:'JetBrains Mono',monospace}
+.batchGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px;max-height:min(50vh,520px);overflow-y:auto;padding:10px;border:1px solid var(--border);border-radius:var(--r-lg);background:rgba(255,255,255,.02)}
+.batchItem .tcg{width:100%}
+@media (max-width:560px){
+.batchGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:8px}
+}
+@media (prefers-reduced-motion:reduce){
+.fxBurst,.fxCharge,.fxConf,.fxIn,.fxShock{display:none}
+.deckCard.lvl2:not(.flipped) .flipInner{animation:none}
+.deckCard.pop.big{animation:none}
+.packStage.shake{animation:none}
 }
 @media (prefers-reduced-motion:reduce){
 .fxFlash,.fxRays,.fxRing,.spark{display:none}
@@ -1146,13 +1304,13 @@ const e=streamViewFromCreator,t=(creatorSettings.twitchChannel||"").trim(),a=win
 wireNav(e?"creator":"viewer"),renderPcPanel(),t&&startWatchTimer()}let cardsCatalog={collections:[],cards:[],v:2
 },boostersViewFromCreator=!0,boostersTab=null,boostNote="",boostersColId=null,boostersFilter="all",boostersVersion="normal",manageColId=null,boosterLock=!1,fanartList=[],fanartDraft={file:null,
 preview:""}
-;const CARDS_PER_PACK=6,GOLD_CHANCE=1e-4,GOLD_CARDS=6,SDF_CHANCE=1e-4,SDF_CARDS=2,HOLOPACK_CHANCE=.003,RAREPACK_CHANCE=.01,EPICPACK_CHANCE=.002,DEVIANT_CHANCE=.02,DEVIANT_MIN_EXTRA=4,DEVIANT_MAX_EXTRA=10,HOLO_MULT=3,MAX_PENDING_FANARTS=3,DAILY_MS=864e5,DAILY_COUNT=2,STOCK_MAX=99,APP_BUILD="v. 9 oct. 2026 · potions renommées",CODE_PREFIX="code:",CODE_ALPHABET="ABCDEFGHJKMNPQRSTUVWXYZ23456789",MAX_CODE_BOOSTERS=50,FANART_PREFIX="fanart:",RARITIES={
-commune:{label:"Commune",value:2,rank:0},rare:{label:"Rare",value:12,rank:1},epique:{label:"Épique",value:40,rank:2},legendaire:{label:"Légendaire",value:160,rank:3},ultime:{label:"Ultime",value:600,
-rank:4}},RARITY_KEYS=["commune","rare","epique","legendaire","ultime"],SLOT_ODDS=[{commune:0,rare:73.13,epique:25.95,legendaire:.91,ultime:.01,holo:8},{commune:25,rare:60.8,epique:14,legendaire:.2,
-ultime:0,holo:6.5},{commune:58,rare:36,epique:6,legendaire:0,ultime:0,holo:5},{commune:75,rare:24,epique:1,legendaire:0,ultime:0,holo:0},{commune:85,rare:15,epique:0,legendaire:0,ultime:0,holo:0},{
-commune:92,rare:8,epique:0,legendaire:0,ultime:0,holo:0}],HOLO_LAST_SLOTS=SLOT_ODDS.filter(e=>e.holo>0).length,RARE_ODDS=[{commune:0,rare:38,epique:56.9,legendaire:5,ultime:.1,holo:8},{commune:0,
-rare:52,epique:44,legendaire:4,ultime:0,holo:6.5},{commune:0,rare:68,epique:29.5,legendaire:2.5,ultime:0,holo:5},{commune:0,rare:82,epique:17.5,legendaire:.5,ultime:0,holo:0},{commune:0,rare:92,
-epique:8,legendaire:0,ultime:0,holo:0},{commune:0,rare:100,epique:0,legendaire:0,ultime:0,holo:0}],EPIC_ODDS=[{commune:0,rare:0,epique:84.5,legendaire:15,ultime:.5,holo:8},{commune:0,rare:0,
+;const CARDS_PER_PACK=6,GOLD_CHANCE=1e-4,GOLD_CARDS=6,SDF_CHANCE=1e-4,SDF_CARDS=2,HOLOPACK_CHANCE=.003,RAREPACK_CHANCE=.01,EPICPACK_CHANCE=.002,DEVIANT_CHANCE=.02,DEVIANT_MIN_EXTRA=4,DEVIANT_MAX_EXTRA=10,HOLO_MULT=3,MAX_PENDING_FANARTS=3,DAILY_MS=864e5,DAILY_COUNT=2,STOCK_MAX=99,APP_BUILD="v. 9 oct. 2026 · lots de boosters, cartes retravaillées",CODE_PREFIX="code:",CODE_ALPHABET="ABCDEFGHJKMNPQRSTUVWXYZ23456789",MAX_CODE_BOOSTERS=50,FANART_PREFIX="fanart:",RARITIES={
+commune:{label:"Commune",value:1.8,rank:0},rare:{label:"Rare",value:10.8,rank:1},epique:{label:"Épique",value:36,rank:2},legendaire:{label:"Légendaire",value:168,rank:3},ultime:{label:"Ultime",
+value:540,rank:4}},RARITY_KEYS=["commune","rare","epique","legendaire","ultime"],SLOT_ODDS=[{commune:0,rare:73.13,epique:25.95,legendaire:.91,ultime:.01,holo:8},{commune:25,rare:60.8,epique:14,
+legendaire:.2,ultime:0,holo:6.5},{commune:58,rare:36,epique:6,legendaire:0,ultime:0,holo:5},{commune:75,rare:24,epique:1,legendaire:0,ultime:0,holo:0},{commune:85,rare:15,epique:0,legendaire:0,
+ultime:0,holo:0},{commune:92,rare:8,epique:0,legendaire:0,ultime:0,holo:0}],HOLO_LAST_SLOTS=SLOT_ODDS.filter(e=>e.holo>0).length,RARE_ODDS=[{commune:0,rare:38,epique:56.9,legendaire:5,ultime:.1,holo:8
+},{commune:0,rare:52,epique:44,legendaire:4,ultime:0,holo:6.5},{commune:0,rare:68,epique:29.5,legendaire:2.5,ultime:0,holo:5},{commune:0,rare:82,epique:17.5,legendaire:.5,ultime:0,holo:0},{commune:0,
+rare:92,epique:8,legendaire:0,ultime:0,holo:0},{commune:0,rare:100,epique:0,legendaire:0,ultime:0,holo:0}],EPIC_ODDS=[{commune:0,rare:0,epique:84.5,legendaire:15,ultime:.5,holo:8},{commune:0,rare:0,
 epique:87.5,legendaire:12.5,ultime:0,holo:6.5},{commune:0,rare:0,epique:90,legendaire:10,ultime:0,holo:5},{commune:0,rare:0,epique:92.5,legendaire:7.5,ultime:0,holo:0},{commune:0,rare:0,epique:96,
 legendaire:4,ultime:0,holo:0},{commune:0,rare:0,epique:100,legendaire:0,ultime:0,holo:0}],ODDS_TABLES={rare:RARE_ODDS,epic:EPIC_ODDS},MARVEL_TEMPLATE={key:"marvel",hue:355,name:"Marvel (MCU)",
 legendaire:[{n:"Iron Man",h:355,d:"Tony Stark, génie milliardaire et inventeur, qui bâtit sa propre armure pour protéger ceux qui comptent."},{n:"Captain America",h:215,
@@ -1385,7 +1543,7 @@ cardsCatalog=t&&Array.isArray(t.collections)&&Array.isArray(t.cards)?t:{collecti
 cardsCatalog.v=2,isCreatorAccount&&cardsCatalog.collections.length&&await saveCards())}async function saveCards(){await kvSet(CARDS_KEY,cardsCatalog)}function cardUid(e){
 return e+Math.random().toString(36).slice(2,10)}function isPublished(e){return!!e&&!1!==e.published}function colCards(e){return cardsCatalog.cards.filter(t=>t.collectionId===e)}function ownedMap(e){
 return watchMine&&(e?watchMine.holo:watchMine.cards)||{}}function myCardCount(e,t){return ownedMap(t)[e]||0}function myProgress(e,t){const a=colCards(e);return{
-owned:a.filter(e=>myCardCount(e.id,t)>0).length,total:a.length}}function cardValue(e,t){const a=(RARITIES[e.rarity]||RARITIES.commune).value;return t?3*a:a}function normCode(e){
+owned:a.filter(e=>myCardCount(e.id,t)>0).length,total:a.length}}function cardValue(e,t){const a=(RARITIES[e.rarity]||RARITIES.commune).value;return t?Math.round(3*a*100)/100:a}function normCode(e){
 return String(e||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}function fmtCode(e){return 8===e.length?e.slice(0,4)+"-"+e.slice(4):e}function genCodeNorm(){const e=new Uint32Array(8)
 ;return crypto.getRandomValues(e),Array.from(e,e=>CODE_ALPHABET[e%31]).join("")}let codeFails=0,codeLockUntil=0;async function redeemCode(e){if(!viewerName||isCreatorAccount)return{ok:!1,
 msg:"Connecte-toi pour utiliser un code."};const t=normCode(e);if(t.length<4)return{ok:!1,msg:"Entre ton code."};if(Date.now()<codeLockUntil)return{ok:!1,
@@ -1436,7 +1594,7 @@ const i=a.sdf?"commune":n<t-1?"legendaire":"ultime";e.push({card:o(bestAvailable
 ;return p.map((e,t)=>({card:o(e),holo:100*Math.random()<d(t)}))}function cardHue(e){return void 0!==e.hue&&null!==e.hue&&""!==e.hue?Number(e.hue):hashHue(e.name)}function hashHue(e){let t=0
 ;const a=String(e||"");for(let e=0;e<a.length;e++)t=(31*t+a.charCodeAt(e))%360;return t}function cardTileHtml(e,t={}){
 const a=RARITIES[e.rarity]||RARITIES.commune,n=!!t.locked,i=!n||!!t.reveal||isCreatorAccount,s=!n&&!!t.holo,o=cardHue(e),r=!n&&!!e.image,l=r?`style="background-image:url('${escapeHtml(e.image)}')"`:n?"":`style="--h:${o}"`,d=n?"?":r?"":`<span class="mono">${posterInitial(e.name)}</span>`
-;return`\n    <div class="tcg r-${e.rarity} ${n?"locked":""} ${s?"holo":""}" data-card="${e.id}">\n      <div class="art ${r||n?"":"noimg"}" ${l}>${d}${!n&&e.artist?`<span class="credit">par ${escapeHtml(e.artist)}</span>`:""}${s?'<span class="holotag">HOLO</span>':""}</div>\n      <div class="nm">${i?escapeHtml(e.name):"?"}</div>\n      <div class="rr">${a.label}</div>\n      ${s?'<div class="foil"></div><div class="glare"></div>':""}\n      ${t.count>1?`<span class="cnt">x${t.count}</span>`:""}\n      ${t.isNew?'<span class="newtag">Nouvelle</span>':""}\n    </div>`
+;return`\n    <div class="tcg r-${e.rarity} ${n?"locked":""} ${s?"holo":""} ${t.count>1&&t.isNew?"bothbadge":""}" data-card="${e.id}">\n      <div class="art ${r||n?"":"noimg"}" ${l}>${d}${!n&&e.artist?`<span class="credit">par ${escapeHtml(e.artist)}</span>`:""}${s?'<span class="holotag">HOLO</span>':""}</div>\n      <div class="nm"${i?` title="${escapeHtml(e.name)}"`:""}>${i?escapeHtml(e.name):"?"}</div>\n      <div class="rr">${a.label}</div>\n      ${s?'<div class="foil"></div><div class="glare"></div>':""}\n      ${t.count>1?`<span class="cnt">x${t.count}</span>`:""}\n      ${t.isNew?'<span class="newtag">Nouvelle</span>':""}\n    </div>`
 }let holoActive=null;const reduceMotionMQ=window.matchMedia?window.matchMedia("(prefers-reduced-motion: reduce)"):{matches:!1};function holoReset(e){
 e&&(["--rx","--ry","--mx","--my","--bx","--by"].forEach(t=>e.style.removeProperty(t)),e.classList.remove("tilting"))}document.addEventListener("pointermove",e=>{if(reduceMotionMQ.matches)return
 ;const t=e.target&&e.target.closest?e.target.closest(".tcg.holo"):null;t!==holoActive&&(holoReset(holoActive),holoActive=t),t&&(holoPt={x:e.clientX,y:e.clientY},
@@ -1447,7 +1605,7 @@ e.classList.add("tilting")}function openCardDetail(e,t,a,n){const i=cardsCatalog
 ;const o=n?n.rec:watchMine,r=cardsCatalog.collections.find(e=>e.id===i.collectionId),l=RARITIES[i.rarity]||RARITIES.commune,d=document.getElementById("modalRoot"),c=()=>{
 const e=t?1:recCount(o,i.id,!1),a=t?1:recCount(o,i.id,!0),u=s?a:e,m=u>0,p=t||e+a>0
 ;d.innerHTML=`\n      <div class="overlay packOverlay" id="cardOverlay">\n        <div class="cardDetail">\n          <div class="cardBig">${cardTileHtml(i,{locked:!m,count:t?0:u,holo:s,reveal:p
-})}</div>\n          <div class="cardInfo r-${i.rarity}">\n            <div class="packTitle" style="text-align:left;margin-bottom:8px;">${escapeHtml(r?r.name:"")}${n?" · "+escapeHtml(n.owner):""}</div>\n            <h3 style="margin-bottom:4px;">${p||isCreatorAccount?escapeHtml(i.name):"?"}</h3>\n            <div class="cardRar">${l.label}</div>\n            <div class="tabs" id="verSwitch" style="margin-bottom:14px;">\n              <button class="tab ${s?"":"active"}" data-h="0">Normale${t?"":` (${e})`}</button>\n              <button class="tab ${s?"active":""}" data-h="1">Holographique${t?"":` (${a})`}</button>\n            </div>\n            <div class="cardDesc">${p?escapeHtml(i.desc||"Pas encore de description."):"Obtiens cette carte pour débloquer sa description."}</div>\n            ${i.artist&&(p||isCreatorAccount)?`<div class="cardMeta">Illustration de ${escapeHtml(i.artist)}</div>`:""}\n            <div class="cardMeta">${t?"Aperçu":m?`Exemplaires : ${u}`:n?"Pas dans sa collection":"Pas encore obtenue"}${!t&&!n&&u>1?` · Recyclage : ${cardValue(i,s)} Ryos par doublon`:""}</div>\n            <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>\n          </div>\n        </div>\n      </div>`
+})}</div>\n          <div class="cardInfo r-${i.rarity}">\n            <div class="packTitle" style="text-align:left;margin-bottom:8px;">${escapeHtml(r?r.name:"")}${n?" · "+escapeHtml(n.owner):""}</div>\n            <h3 style="margin-bottom:4px;">${p||isCreatorAccount?escapeHtml(i.name):"?"}</h3>\n            <div class="cardRar"><span class="st">${"★".repeat(Math.max(1,RARITY_KEYS.indexOf(i.rarity)+1))}</span>${l.label}</div>\n            <div class="tabs" id="verSwitch" style="margin-bottom:14px;">\n              <button class="tab ${s?"":"active"}" data-h="0">Normale${t?"":` (${e})`}</button>\n              <button class="tab ${s?"active":""}" data-h="1">Holographique${t?"":` (${a})`}</button>\n            </div>\n            <div class="cardDesc">${p?escapeHtml(i.desc||"Pas encore de description."):"Obtiens cette carte pour débloquer sa description."}</div>\n            ${i.artist&&(p||isCreatorAccount)?`<div class="cardMeta">Illustration de ${escapeHtml(i.artist)}</div>`:""}\n            <div class="cardMeta">${t?"Aperçu":m?`Exemplaires : ${u}`:n?"Pas dans sa collection":"Pas encore obtenue"}${!t&&!n&&u>1?` · Recyclage : ${fmtN(cardValue(i,s))} Ryos par doublon`:""}</div>\n            <button class="btn ghost" id="cardCloseBtn" style="flex:none;">Fermer</button>\n          </div>\n        </div>\n      </div>`
 ;const v=()=>closeModal();document.getElementById("cardCloseBtn").onclick=v,document.getElementById("cardOverlay").onclick=e=>{"cardOverlay"===e.target.id&&v()},
 document.querySelectorAll("#verSwitch .tab").forEach(e=>{e.onclick=()=>{s="1"===e.dataset.h,c()}})};c()}function openCardEditor(e){const t=cardsCatalog.cards.find(t=>t.id===e);if(!t)return
 ;const a=cardHue(t)
@@ -1462,91 +1620,124 @@ const t=new Set(colCards(e).map(e=>normName(e.name)));RARITY_KEYS.forEach(n=>(i[
 rarity:n,desc:i.d,hue:i.h,image:"",imagePath:""}),t.add(normName(i.n)),a++)}))}const s={};return COLLECTION_TEMPLATES.forEach(e=>RARITY_KEYS.forEach(t=>(e[t]||[]).forEach(e=>{s[normName(e.n)]=e}))),
 cardsCatalog.cards.filter(t=>t.collectionId===e).forEach(e=>{const t=s[normName(e.name)];if(!t)return;let a=!1;e.desc||(e.desc=t.d,a=!0),void 0!==e.hue&&null!==e.hue&&""!==e.hue||(e.hue=t.h,a=!0),
 a&&n++}),(a||n)&&await saveCards(),{added:a,completed:n}}async function renderBoosters(){
-const e=boostersViewFromCreator,t=e?["manage","test","codes","fanarts","board"]:["open","wheelweek","collection","trade","fanart","board"];if(t.includes(boostersTab)||(boostersTab=t[0]),
+const e=boostersViewFromCreator,t=e?["manage","test","codes","fanarts","board"]:["open",...WHEEL_ON?["wheelweek"]:[],"collection","trade","fanart","board"]
+;if(t.includes(boostersTab)||(boostersTab=t[0]),
 app.innerHTML=`\n    <div class="page">\n      ${navHtml("boosters",e?"creator":"viewer")}\n      <div class="logo" style="margin-bottom:20px;">\n        <h1 style="font-size:28px;">BOOSTERS</h1>\n      </div>\n      <div class="tabs" id="boosterTabs" style="margin-bottom:18px;"></div>\n      <div id="boostersBody"></div>\n    </div>\n  `,
 wireNav(e?"creator":"viewer"),boostersViewUser=null,tradeNote="",tradeDraft=null,boostNote="",await loadCards(!0),await loadWatchMine(),e)await loadFanarts();else if(viewerName){await loadTrades()
-;const e=await claimTrades();e.note&&(tradeNote=e.note)}drawBoosters()}function drawBoosters(){stopDailyTimer(),codeStatusTimer&&"codes"!==boostersTab&&(clearInterval(codeStatusTimer),
-codeStatusTimer=null);const e=boostersViewFromCreator,t=document.getElementById("boosterTabs"),a=document.getElementById("boostersBody");if(!t||!a)return
-;const n=fanartList.filter(e=>"pending"===e.status).length,i=e?[["manage","Gérer"],["test","Tester"],["codes","Codes"],["fanarts","Fan arts"+(n?` (${n})`:"")],["board","Classement"]]:[["open","Boosters"],["wheelweek","Roue bonus"],["collection","Ma collection"],["trade","Échanges"],["fanart","Fan art"],["board","Classement"]]
+;const e=await claimTrades();e.note&&(tradeNote=e.note)}drawBoosters()}function drawBoosters(){"wheelweek"!==boostersTab||WHEEL_ON||(boostersTab="open"),stopDailyTimer(),
+codeStatusTimer&&"codes"!==boostersTab&&(clearInterval(codeStatusTimer),codeStatusTimer=null)
+;const e=boostersViewFromCreator,t=document.getElementById("boosterTabs"),a=document.getElementById("boostersBody");if(!t||!a)return
+;const n=fanartList.filter(e=>"pending"===e.status).length,i=e?[["manage","Gérer"],["test","Tester"],["codes","Codes"],["fanarts","Fan arts"+(n?` (${n})`:"")],["board","Classement"]]:[["open","Boosters"],...WHEEL_ON?[["wheelweek","Roue bonus"]]:[],["collection","Ma collection"],["trade","Échanges"],["fanart","Fan art"],["board","Classement"]]
 ;t.innerHTML=i.map(([e,t])=>`<button class="tab ${boostersTab===e?"active":""}" data-t="${e}">${t}</button>`).join(""),t.querySelectorAll(".tab").forEach(e=>{e.onclick=()=>{boostersTab=e.dataset.t,
 boostersViewUser=null,boostNote="",drawBoosters()}});const s=window.scrollY
 ;"open"===boostersTab?drawBoostersOpen(a):"wheelweek"===boostersTab?drawBoostersWheel(a):"collection"===boostersTab?drawBoostersCollection(a):"trade"===boostersTab?drawBoostersTrade(a):"board"===boostersTab?drawBoostersBoard(a):"fanart"===boostersTab?drawBoostersFanartForm(a):"fanarts"===boostersTab?drawBoostersFanarts(a):"test"===boostersTab?drawBoostersTest(a):"codes"===boostersTab?drawBoostersCodes(a):drawBoostersManage(a),
 window.scrollTo(0,s)}function boosterLoginPrompt(e){return`<div class="empty" style="padding:36px 18px;"><div>${e}</div><button class="btn2" id="boosterLoginBtn">Se connecter</button></div>`}
 function wireBoosterLogin(){const e=document.getElementById("boosterLoginBtn");e&&(e.onclick=()=>setMode("select"))}function drawBoostersOpen(e){
-const t=!!viewerName&&!isCreatorAccount,a=watchMine&&watchMine.points||0,n=cardsCatalog.collections.filter(e=>colCards(e.id).length>0&&isPublished(e)),i=viewerName?t?`\n    <div class="watchBar" style="margin:0 0 18px;">\n      <div class="watchMine">\n        <div class="n">${a}</div>\n        <div class="l">Ryos</div>\n        <div class="m">${watchMine&&watchMine.packs?watchMine.packs:0} boosters ouverts${stockTotal(watchMine)?` · ${stockTotal(watchMine)} en réserve`:""}${watchMine&&watchMine.freeBoosters?` · ${watchMine.freeBoosters} booster${watchMine.freeBoosters>1?"s":""} offert${watchMine.freeBoosters>1?"s":""}`:""}${specialCountsText(watchMine)}</div>\n      </div>\n    </div>`:"":boosterLoginPrompt("Connecte-toi pour ouvrir des boosters."),s=t&&watchMine&&watchMine.freeBoosters||0,o=t?'\n    <div class="codeBox">\n      <div class="dailyTitle">Code</div>\n      <div class="codeRow">\n        <input type="text" id="codeInput" class="codeInput" placeholder="Entre ton code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false">\n        <button class="btn primary" id="codeBtn" style="flex:none;">Valider</button>\n      </div>\n      <div class="hint" id="codeStatus" style="min-height:16px;text-align:left;margin:6px 0 0;"></div>\n    </div>':"",r=t?dailyLeft():0,l=t&&dailyEligibleCols().length>0&&r>0,d=t?`\n    <div class="dailyBox ${l?"ready":""}">\n      <div class="dailyTitle">Boosters quotidiens (2 par jour)</div>\n      <div class="dailyText" id="dailyText">${dailyTextPlain()}</div>\n    </div>`:"",c=t?luckActive(watchMine):null,u=c?`<div class="luckBox"><b>${escapeHtml(c.def.name)}</b> active : ${escapeHtml(c.def.desc.replace(/ sur \d+ boosters?$/,""))} · encore ${c.left} ${boosterWord(c.left)}</div>`:"",m=t&&watchMine&&watchMine.wheelWk!==weekKey()?'<button type="button" class="dailyBox ready wkBanner" id="wkBanner"><div class="dailyTitle">Roue de la semaine</div><div class="dailyText">Ton tour de roue est disponible : clique ici pour la tourner.</div></button>':"",p=(t&&tradeNote?`<div class="noticeBox">${escapeHtml(tradeNote)}</div>`:"")+(t&&boostNote?`<div class="noticeBox">${escapeHtml(boostNote)}</div>`:"")
-;e.innerHTML=i+p+u+o+d+m+(n.length?`\n    <div class="packGrid">\n      ${n.map(e=>{
-const n=myProgress(e.id,!1),i=myProgress(e.id,!0),o=a>=e.price,d=t&&watchMine&&(watchMine.stock||{})[e.id]||0,u=t?o?`Ouvrir · ${e.price} Ryos`:`${e.price} Ryos · il t'en manque ${e.price-a}`:`${e.price} Ryos`
-;return`\n        <div class="packTile">\n          ${packArtHtml(e)}\n          <div class="packInfo">\n            <div class="packName">${escapeHtml(e.name)}</div>\n            <div class="packMeta">${e.perPack} cartes par booster${t?` · ${n.owned}/${n.total} normales · ${i.owned}/${i.total} holo`:` · ${n.total} cartes`}</div>\n            <div class="packOdds">${lastCardOdds(e,c?c.def.m:null)}</div>\n            <details class="oddsBox"><summary>Voir tous les taux</summary>${oddsTableHtml(e)}</details>\n            ${s>0?`<button class="btn primary dailyBtn" data-voucher="${e.id}" style="flex:none;width:100%;">Utiliser un booster offert (${s})</button>`:""}\n            ${d>0?`<button class="btn primary dailyBtn" data-stock="${e.id}" style="flex:none;width:100%;">Ouvrir un booster de ma réserve (${d})</button>`:""}\n            ${l&&!1!==e.daily?`<button class="btn primary dailyBtn" data-daily="${e.id}" style="flex:none;width:100%;">Booster gratuit du jour${r>1?` (${r} restants)`:""}</button>`:""}\n            <button class="${s>0||d>0||l&&!1!==e.daily?"addbtn":"btn primary"}" data-open="${e.id}" style="flex:none;width:100%;" ${t&&o?"":"disabled"}>${u}</button>\n            ${t?`<div class="stockRow"><button type="button" class="addbtn" data-stockbuy="${e.id}" data-qty="1" title="Acheter maintenant, ouvrir plus tard" ${a>=e.price?"":"disabled"}>Garder ×1 · ${fmtN(e.price)}</button><button type="button" class="addbtn" data-stockbuy="${e.id}" data-qty="5" title="Acheter 5 boosters, à ouvrir plus tard" ${a>=5*e.price?"":"disabled"}>Garder ×5 · ${fmtN(5*e.price)}</button></div>`:""}\n          </div>\n        </div>`
+const t=!!viewerName&&!isCreatorAccount,a=watchMine&&watchMine.points||0,n=cardsCatalog.collections.filter(e=>colCards(e.id).length>0&&isPublished(e)),i=viewerName?t?`\n    <div class="watchBar" style="margin:0 0 18px;">\n      <div class="watchMine">\n        <div class="n">${a}</div>\n        <div class="l">Ryos</div>\n        <div class="m">${watchMine&&watchMine.packs?watchMine.packs:0} boosters ouverts${stockTotal(watchMine)?` · ${stockTotal(watchMine)} en réserve`:""}${watchMine&&watchMine.freeBoosters?` · ${watchMine.freeBoosters} booster${watchMine.freeBoosters>1?"s":""} offert${watchMine.freeBoosters>1?"s":""}`:""}${specialCountsText(watchMine)}</div>\n      </div>\n    </div>`:"":boosterLoginPrompt("Connecte-toi pour ouvrir des boosters."),s=t&&watchMine&&watchMine.freeBoosters||0,o=t?'\n    <div class="codeBox">\n      <div class="dailyTitle">Code</div>\n      <div class="codeRow">\n        <input type="text" id="codeInput" class="codeInput" placeholder="Entre ton code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false">\n        <button class="btn primary" id="codeBtn" style="flex:none;">Valider</button>\n      </div>\n      <div class="hint" id="codeStatus" style="min-height:16px;text-align:left;margin:6px 0 0;"></div>\n    </div>':"",r=t?dailyLeft():0,l=t&&dailyEligibleCols().length>0&&r>0,d=t?`\n    <div class="dailyBox ${l?"ready":""}">\n      <div class="dailyTitle">Boosters quotidiens (2 par jour)</div>\n      <div class="dailyText" id="dailyText">${dailyTextPlain()}</div>\n    </div>`:"",c=t?luckActive(watchMine):null,u=c?`<div class="luckBox">${potionIcon(c.def)}<span><b>${escapeHtml(c.def.name)}</b> active : ${escapeHtml(c.def.desc.replace(/ sur \d+ boosters?$/,""))} · encore ${c.left} ${boosterWord(c.left)}</span></div>`:"",m=WHEEL_ON&&t&&watchMine&&watchMine.wheelWk!==weekKey()?'<button type="button" class="dailyBox ready wkBanner" id="wkBanner"><div class="dailyTitle">Roue de la semaine</div><div class="dailyText">Ton tour de roue est disponible : clique ici pour la tourner.</div></button>':"",p=(t&&tradeNote?`<div class="noticeBox">${escapeHtml(tradeNote)}</div>`:"")+(t&&boostNote?`<div class="noticeBox">${escapeHtml(boostNote)}</div>`:""),v=t&&n.length?`<div class="qtyBar" id="qtyBar" role="group" aria-label="Nombre de boosters à ouvrir"><span class="qtyLab">Ouvrir par</span>${BATCH_QTYS.map(e=>`<button type="button" class="qtyBtn ${e===openQty?"on":""}" data-qty="${e}" aria-pressed="${e===openQty}">×${e}</button>`).join("")}</div>`:""
+;e.innerHTML=i+p+u+o+d+m+v+(n.length?`\n    <div class="packGrid">\n      ${n.map(e=>{
+const n=myProgress(e.id,!1),i=myProgress(e.id,!0),o=openQty,d=e.price*o,u=a>=d,m=t&&watchMine&&(watchMine.stock||{})[e.id]||0,p=Math.min(o,m),v=Math.min(o,s),h=Math.min(o,r),g=t?u?o>1?`Ouvrir ×${o} · ${fmtN(d)} Ryos`:`Ouvrir · ${e.price} Ryos`:o>1?`${fmtN(d)} Ryos · il t'en manque ${fmtN(d-a)}`:`${e.price} Ryos · il t'en manque ${e.price-a}`:`${e.price} Ryos`
+;return`\n        <div class="packTile">\n          ${packArtHtml(e)}\n          <div class="packInfo">\n            <div class="packName">${escapeHtml(e.name)}</div>\n            <div class="packMeta">${e.perPack} cartes par booster${t?` · ${n.owned}/${n.total} normales · ${i.owned}/${i.total} holo`:` · ${n.total} cartes`}</div>\n            <div class="packOdds">${lastCardOdds(e,c?c.def.m:null)}</div>\n            <details class="oddsBox"><summary>Voir tous les taux</summary>${oddsTableHtml(e)}</details>\n            ${s>0?`<button class="btn primary dailyBtn" data-voucher="${e.id}" style="flex:none;width:100%;">${v>1?`Utiliser ×${v} boosters offerts (${s})`:`Utiliser un booster offert (${s})`}</button>`:""}\n            ${m>0?`<button class="btn primary dailyBtn" data-stock="${e.id}" style="flex:none;width:100%;">${p>1?`Ouvrir ×${p} de ma réserve (${m})`:`Ouvrir un booster de ma réserve (${m})`}</button>`:""}\n            ${l&&!1!==e.daily?`<button class="btn primary dailyBtn" data-daily="${e.id}" style="flex:none;width:100%;">${h>1?`Ouvrir mes ${h} boosters gratuits du jour`:"Booster gratuit du jour"+(r>1?` (${r} restants)`:"")}</button>`:""}\n            <button class="${s>0||m>0||l&&!1!==e.daily?"addbtn":"btn primary"}" data-open="${e.id}" style="flex:none;width:100%;" ${t&&u?"":"disabled"}>${g}</button>\n            ${t?`<div class="stockRow"><button type="button" class="addbtn" data-stockbuy="${e.id}" data-qty="1" title="Acheter maintenant, ouvrir plus tard" ${a>=e.price?"":"disabled"}>Garder ×1 · ${fmtN(e.price)}</button><button type="button" class="addbtn" data-stockbuy="${e.id}" data-qty="5" title="Acheter 5 boosters, à ouvrir plus tard" ${a>=5*e.price?"":"disabled"}>Garder ×5 · ${fmtN(5*e.price)}</button></div>`:""}\n          </div>\n        </div>`
 }).join("")}\n    </div>\n    <div class="hint" style="margin-top:18px;">Les cartes les plus rares arrivent en fin de booster, et un booster reste cohérent (après une Épique ou mieux, jamais de Commune ni de Rare) · holographiques possibles sur les ${HOLO_LAST_SLOTS} dernières cartes (de ${fmtPct(Math.min(...SLOT_ODDS.filter(e=>e.holo>0).map(e=>e.holo)))} à ${fmtPct(Math.max(...SLOT_ODDS.map(e=>e.holo)))} selon la carte)<br>${specialLegendText()}</div>\n  `:'<div class="empty"><div>Aucun booster disponible pour l\'instant.</div></div>'),
-e.querySelectorAll("[data-open]").forEach(e=>{e.onclick=()=>openBooster(e.dataset.open)}),e.querySelectorAll("[data-daily]").forEach(e=>{e.onclick=()=>openBooster(e.dataset.daily,{daily:!0})}),
-e.querySelectorAll("[data-voucher]").forEach(e=>{e.onclick=()=>openBooster(e.dataset.voucher,{voucher:!0})}),e.querySelectorAll("[data-stock]").forEach(e=>{e.onclick=()=>openBooster(e.dataset.stock,{
-stock:!0})}),e.querySelectorAll("[data-stockbuy]").forEach(e=>{e.onclick=async()=>{e.disabled=!0;const t=await buyStock(e.dataset.stockbuy,parseInt(e.dataset.qty,10))
+e.querySelectorAll(".qtyBtn").forEach(e=>{e.onclick=()=>{setOpenQty(parseInt(e.dataset.qty,10)),drawBoosters()}}),e.querySelectorAll("[data-open]").forEach(e=>{
+e.onclick=()=>openBooster(e.dataset.open,{qty:openQty})}),e.querySelectorAll("[data-daily]").forEach(e=>{e.onclick=()=>openBooster(e.dataset.daily,{daily:!0,qty:openQty})}),
+e.querySelectorAll("[data-voucher]").forEach(e=>{e.onclick=()=>openBooster(e.dataset.voucher,{voucher:!0,qty:openQty})}),e.querySelectorAll("[data-stock]").forEach(e=>{
+e.onclick=()=>openBooster(e.dataset.stock,{stock:!0,qty:openQty})}),e.querySelectorAll("[data-stockbuy]").forEach(e=>{e.onclick=async()=>{e.disabled=!0
+;const t=await buyStock(e.dataset.stockbuy,parseInt(e.dataset.qty,10))
 ;if(boostNote=t.ok?`${t.qty} booster${t.qty>1?"s":""} ${t.col.name} mis en réserve pour ${fmtN(t.total)} Ryos (${t.n} en réserve).`:"",drawBoosters(),!t.ok){
 const e=document.querySelector("#boostersBody");e&&e.insertAdjacentHTML("afterbegin",`<div class="noticeBox" style="background:rgba(229,72,77,0.14);color:var(--rate-red);">${escapeHtml(t.msg)}</div>`)
-}}});const v=document.getElementById("wkBanner");v&&(v.onclick=()=>{boostersTab="wheelweek",boostNote="",drawBoosters()})
-;const h=document.getElementById("codeBtn"),g=document.getElementById("codeInput");if(h&&g){const e=async()=>{const e=document.getElementById("codeStatus");h.disabled=!0
-;const t=await redeemCode(g.value);if(h.disabled=!1,t.ok){drawBoosters();const e=document.getElementById("codeStatus");e&&(e.style.color="var(--rate-green)",
-e.textContent=`Code activé : +${t.boosters} booster${t.boosters>1?"s":""} offert${t.boosters>1?"s":""} !`)}else e&&(e.style.color="var(--rate-red)",e.textContent=t.msg)};h.onclick=e,
-g.addEventListener("keydown",t=>{"Enter"===t.key&&e()})}wireBoosterLogin(),t&&dailyEligibleCols().length>0&&!dailyState(watchMine).fresh&&(dailyTimer=setInterval(dailyTick,3e4))}function dailyTick(){
+}}});const h=document.getElementById("wkBanner");h&&(h.onclick=()=>{boostersTab="wheelweek",boostNote="",drawBoosters()})
+;const g=document.getElementById("codeBtn"),y=document.getElementById("codeInput");if(g&&y){const e=async()=>{const e=document.getElementById("codeStatus");g.disabled=!0
+;const t=await redeemCode(y.value);if(g.disabled=!1,t.ok){drawBoosters();const e=document.getElementById("codeStatus");e&&(e.style.color="var(--rate-green)",
+e.textContent=`Code activé : +${t.boosters} booster${t.boosters>1?"s":""} offert${t.boosters>1?"s":""} !`)}else e&&(e.style.color="var(--rate-red)",e.textContent=t.msg)};g.onclick=e,
+y.addEventListener("keydown",t=>{"Enter"===t.key&&e()})}wireBoosterLogin(),t&&dailyEligibleCols().length>0&&!dailyState(watchMine).fresh&&(dailyTimer=setInterval(dailyTick,3e4))}function dailyTick(){
 const e=document.getElementById("dailyText");e&&"open"===boostersTab?dailyState(watchMine).fresh?(stopDailyTimer(),drawBoosters()):e.textContent=dailyTextPlain():stopDailyTimer()}
-async function openBooster(e,t){if(!boosterLock&&viewerName&&!isCreatorAccount){boosterLock=!0;try{await loadCards();const a=cardsCatalog.collections.find(t=>t.id===e);if(!a||!isPublished(a))return
-;const n="watch:"+viewerKey,i=await getRec(n),s=!(!t||!t.daily),o=!(!t||!t.voucher),r=!(!t||!t.stock);if(o){if((i.freeBoosters||0)<=0)return watchMine=i,void drawBoosters()}else if(r){
-if(((i.stock||{})[e]||0)<=0)return watchMine=i,void drawBoosters()}else if(s){if(!1===a.daily)return;if(dailyState(i).left<=0)return watchMine=i,void drawBoosters()
-}else if((i.points||0)<a.price)return watchMine=i,void drawBoosters();const l=rollVariant(a),d=Object.assign({},VARIANTS[l.type].draw),c=luckActive(i),u=!!c&&!d.gold&&!d.sdf;u&&(d.luck=c.def.m,
-d.luckId=c.def.id);const m=drawCards(e,l.n,d);if(!m.length)return;i.cards=i.cards||{},i.holo=i.holo||{};const p=m.map(({card:e,holo:t})=>{const a=t?i.holo:i.cards,n=a[e.id]||0;return a[e.id]=n+1,{
-card:e,holo:t,isNew:0===n}});o?(i.freeBoosters=(i.freeBoosters||0)-1,i.vouchers=(i.vouchers||0)+1):r?(i.stock[e]-=1,i.stock[e]<=0&&delete i.stock[e]):s?dailyClaim(i):i.points=(i.points||0)-a.price,
-u&&(i.luck.left-=1,i.luck.left<=0&&delete i.luck),i.packs=(i.packs||0)+1,"normal"!==l.type&&(i[VARIANTS[l.type].rec]=(i[VARIANTS[l.type].rec]||0)+1),i.display=viewerName,await kvSet(n,i),watchMine=i,
-showPackOpening(p,a,l,{daily:s,voucher:o,stock:r,luck:u?{name:c.def.name,left:c.left-1}:null})}finally{boosterLock=!1}}}document.addEventListener("pointerup",e=>{
-e.pointerType&&"mouse"!==e.pointerType&&(holoReset(holoActive),holoActive=null)}),document.addEventListener("mouseleave",()=>{holoReset(holoActive),holoActive=null});const REVEAL_FX={rare:{
-color:"#3b82f6",sparks:0,rings:0,rays:!1,flash:null,label:null},epique:{color:"#a855f7",sparks:16,rings:1,rays:!1,flash:"rgba(168,85,247,0.30)",label:"ÉPIQUE"},legendaire:{color:"#f5b301",sparks:30,
-rings:2,rays:!0,flash:"rgba(255,205,80,0.65)",label:"LÉGENDAIRE"},ultime:{color:"#ff5ccd",sparks:46,rings:3,rays:!0,flash:"rgba(255,255,255,0.85)",label:"ULTIME",rainbow:!0}}
-;function clearRevealFx(e,t){e&&(e.innerHTML=""),t&&t.querySelectorAll(".fxFlash").forEach(e=>e.remove())}function playRevealFx(e,t,a){clearRevealFx(e,t)
-;const n=REVEAL_FX[a.card.rarity]||null,i=!!a.holo;if(!n&&!i)return;const s=reduceMotionMQ.matches,o=n?n.color:"#ffffff",r=!(!n||!n.rainbow),l=(t,a,n)=>{const i=document.createElement(t)
-;return i.className=a,n&&(i.style.cssText=n),e.appendChild(i),i};if(n&&l("div","fxGlow"+(r?" rainbow":""),`--fx:${o};`),n&&n.rays&&!s&&l("div","fxRays"+(r?" rainbow":""),`--fx:${o};`),
-n&&!s)for(let e=0;e<n.rings;e++)l("b","fxRing",`--fx:${o};--delay:${230*e}ms;`);if(!s){const e=(n?n.sparks:0)+(i?10:0);for(let t=0;t<e;t++){
-const e=Math.round(360*Math.random()),a=r||i&&t>=(n?n.sparks:0)?`hsl(${e},95%,68%)`:o
+document.addEventListener("pointerup",e=>{e.pointerType&&"mouse"!==e.pointerType&&(holoReset(holoActive),holoActive=null)}),document.addEventListener("mouseleave",()=>{holoReset(holoActive),
+holoActive=null});const BATCH_QTYS=[1,3,5,10],BATCH_MAX=10;let openQty=1;try{const e=parseInt(localStorage.getItem("kutsu_openqty"),10);BATCH_QTYS.includes(e)&&(openQty=e)}catch(e){}
+function setOpenQty(e){if(BATCH_QTYS.includes(e)){openQty=e;try{localStorage.setItem("kutsu_openqty",String(e))}catch(e){}}}function rollOnePack(e,t,a){
+const n=rollVariant(t),i=Object.assign({},VARIANTS[n.type].draw),s=luckActive(e),o=!!s&&!i.gold&&!i.sdf;o&&(i.luck=s.def.m,i.luckId=s.def.id);const r=drawCards(t.id,n.n,i);if(!r.length)return null
+;e.cards=e.cards||{},e.holo=e.holo||{};const l=r.map(({card:t,holo:a})=>{const n=a?e.holo:e.cards,i=n[t.id]||0;return n[t.id]=i+1,{card:t,holo:a,isNew:0===i}})
+;"voucher"===a?(e.freeBoosters=(e.freeBoosters||0)-1,e.vouchers=(e.vouchers||0)+1):"stock"===a?(e.stock[t.id]-=1,
+e.stock[t.id]<=0&&delete e.stock[t.id]):"daily"===a?dailyClaim(e):e.points=(e.points||0)-t.price;let d=null;return o&&(e.luck.left-=1,d={name:s.def.name,left:e.luck.left},
+e.luck.left<=0&&delete e.luck),e.packs=(e.packs||0)+1,"normal"!==n.type&&(e[VARIANTS[n.type].rec]=(e[VARIANTS[n.type].rec]||0)+1),{pulled:l,variant:n,luck:d}}function packsAvailable(e,t,a){
+return"voucher"===a?e.freeBoosters||0:"stock"===a?(e.stock||{})[t.id]||0:"daily"===a?dailyState(e).left:t.price>0?Math.floor((e.points||0)/t.price):BATCH_MAX}async function openBooster(e,t){
+if(!boosterLock&&viewerName&&!isCreatorAccount){boosterLock=!0;try{await loadCards();const a=cardsCatalog.collections.find(t=>t.id===e);if(!a||!isPublished(a))return
+;const n="watch:"+viewerKey,i=await getRec(n),s=!(!t||!t.daily),o=!(!t||!t.voucher),r=!(!t||!t.stock),l=o?"voucher":r?"stock":s?"daily":"pay";if("daily"===l&&!1===a.daily)return
+;const d=packsAvailable(i,a,l);if(d<=0)return watchMine=i,void drawBoosters();const c=Math.max(1,Math.min(BATCH_MAX,parseInt(t&&t.qty,10)||1)),u=Math.min(c,d),m=[];for(let e=0;e<u;e++){
+const e=rollOnePack(i,a,l);if(!e)break;m.push(e)}if(!m.length)return;i.display=viewerName,await kvSet(n,i),watchMine=i,showPackAt(a,{packs:m,i:0,total:m.length,qty:c},{daily:s,voucher:o,stock:r})
+}finally{boosterLock=!1}}}function showPackAt(e,t,a){const n=t.packs[t.i];showPackOpening(n.pulled,e,n.variant,{daily:!!a.daily,voucher:!!a.voucher,stock:!!a.stock,luck:n.luck,batch:t.total>1?t:null})
+}function showBatchRecap(e,t,a){const n=t.packs.flatMap(e=>e.pulled),i=new Map;n.forEach(e=>{const t=e.card.id+"|"+(e.holo?1:0),a=i.get(t)||{card:e.card,holo:!!e.holo,n:0,isNew:!1};a.n++,
+e.isNew&&(a.isNew=!0),i.set(t,a)})
+;const s=[...i.values()].sort((e,t)=>RARITIES[t.card.rarity].rank-RARITIES[e.card.rarity].rank||t.holo-e.holo||e.card.name.localeCompare(t.card.name)),o=n.filter(e=>e.isNew).length,r=n.length-o,l=n.filter(e=>e.holo).length,d=RARITY_KEYS.slice().reverse().map(e=>[e,n.filter(t=>t.card.rarity===e).length]).filter(e=>e[1]>0),c={}
+;t.packs.forEach(e=>{"normal"!==e.variant.type&&(c[e.variant.type]=(c[e.variant.type]||0)+1)})
+;const u=Object.entries(c).map(([e,t])=>`${t} ${SPECIAL_NAMES[e]||e}`).join(", "),m=a.voucher?"voucher":a.stock?"stock":a.daily?"daily":"pay",p=watchMine?packsAvailable(watchMine,e,m):0,v=Math.min(t.qty,p),h="pay"===m?`Ouvrir ${v>1?"×"+v:"un autre"} · ${fmtN(v*e.price)} Ryos`:`Ouvrir ${v>1?"×"+v:"un autre"}${"stock"===m?" de ma réserve":" offert"+(v>1?"s":"")}`
+;document.getElementById("modalRoot").innerHTML=`\n    <div class="overlay packOverlay" id="packOverlay" data-batch="1">\n      <div class="packStage batchStage">\n        <div class="packTitle">${escapeHtml(e.name)} · bilan</div>\n        <div class="packBanner" style="font-size:20px;margin-bottom:6px;">${t.total} boosters ouverts</div>\n        <div class="packSummary" id="batchSummary">${n.length} cartes · ${o} nouvelle${o>1?"s":""} · ${r} doublon${r>1?"s":""}${l?` · ${l} holographique${l>1?"s":""}`:""}${u?` · spéciaux : ${escapeHtml(u)}`:""}</div>\n        <div class="batchChips">${d.map(([e,t])=>`<span class="batchChip" style="--rc:${REC_COLORS[e]}"><span class="dot"></span>${RARITIES[e].label}<b>${t}</b></span>`).join("")}</div>\n        <div class="batchGrid" id="batchGrid">${s.map(e=>`<div class="batchItem" data-rarity="${e.card.rarity}" data-holo="${e.holo?1:0}">${cardTileHtml(e.card,{
+holo:e.holo,count:e.n,isNew:e.isNew
+})}</div>`).join("")}</div>\n        <div class="packBtns" style="margin-top:16px;">\n          ${v>0?`<button class="addbtn" id="batchAgain">${escapeHtml(h)}</button>`:""}\n          <button class="btn ghost" id="batchClose" style="flex:none;">Fermer</button>\n        </div>\n      </div>\n    </div>`
+;const g=document.getElementById("batchAgain");g&&(g.onclick=()=>{closeModal(),openBooster(e.id,Object.assign({},a,{qty:t.qty}))}),document.getElementById("batchClose").onclick=()=>{closeModal(),
+"boosters"===mode&&drawBoosters()}}const REVEAL_FX={rare:{color:"#3b82f6",sparks:0,rings:0,rays:!1,flash:null,label:null},epique:{color:"#a855f7",sparks:24,rings:2,rays:!1,
+flash:"rgba(168,85,247,0.34)",label:"ÉPIQUE",burst:!0,shocks:1},legendaire:{color:"#f5b301",sparks:48,rings:3,rays:!0,flash:"rgba(255,205,80,0.7)",label:"LÉGENDAIRE",burst:!0,shocks:2,confetti:34,
+shake:!0,big:!0},ultime:{color:"#ff5ccd",sparks:60,rings:3,rays:!0,flash:"rgba(255,255,255,0.85)",label:"ULTIME",rainbow:!0,burst:!0,shocks:3,confetti:46,shake:!0,big:!0}};function clearRevealFx(e,t){
+if(e&&(e.innerHTML=""),t){t.querySelectorAll(".fxFlash").forEach(e=>e.remove());const e=t.querySelector(".packStage");e&&e.classList.remove("shake")}}function playChargeFx(e,t){
+if(!e||reduceMotionMQ.matches)return;clearRevealFx(e,null);const a=t>=2?"#ffc933":"#fff1c9",n=(t,a,n)=>{const i=document.createElement(t);return i.className=a,n&&(i.style.cssText=n),e.appendChild(i),i
+};n("b","fxCharge",`--fx:${a};`),t>=2&&n("b","fxCharge",`--fx:${a};animation-delay:140ms;`);const i=t>=2?26:14
+;for(let e=0;e<i;e++)n("i","fxIn",`--a:${Math.round(360*Math.random())}deg;--d:${Math.round(110+120*Math.random())}px;--s:${(4+6*Math.random()).toFixed(1)}px;--c:${a};--delay:${Math.round(260*Math.random())}ms;`)
+;t>=2&&n("div","fxRays charging","--fx:#f5b301;")}function playRevealFx(e,t,a){clearRevealFx(e,t);const n=REVEAL_FX[a.card.rarity]||null,i=!!a.holo;if(!n&&!i)return
+;const s=reduceMotionMQ.matches,o=n?n.color:"#ffffff",r=!(!n||!n.rainbow),l=(t,a,n)=>{const i=document.createElement(t);return i.className=a,n&&(i.style.cssText=n),e.appendChild(i),i}
+;if(n&&l("div","fxGlow"+(r?" rainbow":""),`--fx:${o};`),n&&n.rays&&!s&&l("div","fxRays"+(r?" rainbow":""),`--fx:${o};`),n&&!s)for(let e=0;e<n.rings;e++)l("b","fxRing",`--fx:${o};--delay:${230*e}ms;`)
+;if(n&&!s){n.burst&&l("div","fxBurst",`--fx:${o};`);for(let e=0;e<(n.shocks||0);e++)l("b","fxShock",`--fx:${o};--delay:${170*e}ms;`)
+;const e=r?["#ff3d81","#ffb02e","#4cf2a0","#35c0ff","#a259ff"]:["#f5b301","#ffd966","#fff3c4","#ff9d2e"]
+;for(let t=0;t<(n.confetti||0);t++)l("u","fxConf",`--x:${Math.round(280*Math.random()-140)}px;--r:${Math.round(720*Math.random()-360)}deg;--t:${(1.3+.9*Math.random()).toFixed(2)}s;--delay:${Math.round(450*Math.random())}ms;--c:${e[t%e.length]};left:${Math.round(10+80*Math.random())}%;`)
+;if(n.shake){const e=t.querySelector(".packStage");e&&(e.classList.remove("shake"),e.offsetWidth,e.classList.add("shake"),setTimeout(()=>e.classList.remove("shake"),560))}}if(!s){
+const e=(n?n.sparks:0)+(i?10:0);for(let t=0;t<e;t++){const e=Math.round(360*Math.random()),a=r||i&&t>=(n?n.sparks:0)?`hsl(${e},95%,68%)`:o
 ;l("i","spark",`--a:${(360*Math.random()).toFixed(1)}deg;--d:${Math.round(150+170*Math.random())}px;--s:${(5+9*Math.random()).toFixed(1)}px;--c:${a};--delay:${Math.round(200*Math.random())}ms;`)}
 if(n&&n.flash){const e=document.createElement("div");e.className="fxFlash",e.style.setProperty("--fx",n.flash),t.appendChild(e),setTimeout(()=>e.remove(),800)}}
-const d=n&&n.label?n.label+(i?" · HOLO":""):i?"HOLO":null;d&&(l("div","fxLabel"+(r?" rainbow":""),`--fx:${o};`).textContent=d)}function showPackOpening(e,t,a,n){a=a||{type:"normal",extra:0}
-;const i=!(!n||!n.test),s=VARIANTS[a.type]||VARIANTS.normal,o=s.label,r={gold:`Booster Gold ! ${e.length} cartes, Ultime assuré sur la dernière`,
+const d=n&&n.label?n.label+(i?" · HOLO":""):i?"HOLO":null;d&&(l("div","fxLabel"+(r?" rainbow":"")+(n&&n.big?" big":""),`--fx:${o};`).textContent=d)}function showPackOpening(e,t,a,n){a=a||{
+type:"normal",extra:0};const i=n&&n.batch?n.batch:null,s=!(!n||!n.test),o=VARIANTS[a.type]||VARIANTS.normal,r=o.label,l={gold:`Booster Gold ! ${e.length} cartes, Ultime assuré sur la dernière`,
 sdf:`Booster SDF : seulement ${e.length} cartes Communes...`,holo:"Booster Holo : toutes les cartes sont holographiques !",rare:"Booster Rare : Rare ou mieux dès la 1re carte",
 epic:"Booster Épique : Épique ou mieux dès la 1re carte",deviant:`Booster Déviant : ${a.extra} cartes en plus`
-}[a.type],l=r?`<div class="packBanner v-${a.type}" id="packBanner">${r}</div>`:"",d=e.length,c=templateForCollection(t),u=void 0!==s.hue?s.hue:c&&void 0!==c.hue?c.hue:hashHue(t.name),m=(t.name.match(/[A-Za-zÀ-ÿ0-9]/)||["?"])[0].toUpperCase(),p=document.getElementById("modalRoot")
-;p.innerHTML=`\n    <div class="overlay packOverlay v-${a.type}" id="packOverlay">\n      <div class="packStage">\n        <div class="packTitle">${escapeHtml(t.name)}${i?" · TEST":""}</div>\n        ${i?'<div class="packTestNote" id="packTestNote">Mode test : gratuit, rien n\'est enregistré</div>':""}\n        ${n&&n.daily?'<div class="packTestNote" id="packDailyNote">Booster quotidien offert</div>':""}\n        ${n&&n.voucher?'<div class="packTestNote" id="packVoucherNote">Booster offert</div>':""}\n        ${n&&n.stock?'<div class="packTestNote" id="packStockNote">Booster de ma réserve</div>':""}\n        ${n&&n.luck?`<div class="packTestNote" id="packLuckNote">${escapeHtml(n.luck.name)} : ${n.luck.left>0?`encore ${n.luck.left} ${boosterWord(n.luck.left)}`:"dernier booster"}</div>`:""}\n        ${l}\n        <div class="deckLayout" id="deckLayout">\n          <div class="deckArea" id="deckArea">\n            <div class="deckFx" id="deckFx"></div>\n            ${e.map((e,n)=>`\n              <div class="deckCard" data-i="${n}" data-rarity="${e.card.rarity}" data-holo="${e.holo?"1":"0"}" style="--rot:${(n%2?1:-1)*(1.2+.37*n%1.1).toFixed(2)}deg;">\n                <div class="flipInner">\n                  <div class="flipFace flipBack" style="--h:${u};">\n                    <div class="backPattern"></div>\n                    <div class="backFrame"></div>\n                    <div class="backTop">KUTSU TIME</div>\n                    <div class="backEmblem"><span>${escapeHtml(m)}</span></div>\n                    <div class="backBottom">${escapeHtml(t.name)}</div>\n                    ${"normal"!==a.type?`<div class="backTag">${o}</div>`:""}\n                  </div>\n                  <div class="flipFace flipFront">${cardTileHtml(e.card,{
+}[a.type],d=l?`<div class="packBanner v-${a.type}" id="packBanner">${l}</div>`:"",c=e.length,u=templateForCollection(t),m=void 0!==o.hue?o.hue:u&&void 0!==u.hue?u.hue:hashHue(t.name),p=(t.name.match(/[A-Za-zÀ-ÿ0-9]/)||["?"])[0].toUpperCase(),v=document.getElementById("modalRoot")
+;v.innerHTML=`\n    <div class="overlay packOverlay v-${a.type}" id="packOverlay">\n      <div class="packStage">\n        <div class="packTitle">${escapeHtml(t.name)}${s?" · TEST":""}${i?` · Booster ${i.i+1}/${i.total}`:""}</div>\n        ${s?'<div class="packTestNote" id="packTestNote">Mode test : gratuit, rien n\'est enregistré</div>':""}\n        ${n&&n.daily?'<div class="packTestNote" id="packDailyNote">Booster quotidien offert</div>':""}\n        ${n&&n.voucher?'<div class="packTestNote" id="packVoucherNote">Booster offert</div>':""}\n        ${n&&n.stock?'<div class="packTestNote" id="packStockNote">Booster de ma réserve</div>':""}\n        ${n&&n.luck?`<div class="packTestNote" id="packLuckNote">${escapeHtml(n.luck.name)} : ${n.luck.left>0?`encore ${n.luck.left} ${boosterWord(n.luck.left)}`:"dernier booster"}</div>`:""}\n        ${d}\n        <div class="deckLayout" id="deckLayout">\n          <div class="deckArea" id="deckArea">\n            <div class="deckFx" id="deckFx"></div>\n            ${e.map((e,n)=>`\n              <div class="deckCard" data-i="${n}" data-rarity="${e.card.rarity}" data-holo="${e.holo?"1":"0"}" style="--rot:${(n%2?1:-1)*(1.2+.37*n%1.1).toFixed(2)}deg;">\n                <div class="flipInner">\n                  <div class="flipFace flipBack" style="--h:${m};">\n                    <div class="backPattern"></div>\n                    <div class="backFrame"></div>\n                    <div class="backTop">KUTSU TIME</div>\n                    <div class="backEmblem"><span>${escapeHtml(p)}</span></div>\n                    <div class="backBottom">${escapeHtml(t.name)}</div>\n                    ${"normal"!==a.type?`<div class="backTag">${r}</div>`:""}\n                  </div>\n                  <div class="flipFace flipFront">${cardTileHtml(e.card,{
 isNew:e.isNew,holo:e.holo
-})}</div>\n                </div>\n              </div>`).join("")}\n          </div>\n          <div class="revealedTray" id="revealedTray"></div>\n        </div>\n        <div class="deckProgress" id="deckProgress"></div>\n        <div class="deckHint" id="deckHint"></div>\n        <div class="recap" id="packRecap" style="display:none;"></div>\n        <div class="packSummary" id="packSummary"></div>\n        <div class="packBtns">\n          <button class="addbtn" id="revealAllBtn">Tout révéler</button>\n          <button class="addbtn" id="packAgainBtn" style="display:none;">Ouvrir un autre booster</button>\n          <button class="btn ghost" id="packCloseBtn" style="flex:none;">Fermer</button>\n        </div>\n      </div>\n    </div>`
-;const v=p.querySelector("#packOverlay"),h=p.querySelector("#deckArea"),g=p.querySelector("#deckFx"),y=p.querySelector("#revealedTray"),b=p.querySelector("#deckHint"),f=p.querySelector("#deckProgress"),w=p.querySelector("#packRecap"),k=Array.from(p.querySelectorAll(".deckCard"))
-;let S=0,E=!1,$=!1,T=!1,C=0;const I=t=>e[t]&&("epique"===e[t].card.rarity||"legendaire"===e[t].card.rarity),x=()=>{v.dataset.idx=String(S),v.dataset.revealed=E?"1":"0",v.dataset.finished=T?"1":"0",
-v.dataset.charge=String(C)},B=()=>{k.forEach((e,t)=>{const a=t-S;a<0||(e.style.setProperty("--k",String(Math.min(a,4))),e.style.zIndex=String(200-a),e.style.opacity=a>3?"0":"")})},A=()=>{
-f.textContent=`Carte ${Math.min(S+1,d)} / ${d}`,
-b.textContent=E?S===d-1?"Touche pour voir le récapitulatif":"Touche ou glisse pour passer à la suivante":C>=1&&I(S)?"Ça brille de plus en plus... touche encore !":"Touche la carte pour la révéler",
-k.forEach((e,t)=>{const a=t===S&&!E&&!T&&I(t);e.classList.toggle("glowy",a),e.classList.toggle("lvl1",a&&C>=1)}),x()},R=()=>{if(T)return;T=!0,$=!1,clearRevealFx(g,v),
-p.querySelector("#deckLayout").style.display="none",f.style.display="none",b.style.display="none",w.style.display="",
-w.innerHTML=e.map((e,t)=>`<div class="recapCard" data-i="${t}" data-rarity="${e.card.rarity}" data-holo="${e.holo?"1":"0"}">${cardTileHtml(e.card,{isNew:e.isNew,holo:e.holo})}</div>`).join("")
-;const a=e.filter(e=>e.isNew).length,s=e.length-a,o=e.filter(e=>e.holo).length
-;document.getElementById("packSummary").textContent=`${a} nouvelle${a>1?"s":""} carte${a>1?"s":""} · ${s} doublon${s>1?"s":""}`+(o?` · ${o} holographique${o>1?"s":""}`:""),
-document.getElementById("revealAllBtn").style.display="none";const r=!(!n||!n.voucher),l=!(!n||!n.stock),d=l&&watchMine&&(watchMine.stock||{})[t.id]||0,c=!(!n||!n.daily)&&!!watchMine&&dailyLeft()>0
-;if(i||(r?watchMine&&(watchMine.freeBoosters||0)>0:l?d>0:c||watchMine&&(watchMine.points||0)>=t.price)){const e=document.getElementById("packAgainBtn");e.style.display="",
-i||(r?e.textContent=`Ouvrir un autre booster offert (${watchMine.freeBoosters})`:l?e.textContent=`Ouvrir un autre booster de ma réserve (${d})`:c&&(e.textContent="Ouvrir mon booster gratuit restant"))
-}x()},M=()=>{if($||!E||T)return;$=!0;const t=k[S],a=e[S];clearRevealFx(g,v),t.classList.remove("pop");const n=(e=>{const t=document.createElement("div")
-;return t.className=`miniWrap r-${e.card.rarity}`,t.dataset.rarity=e.card.rarity,t.innerHTML=cardTileHtml(e.card,{holo:e.holo}),t})(a);n.style.visibility="hidden",y.appendChild(n)
-;const i=h.getBoundingClientRect(),s=n.getBoundingClientRect();t.style.transformOrigin="top left",t.style.transition="transform .55s cubic-bezier(.5,0,.25,1), opacity .5s ease .1s",
-t.style.transform=`translate(${s.left-i.left}px, ${s.top-i.top}px) scale(${s.width/i.width})`,t.style.opacity="0.15",S++,E=!1,C=0,S<d&&(B(),A()),setTimeout(()=>{n.style.visibility="",
-t.style.display="none",S>=d?R():$=!1},580)},L=()=>{if(!$&&!T)if(E)M();else{if(I(S)&&C<1)return C++,$=!0,A(),void setTimeout(()=>{$=!1},450);(()=>{if($||E||T)return;$=!0;const t=k[S],a=e[S]
-;t.classList.remove("glowy","lvl1"),t.classList.add("flipped");const n=(RARITIES[a.card.rarity]||RARITIES.commune).rank;setTimeout(()=>{T||(playRevealFx(g,v,a),
-(n>=2||a.holo)&&!reduceMotionMQ.matches&&t.classList.add("pop"))},320),setTimeout(()=>{T||(E=!0,$=!1,A())},780)})()}};let P=null;h.addEventListener("pointerdown",e=>{if(!T&&!$){P={x:e.clientX,dx:0,
-moved:!1};try{h.setPointerCapture(e.pointerId)}catch(e){}}}),h.addEventListener("pointermove",e=>{P&&(P.dx=e.clientX-P.x,Math.abs(P.dx)>8&&(P.moved=!0),P.moved&&k[S]&&(k[S].style.transition="none",
-k[S].style.transform=`translateX(${P.dx}px) rotate(${P.dx/22}deg)`))});h.addEventListener("pointerup",()=>{if(!P)return;const e=P;P=null;const t=k[S];t&&(t.style.transition="",t.style.transform=""),
-(!e.moved||Math.abs(e.dx)>70)&&L()}),h.addEventListener("pointercancel",()=>{P=null;const e=k[S];e&&(e.style.transition="",e.style.transform="")});const H=e=>{if(document.body.contains(v)){
-if(" "===e.key||"Enter"===e.key||"ArrowRight"===e.key||"ArrowLeft"===e.key){if(T)return;e.preventDefault(),L()}}else document.removeEventListener("keydown",H)};document.addEventListener("keydown",H),
-document.getElementById("revealAllBtn").onclick=R;document.getElementById("packCloseBtn").onclick=()=>{document.removeEventListener("keydown",H),closeModal(),"boosters"===mode&&drawBoosters()},
-document.getElementById("packAgainBtn").onclick=()=>{document.removeEventListener("keydown",H),closeModal(),i?openTestBooster(t.id):n&&n.voucher?openBooster(t.id,{voucher:!0
-}):n&&n.stock?openBooster(t.id,{stock:!0}):n&&n.daily&&dailyLeft()>0?openBooster(t.id,{daily:!0}):openBooster(t.id)},B(),A()}function recycleValue(e){let t=0;return colCards(e).forEach(e=>{
-[!1,!0].forEach(a=>{const n=myCardCount(e.id,a);n>1&&(t+=(n-1)*cardValue(e,a))})}),t}const REC_COLORS={commune:"#8b9199",rare:"#3b82f6",epique:"#a855f7",legendaire:"#f5b301",ultime:"#ff5ccd"}
-;let recSel={},recBusy=!1;function recDupItems(e){const t=[];return colCards(e).forEach(e=>[!1,!0].forEach(a=>{const n=myCardCount(e.id,a);n>1&&t.push({card:e,holo:a,key:e.id+"|"+(a?1:0),dup:n-1,
-unit:cardValue(e,a)})})),t.sort((e,t)=>RARITIES[t.card.rarity].rank-RARITIES[e.card.rarity].rank||e.card.name.localeCompare(t.card.name)||e.holo-t.holo)}async function recycleSelection(e,t){
+})}</div>\n                </div>\n              </div>`).join("")}\n          </div>\n          <div class="revealedTray" id="revealedTray"></div>\n        </div>\n        <div class="deckProgress" id="deckProgress"></div>\n        <div class="deckHint" id="deckHint"></div>\n        <div class="recap" id="packRecap" style="display:none;"></div>\n        <div class="packSummary" id="packSummary"></div>\n        <div class="packBtns">\n          <button class="addbtn" id="revealAllBtn">Tout révéler</button>\n          <button class="btn primary" id="packNextBtn" style="display:none;flex:none;">Booster suivant</button>\n          <button class="addbtn" id="packSkipBtn" style="display:none;">Passer au bilan</button>\n          <button class="addbtn" id="packAgainBtn" style="display:none;">Ouvrir un autre booster</button>\n          <button class="btn ghost" id="packCloseBtn" style="flex:none;">Fermer</button>\n        </div>\n      </div>\n    </div>`
+;const h=v.querySelector("#packOverlay"),g=v.querySelector("#deckArea"),y=v.querySelector("#deckFx"),b=v.querySelector("#revealedTray"),f=v.querySelector("#deckHint"),w=v.querySelector("#deckProgress"),k=v.querySelector("#packRecap"),$=Array.from(v.querySelectorAll(".deckCard"))
+;let S=0,E=!1,T=!1,C=!1,I=0;const x=t=>e[t]&&("epique"===e[t].card.rarity||"legendaire"===e[t].card.rarity),B=()=>{h.dataset.idx=String(S),h.dataset.revealed=E?"1":"0",h.dataset.finished=C?"1":"0",
+h.dataset.charge=String(I)},A=()=>{$.forEach((e,t)=>{const a=t-S;a<0||(e.style.setProperty("--k",String(Math.min(a,4))),e.style.zIndex=String(200-a),e.style.opacity=a>3?"0":"")})},M=()=>{
+w.textContent=`Carte ${Math.min(S+1,c)} / ${c}`,
+f.textContent=E?S===c-1?"Touche pour voir le récapitulatif":"Touche ou glisse pour passer à la suivante":I>=2&&x(S)?"Une énergie incroyable... un dernier clic !":I>=1&&x(S)?"Ça brille de plus en plus... touche encore !":"Touche la carte pour la révéler",
+(()=>{$.forEach((e,t)=>{const a=t===S&&!E&&!C&&x(t);e.classList.toggle("glowy",a),e.classList.toggle("lvl1",a&&I>=1),e.classList.toggle("lvl2",a&&I>=2)});const e=!E&&!C&&!!x(S)
+;h.classList.toggle("charge1",e&&I>=1),h.classList.toggle("charge2",e&&I>=2)})(),B()},R=()=>{if(C)return;C=!0,T=!1,clearRevealFx(y,h),v.querySelector("#deckLayout").style.display="none",
+w.style.display="none",
+f.style.display="none",k.style.display="",k.innerHTML=e.map((e,t)=>`<div class="recapCard" data-i="${t}" data-rarity="${e.card.rarity}" data-holo="${e.holo?"1":"0"}">${cardTileHtml(e.card,{
+isNew:e.isNew,holo:e.holo})}</div>`).join("");const a=e.filter(e=>e.isNew).length,o=e.length-a,r=e.filter(e=>e.holo).length
+;document.getElementById("packSummary").textContent=`${a} nouvelle${a>1?"s":""} carte${a>1?"s":""} · ${o} doublon${o>1?"s":""}`+(r?` · ${r} holographique${r>1?"s":""}`:""),
+document.getElementById("revealAllBtn").style.display="none";const l=!(!n||!n.voucher),d=!(!n||!n.stock),c=d&&watchMine&&(watchMine.stock||{})[t.id]||0,u=!(!n||!n.daily)&&!!watchMine&&dailyLeft()>0
+;if(s||(l?watchMine&&(watchMine.freeBoosters||0)>0:d?c>0:u||watchMine&&(watchMine.points||0)>=t.price)){const e=document.getElementById("packAgainBtn");e.style.display="",
+s||(l?e.textContent=`Ouvrir un autre booster offert (${watchMine.freeBoosters})`:d?e.textContent=`Ouvrir un autre booster de ma réserve (${c})`:u&&(e.textContent="Ouvrir mon booster gratuit restant"))
+}if(i){document.getElementById("packAgainBtn").style.display="none",document.getElementById("packSkipBtn").style.display="none";const e=document.getElementById("packNextBtn");e.style.display="",
+e.textContent=i.i<i.total-1?`Booster suivant (${i.i+2}/${i.total})`:`Voir le bilan (${i.total} boosters)`}B()},L=()=>{if(T||!E||C)return;T=!0;const t=$[S],a=e[S];clearRevealFx(y,h),
+t.classList.remove("pop");const n=(e=>{const t=document.createElement("div");return t.className=`miniWrap r-${e.card.rarity}`,t.dataset.rarity=e.card.rarity,t.innerHTML=cardTileHtml(e.card,{
+holo:e.holo}),t})(a);n.style.visibility="hidden",b.appendChild(n);const i=g.getBoundingClientRect(),s=n.getBoundingClientRect();t.style.transformOrigin="top left",
+t.style.transition="transform .37s cubic-bezier(.5,0,.25,1), opacity .33s ease .07s",t.style.transform=`translate(${s.left-i.left}px, ${s.top-i.top}px) scale(${s.width/i.width})`,
+t.style.opacity="0.15",S++,E=!1,I=0,S<c&&(A(),M()),setTimeout(()=>{n.style.visibility="",t.style.display="none",S>=c?R():T=!1},390)},P=()=>{if(!T&&!C)if(E)L();else{if(x(S)&&I<(t=>{
+const a=e[t]&&e[t].card.rarity;return"legendaire"===a?2:"epique"===a?1:0})(S))return I++,T=!0,M(),playChargeFx(y,I),void setTimeout(()=>{T=!1},I>=2?520:420);(()=>{if(T||E||C)return;T=!0
+;const t=$[S],a=e[S];t.classList.remove("glowy","lvl1","lvl2"),t.classList.add("flipped");const n=(RARITIES[a.card.rarity]||RARITIES.commune).rank,i=n<2&&!a.holo,s=i?.67:1;if(i){
+const e=t.querySelector(".flipInner");e&&(e.style.transitionDuration=".4s")}setTimeout(()=>{C||(playRevealFx(y,h,a),(n>=2||a.holo)&&!reduceMotionMQ.matches&&(t.classList.add("pop"),
+n>=3&&t.classList.add("big")))},Math.round(320*s)),setTimeout(()=>{C||(E=!0,T=!1,M())},Math.round(780*s))})()}};let H=null;g.addEventListener("pointerdown",e=>{if(!C&&!T){H={x:e.clientX,dx:0,moved:!1}
+;try{g.setPointerCapture(e.pointerId)}catch(e){}}}),g.addEventListener("pointermove",e=>{H&&(H.dx=e.clientX-H.x,Math.abs(H.dx)>8&&(H.moved=!0),H.moved&&$[S]&&($[S].style.transition="none",
+$[S].style.transform=`translateX(${H.dx}px) rotate(${H.dx/22}deg)`))});g.addEventListener("pointerup",()=>{if(!H)return;const e=H;H=null;const t=$[S];t&&(t.style.transition="",t.style.transform=""),
+(!e.moved||Math.abs(e.dx)>70)&&P()}),g.addEventListener("pointercancel",()=>{H=null;const e=$[S];e&&(e.style.transition="",e.style.transform="")});const N=e=>{if(document.body.contains(h)){
+if(" "===e.key||"Enter"===e.key||"ArrowRight"===e.key||"ArrowLeft"===e.key){if(C)return;e.preventDefault(),P()}}else document.removeEventListener("keydown",N)};document.addEventListener("keydown",N),
+document.getElementById("revealAllBtn").onclick=R;if(document.getElementById("packCloseBtn").onclick=()=>{document.removeEventListener("keydown",N),closeModal(),"boosters"===mode&&drawBoosters()},
+document.getElementById("packAgainBtn").onclick=()=>{document.removeEventListener("keydown",N),closeModal(),s?openTestBooster(t.id):n&&n.voucher?openBooster(t.id,{voucher:!0
+}):n&&n.stock?openBooster(t.id,{stock:!0}):n&&n.daily&&dailyLeft()>0?openBooster(t.id,{daily:!0}):openBooster(t.id)},i){const e={daily:!(!n||!n.daily),voucher:!(!n||!n.voucher),stock:!(!n||!n.stock)}
+;document.getElementById("packCloseBtn").style.display="none";const a=document.getElementById("packSkipBtn");a.style.display="",a.onclick=()=>{document.removeEventListener("keydown",N),
+showBatchRecap(t,i,e)},document.getElementById("packNextBtn").onclick=()=>{document.removeEventListener("keydown",N),i.i<i.total-1?showPackAt(t,Object.assign({},i,{i:i.i+1}),e):showBatchRecap(t,i,e)}}
+A(),M()}function recycleValue(e){let t=0;return colCards(e).forEach(e=>{[!1,!0].forEach(a=>{const n=myCardCount(e.id,a);n>1&&(t+=(n-1)*cardValue(e,a))})}),Math.round(t)}const REC_COLORS={
+commune:"#8b9199",rare:"#3b82f6",epique:"#a855f7",legendaire:"#f5b301",ultime:"#ff5ccd"};let recSel={},recBusy=!1;function recDupItems(e){const t=[];return colCards(e).forEach(e=>[!1,!0].forEach(a=>{
+const n=myCardCount(e.id,a);n>1&&t.push({card:e,holo:a,key:e.id+"|"+(a?1:0),dup:n-1,unit:cardValue(e,a)})})),
+t.sort((e,t)=>RARITIES[t.card.rarity].rank-RARITIES[e.card.rarity].rank||e.card.name.localeCompare(t.card.name)||e.holo-t.holo)}async function recycleSelection(e,t){
 if(!viewerName||isCreatorAccount)return null;const a="watch:"+viewerKey,n=await getRec(a);n.cards=n.cards||{},n.holo=n.holo||{};let i=0,s=0;return colCards(e).forEach(e=>[!1,!0].forEach(a=>{
-const o=Math.floor(Number(t[e.id+"|"+(a?1:0)]))||0;if(o<=0)return;const r=a?n.holo:n.cards,l=r[e.id]||0,d=Math.min(o,Math.max(0,l-1));d>0&&(r[e.id]=l-d,i+=d*cardValue(e,a),s+=d)})),
+const o=Math.floor(Number(t[e.id+"|"+(a?1:0)]))||0;if(o<=0)return;const r=a?n.holo:n.cards,l=r[e.id]||0,d=Math.min(o,Math.max(0,l-1));d>0&&(r[e.id]=l-d,i+=d*cardValue(e,a),s+=d)})),i=Math.round(i),
 i?(n.points=(n.points||0)+i,n.display=viewerName,await kvSet(a,n),watchMine=n,{gain:i,copies:s}):(watchMine=n,{gain:0,copies:0})}function openRecycleModal(e){recSel={},
 document.getElementById("modalRoot").innerHTML='<div class="overlay" id="overlay"><div class="modal recModal"><h3>Recycler des doublons</h3><div id="recBody"></div></div></div>',
 document.getElementById("overlay").onclick=e=>{"overlay"===e.target.id&&closeModal()};const t=document.getElementById("recBody"),a=(e,t)=>Math.min(e.dup,Math.max(0,t));t.onclick=t=>{
@@ -1561,14 +1752,14 @@ const e=n.dataset.g,t=i.filter(t=>"v:normal"===e?!t.holo:"v:holo"===e?t.holo:t.c
 void(document.getElementById("recClose").onclick=closeModal);const n=recDupItems(e)
 ;if(!n.length)return a.innerHTML='<p class="recHint">Tu n\'as aucun doublon dans cette collection.</p><div class="recMsg" id="recMsg" role="status"></div><div class="modalbtns"><button type="button" class="btn primary" id="recClose">Fermer</button></div>',
 void(document.getElementById("recClose").onclick=closeModal)
-;const i=e=>Math.min(e.dup,Math.max(0,recSel[e.key]||0)),s=(e,t)=>e.reduce((e,a)=>e+t(a),0),o=s(n,i),r=s(n,e=>e.dup),l=s(n,e=>i(e)*e.unit),d=document.activeElement,c=d&&d.dataset?d.dataset.f:null,u=a.querySelector(".recList"),m=u?u.scrollTop:0,p=(e,t,a)=>{
+;const i=e=>Math.min(e.dup,Math.max(0,recSel[e.key]||0)),s=(e,t)=>e.reduce((e,a)=>e+t(a),0),o=s(n,i),r=s(n,e=>e.dup),l=Math.round(s(n,e=>i(e)*e.unit)),d=document.activeElement,c=d&&d.dataset?d.dataset.f:null,u=a.querySelector(".recList"),m=u?u.scrollTop:0,p=(e,t,a)=>{
 const o=n.filter(t=>"v:normal"===e?!t.holo:"v:holo"===e?t.holo:t.card.rarity===e.slice(2)),r=s(o,e=>e.dup),l=s(o,i),d=r&&l===r?"on":l>0?"part":""
 ;return`<button type="button" class="recChip ${d}" data-act="chip" data-g="${e}" data-f="chip-${e}" style="--rc:${a}" aria-pressed="${"on"===d?"true":d?"mixed":"false"}" ${r?"":"disabled"}><span class="dot"></span>${t}<span class="num">${r}</span></button>`
 },v=e=>{
 const t=e.card,a=i(e),n=a===e.dup,s=escapeHtml(t.name),o=t.image?`<span class="recThumb" style="background-image:url('${escapeHtml(t.image)}')"></span>`:`<span class="recThumb" style="background:hsl(${cardHue(t)} 55% 36%)">${posterInitial(t.name)}</span>`,r=e.dup>1?`<div class="recStep"><button type="button" data-act="step" data-d="-1" data-k="${e.key}" data-f="m-${e.key}" aria-label="Moins : ${s}" ${a?"":"disabled"}>−</button><span class="recQty">${a}/${e.dup}</span><button type="button" data-act="step" data-d="1" data-k="${e.key}" data-f="p-${e.key}" aria-label="Plus : ${s}" ${n?"disabled":""}>+</button></div>`:""
 ;return`<div class="recRow ${a?"sel":""}" data-k="${e.key}" style="--rc:${REC_COLORS[t.rarity]}">\n      <input type="checkbox" data-act="row" data-k="${e.key}" data-f="r-${e.key}" data-part="${a>0&&!n?1:0}" ${n?"checked":""} aria-label="Recycler tous les doublons de ${s}${e.holo?" (holographique)":""}">\n      ${o}\n      <div class="recInfo"><div class="recName"><span class="recNm">${s}</span>${e.holo?'<span class="recHolo">HOLO</span>':""}</div><div class="recSub">x${e.dup+1} · ${fmtN(e.unit)} Ryos / doublon</div></div>\n      <div class="recCtl">${r}<span class="recGain">${a?"+"+fmtN(a*e.unit):""}</span></div>\n    </div>`
 },h=RARITY_KEYS.slice().reverse().map(e=>({k:e,arr:n.filter(t=>t.card.rarity===e)})).filter(e=>e.arr.length)
-;a.innerHTML=`\n    <p class="recHint">Choisis les doublons à recycler : par rareté, par version, ou carte par carte. Tu gardes toujours 1 exemplaire de chaque carte et de chaque version.</p>\n    <div class="recChips" role="group" aria-label="Sélection rapide par rareté"><span class="recLab">Rareté</span>${RARITY_KEYS.slice().reverse().map(e=>p("r:"+e,RARITIES[e].label,REC_COLORS[e])).join("")}</div>\n    <div class="recChips" role="group" aria-label="Sélection rapide par version"><span class="recLab">Version</span>${p("v:normal","Normales","#9a9a9a")}${p("v:holo","Holo","#35c0ff")}</div>\n    <div class="recBar"><span class="recTotal" aria-live="polite"><b>${o}</b> sur ${r} doublons · <b class="g">+${fmtN(l)} Ryos</b></span><span class="recLinks"><button type="button" class="recLink" data-act="all" data-f="all">Tout cocher</button><button type="button" class="recLink" data-act="none" data-f="none">Tout décocher</button></span></div>\n    <div class="recList">${h.map(e=>`<div class="recGrp" style="--rc:${REC_COLORS[e.k]}"><span>${RARITIES[e.k].label}</span><span>${s(e.arr,e=>e.dup)} en double · jusqu'à +${fmtN(s(e.arr,e=>e.dup*e.unit))}</span></div>${e.arr.map(v).join("")}`).join("")}</div>\n    <div class="recMsg" id="recMsg" role="status"></div>\n    <div class="modalbtns recFoot"><button type="button" class="btn ghost" id="recCancel">Annuler</button><button type="button" class="btn primary" id="recGo" ${o?"":"disabled"}>${o?`Recycler (+${fmtN(l)} Ryos)`:"Recycler"}</button></div>`
+;a.innerHTML=`\n    <p class="recHint">Choisis les doublons à recycler : par rareté, par version, ou carte par carte. Tu gardes toujours 1 exemplaire de chaque carte et de chaque version.</p>\n    <div class="recChips" role="group" aria-label="Sélection rapide par rareté"><span class="recLab">Rareté</span>${RARITY_KEYS.slice().reverse().map(e=>p("r:"+e,RARITIES[e].label,REC_COLORS[e])).join("")}</div>\n    <div class="recChips" role="group" aria-label="Sélection rapide par version"><span class="recLab">Version</span>${p("v:normal","Normales","#9a9a9a")}${p("v:holo","Holo","#35c0ff")}</div>\n    <div class="recBar"><span class="recTotal" aria-live="polite"><b>${o}</b> sur ${r} doublons · <b class="g">+${fmtN(l)} Ryos</b></span><span class="recLinks"><button type="button" class="recLink" data-act="all" data-f="all">Tout cocher</button><button type="button" class="recLink" data-act="none" data-f="none">Tout décocher</button></span></div>\n    <div class="recList">${h.map(e=>`<div class="recGrp" style="--rc:${REC_COLORS[e.k]}"><span>${RARITIES[e.k].label}</span><span>${s(e.arr,e=>e.dup)} en double · jusqu'à +${fmtN(Math.round(s(e.arr,e=>e.dup*e.unit)))}</span></div>${e.arr.map(v).join("")}`).join("")}</div>\n    <div class="recMsg" id="recMsg" role="status"></div>\n    <div class="modalbtns recFoot"><button type="button" class="btn ghost" id="recCancel">Annuler</button><button type="button" class="btn primary" id="recGo" ${o?"":"disabled"}>${o?`Recycler (+${fmtN(l)} Ryos)`:"Recycler"}</button></div>`
 ;const g=a.querySelector(".recList");if(g&&(g.scrollTop=m),a.querySelectorAll('input[data-part="1"]').forEach(e=>{e.indeterminate=!0}),c){
 const e=[...a.querySelectorAll("[data-f]")].find(e=>e.dataset.f===c&&!e.disabled);e&&e.focus({preventScroll:!0})}document.getElementById("recCancel").onclick=closeModal,
 o&&armButton(document.getElementById("recGo"),`Confirmer : +${fmtN(l)} Ryos ?`,()=>runRecycle(e))}async function runRecycle(e){if(recBusy)return;recBusy=!0;let t="";try{
@@ -1598,11 +1789,11 @@ key:boostersViewUser.key})}if(await loadCollectors(),"board"!==boostersTab)retur
 const e=normName(n.value),i=e?allCollectors.filter(t=>normName(t.display).includes(e)||normName(t.key).includes(e)):allCollectors;a.innerHTML=i.length?i.map(e=>{const a=allCollectors.indexOf(e)
 ;return`\n      <div class="lbRow clickable ${t&&e.key===t?"me":""}" data-user="${escapeHtml(e.key)}" data-name="${escapeHtml(e.display)}">\n        <div class="lbRank ${["top1","top2","top3"][a]||""}">${a+1}</div>\n        <div class="lbName">${escapeHtml(e.display)}</div>\n        <div class="lbPts">${e.unique} cartes uniques${e.holo?` · ${e.holo} holo`:""}</div>\n        <div class="lbGo">Voir</div>\n      </div>`
 }).join(""):`<div class="empty"><div>${e?"Aucun viewer trouvé.":"Personne n'a encore de cartes."}</div></div>`,a.querySelectorAll(".lbRow.clickable").forEach(e=>{e.onclick=()=>{boostersViewUser={
-key:e.dataset.user,display:e.dataset.name},drawBoosters()}})};n.oninput=i,i()}const WHEEL_PRIZES=[{id:"r50",label:"50 Ryos",kind:"ryos",n:50,w:16,hue:12},{id:"b1",label:"1 booster",kind:"boost",n:1,
-w:14,hue:200},{id:"r100",label:"100 Ryos",kind:"ryos",n:100,w:14,hue:30},{id:"cR",label:"Carte Rare",kind:"card",rarity:"rare",w:10,hue:220},{id:"r200",label:"200 Ryos",kind:"ryos",n:200,w:10,hue:48
-},{id:"pot",label:"Potion de Chance",kind:"potion",potion:"p1",w:8,hue:140},{id:"b2",label:"2 boosters",kind:"boost",n:2,w:7,hue:188},{id:"cE",label:"Carte Épique",kind:"card",rarity:"epique",w:6,
-hue:275},{id:"r400",label:"400 Ryos",kind:"ryos",n:400,w:6,hue:22},{id:"b3",label:"3 boosters",kind:"boost",n:3,w:4,hue:172},{id:"cL",label:"Carte Légendaire",kind:"card",rarity:"legendaire",w:1.5,
-hue:44},{id:"r1500",label:"1 500 Ryos",kind:"ryos",n:1500,w:1.5,hue:52}],WHEEL_SLICE=360/WHEEL_PRIZES.length;function weekKey(e){
+key:e.dataset.user,display:e.dataset.name},drawBoosters()}})};n.oninput=i,i()}let WHEEL_ON=!1;const WHEEL_PRIZES=[{id:"r50",label:"50 Ryos",kind:"ryos",n:50,w:16,hue:12},{id:"b1",label:"1 booster",
+kind:"boost",n:1,w:14,hue:200},{id:"r100",label:"100 Ryos",kind:"ryos",n:100,w:14,hue:30},{id:"cR",label:"Carte Rare",kind:"card",rarity:"rare",w:10,hue:220},{id:"r200",label:"200 Ryos",kind:"ryos",
+n:200,w:10,hue:48},{id:"pot",label:"Potion de Chance",kind:"potion",potion:"p1",w:8,hue:140},{id:"b2",label:"2 boosters",kind:"boost",n:2,w:7,hue:188},{id:"cE",label:"Carte Épique",kind:"card",
+rarity:"epique",w:6,hue:275},{id:"r400",label:"400 Ryos",kind:"ryos",n:400,w:6,hue:22},{id:"b3",label:"3 boosters",kind:"boost",n:3,w:4,hue:172},{id:"cL",label:"Carte Légendaire",kind:"card",
+rarity:"legendaire",w:1.5,hue:44},{id:"r1500",label:"1 500 Ryos",kind:"ryos",n:1500,w:1.5,hue:52}],WHEEL_SLICE=360/WHEEL_PRIZES.length;function weekKey(e){
 const t=parisParts(e),a=Date.UTC(+t.year,+t.month-1,+t.day),n=(new Date(a).getUTCDay()+6)%7;return new Date(a-864e5*n).toISOString().slice(0,10)}function weekResetInMs(e){
 const t=parisParts(e),a=(new Date(Date.UTC(+t.year,+t.month-1,+t.day)).getUTCDay()+6)%7;return shopResetInMs(e)+864e5*(6-a)}function pickPrizeCard(e){
 const t=new Set(cardsCatalog.collections.filter(isPublished).map(e=>e.id)),a=cardsCatalog.cards.filter(e=>t.has(e.collectionId)),n=RARITY_KEYS.filter(e=>a.some(t=>t.rarity===e))
@@ -1610,17 +1801,18 @@ const t=new Set(cardsCatalog.collections.filter(isPublished).map(e=>e.id)),a=car
 ;if("ryos"===t.kind)return e.points=(e.points||0)+t.n,{text:`+${fmtN(t.n)} Ryos`};if("boost"===t.kind)return e.freeBoosters=(e.freeBoosters||0)+t.n,{
 text:`${t.n} booster${a(t.n)} offert${a(t.n)} (à utiliser dans l'onglet Boosters)`};if("potion"===t.kind){const a=potionDef(t.potion);return addLuck(e,t.potion,!0),{
 text:`${a.name} : tes ${a.charges} prochains boosters sont boostés`}}const n=pickPrizeCard(t.rarity);return n?(bumpCard(e,n.id,!1,1),{text:`${n.name} (${RARITIES[n.rarity].label})`,card:n
-}):(e.points=(e.points||0)+100,{text:"+100 Ryos (aucune carte disponible pour l'instant)"})}let wkBusy=!1;async function spinWeekWheel(){if(!viewerName||isCreatorAccount)return notViewer()
-;if(wkBusy)return{ok:!1,msg:"Un instant..."};wkBusy=!0;try{await loadCards();const e="watch:"+viewerKey,t=await getRec(e),a=weekKey();if(t.wheelWk===a)return watchMine=t,{ok:!1,
-msg:"Tu as déjà tourné la roue cette semaine."};const n=WHEEL_PRIZES.reduce((e,t)=>e+t.w,0);let i=Math.random()*n,s=WHEEL_PRIZES.length-1;for(let e=0;e<WHEEL_PRIZES.length;e++)if(i-=WHEEL_PRIZES[e].w,
-i<=0){s=e;break}const o=WHEEL_PRIZES[s],r=applyWheelPrize(t,o);return t.wheelWk=a,t.wheelWon={id:o.id,text:r.text,at:Date.now()},t.wheelSpins=(t.wheelSpins||0)+1,t.display=viewerName,await kvSet(e,t),
-watchMine=t,{ok:!0,idx:s,prize:o,res:r}}finally{wkBusy=!1}}function wheelSvg(){WHEEL_PRIZES.length;const e=100,t=(t,a)=>{const n=(t-90)*Math.PI/180
-;return[(e+a*Math.cos(n)).toFixed(2),(e+a*Math.sin(n)).toFixed(2)]}
+}):(e.points=(e.points||0)+100,{text:"+100 Ryos (aucune carte disponible pour l'instant)"})}let wkBusy=!1;async function spinWeekWheel(){if(!WHEEL_ON)return{ok:!1,
+msg:"La roue n'est pas disponible pour le moment."};if(!viewerName||isCreatorAccount)return notViewer();if(wkBusy)return{ok:!1,msg:"Un instant..."};wkBusy=!0;try{await loadCards()
+;const e="watch:"+viewerKey,t=await getRec(e),a=weekKey();if(t.wheelWk===a)return watchMine=t,{ok:!1,msg:"Tu as déjà tourné la roue cette semaine."};const n=WHEEL_PRIZES.reduce((e,t)=>e+t.w,0)
+;let i=Math.random()*n,s=WHEEL_PRIZES.length-1;for(let e=0;e<WHEEL_PRIZES.length;e++)if(i-=WHEEL_PRIZES[e].w,i<=0){s=e;break}const o=WHEEL_PRIZES[s],r=applyWheelPrize(t,o);return t.wheelWk=a,
+t.wheelWon={id:o.id,text:r.text,at:Date.now()},t.wheelSpins=(t.wheelSpins||0)+1,t.display=viewerName,await kvSet(e,t),watchMine=t,{ok:!0,idx:s,prize:o,res:r}}finally{wkBusy=!1}}function wheelSvg(){
+WHEEL_PRIZES.length;const e=100,t=(t,a)=>{const n=(t-90)*Math.PI/180;return[(e+a*Math.cos(n)).toFixed(2),(e+a*Math.sin(n)).toFixed(2)]}
 ;return`<svg viewBox="0 0 200 200" id="wkSvg" role="img" aria-label="Roue de la semaine"><circle cx="100" cy="100" r="99.4" fill="#111" stroke="var(--gold)" stroke-width="1.2"/>${WHEEL_PRIZES.map((e,a)=>{
 const n=a*WHEEL_SLICE,i=t(n-WHEEL_SLICE/2,98),s=t(n+WHEEL_SLICE/2,98),o=a%2?36:30
 ;return`<path d="M100 100 L${i[0]} ${i[1]} A98 98 0 0 1 ${s[0]} ${s[1]} Z" fill="hsl(${e.hue},52%,${o}%)" stroke="rgba(0,0,0,0.45)" stroke-width="0.6"/><text x="166" y="100" transform="rotate(${(n-90).toFixed(1)} 100 100)" text-anchor="middle" dominant-baseline="central" font-size="${e.label.length>14?6:7.2}" font-weight="700" fill="#fff">${escapeHtml(e.label)}</text>`
 }).join("")}</svg>`}const wkRotFor=e=>2160-e*WHEEL_SLICE;let wkLast=null;function drawBoostersWheel(e){
-if(!(!!viewerName&&!isCreatorAccount))return e.innerHTML=boosterLoginPrompt("Connecte-toi pour tourner la roue de la semaine."),void wireBoosterLogin()
+if(!WHEEL_ON)return void(e.innerHTML='<div class="empty"><div>La roue de la semaine n\'est pas disponible pour le moment.</div></div>')
+;if(!(!!viewerName&&!isCreatorAccount))return e.innerHTML=boosterLoginPrompt("Connecte-toi pour tourner la roue de la semaine."),void wireBoosterLogin()
 ;const t=weekKey(),a=!!watchMine&&watchMine.wheelWk===t,n=a&&wkLast&&wkLast.week===t?wkLast:null,i=a&&watchMine.wheelWon?watchMine.wheelWon:null,s=n?n.idx:i?Math.max(0,WHEEL_PRIZES.findIndex(e=>e.id===i.id)):0,o=WHEEL_PRIZES.reduce((e,t)=>e+t.w,0),r=n?n.text:i?i.text:""
 ;e.innerHTML=`\n    <div class="dailyBox ${a?"":"ready"}">\n      <div class="dailyTitle">Roue de la semaine</div>\n      <div class="dailyText" id="wkText">${a?`Tour déjà utilisé cette semaine · prochaine roue dans ${fmtRemaining(weekResetInMs())}`:"Un tour par semaine, remis à zéro le lundi à minuit : Ryos, boosters, cartes ou potion."}</div>\n    </div>\n    <div class="wkWrap"><div class="wkPointer"></div><div class="wkSpin" id="wkSpin" style="transform:rotate(${a?wkRotFor(s)+(n&&n.jit||0):0}deg);transition:none;">${wheelSvg()}</div><div class="wkHub"></div></div>\n    <div class="wkAct"><button class="btn primary" id="wkBtn" style="flex:none;min-width:220px;" ${a?"disabled":""}>${a?"Déjà tournée cette semaine":"Tourner la roue"}</button></div>\n    <div class="hint" id="wkMsg" style="min-height:18px;"></div>\n    <div id="wkResult">${a?`<div class="noticeBox wkWin"><b>Ton gain de la semaine :</b> ${escapeHtml(r)}</div>${n&&n.card?`<div class="wkCard">${cardTileHtml(n.card,{})}</div>`:""}`:""}</div>\n    <details class="oddsBox" style="max-width:420px;margin:10px auto 0;"><summary>Voir les chances de gain</summary>\n      <div class="oddsWrap"><table class="oddsTable"><thead><tr><th>Gain</th><th>Chance</th></tr></thead><tbody>\n        ${WHEEL_PRIZES.map(e=>`<tr><td style="text-align:left;">${escapeHtml(e.label)}</td><td>${fmtPct(e.w/o*100)}</td></tr>`).join("")}\n      </tbody></table></div></details>`
 ;const l=document.getElementById("wkBtn");l&&!a&&(l.onclick=async()=>{l.disabled=!0,l.textContent="Tirage...";const t=await spinWeekWheel();if(!t.ok)return drawBoostersWheel(e),
@@ -1646,8 +1838,17 @@ i.shopBought[e]=Object.assign({},i.shopBought[e],{[t]:!0}),Object.keys(i.shopBou
 card:cardsCatalog.cards.find(e=>e.id===a.cardId),holo:a.holo,price:a.price})}const POTIONS=[{id:"p1",name:"Potion de Chance",price:1200,charges:5,m:{epique:1.5,legendaire:1.5,ultime:1.5},hue:140,
 desc:"Épique, Légendaire et Ultime x1,5 sur 5 boosters"},{id:"p2",name:"Moyenne Potion de Chance",price:3500,charges:5,m:{epique:2,legendaire:2.5,ultime:2.5},hue:205,
 desc:"Épique x2, Légendaire et Ultime x2,5 sur 5 boosters"},{id:"p3",name:"Grande Potion de Chance",price:7e3,charges:5,m:{epique:3,legendaire:6,ultime:6},hue:44,
-desc:"Épique x3, Légendaire et Ultime x6 sur 5 boosters"}],potionDef=e=>POTIONS.find(t=>t.id===e);function luckActive(e){const t=e&&e.luck,a=t&&potionDef(t.id);return a&&t.left>0?{def:a,left:t.left
-}:null}const boosterWord=e=>"booster"+(e>1?"s":"");function addLuck(e,t,a){const n=potionDef(t),i=luckActive(e);if(i&&i.def.id!==t&&!a)return{ok:!1,
+desc:"Épique x3, Légendaire et Ultime x6 sur 5 boosters"}],potionDef=e=>POTIONS.find(t=>t.id===e);let potSvgN=0;function potionSvg(e){const t="pt"+potSvgN++,a=e.hue,n={
+p1:"M48 66 L48 50 Q48 46 52 46 L68 46 Q72 46 72 50 L72 66 C96 74 104 94 98 116 C92 138 76 148 60 148 C44 148 28 138 22 116 C16 94 24 74 48 66 Z",
+p2:"M51 30 L51 64 C40 70 30 82 30 102 C30 130 42 150 60 150 C78 150 90 130 90 102 C90 82 80 70 69 64 L69 30 Z",
+p3:"M46 42 L46 58 C24 66 14 84 14 104 C14 132 34 152 60 152 C86 152 106 132 106 104 C106 84 96 66 74 58 L74 42 Z"},i=n[e.id]||n.p1,s={p1:98,p2:92,p3:82}[e.id]||98,o={
+p1:'<rect x="46" y="31" width="28" height="17" rx="4" fill="#b98a5e"/><path d="M50 36 H70 M50 41 H70" stroke="rgba(0,0,0,.25)" stroke-width="1.4"/>',
+p2:`<rect x="48" y="14" width="24" height="18" rx="4" fill="#b98a5e"/><path d="M52 20 H68 M52 26 H68" stroke="rgba(0,0,0,.25)" stroke-width="1.4"/><rect x="47" y="34" width="26" height="10" rx="3" fill="hsl(${a} 70% 46%)" stroke="rgba(255,255,255,.35)" stroke-width="1"/>`,
+p3:'<path d="M60 4 L76 20 L71 40 L49 40 L44 20 Z" fill="#ffd966" stroke="#fff3c4" stroke-width="1.4" stroke-linejoin="round"/><path d="M60 4 L60 40 M44 20 L76 20 M60 4 L49 40 M60 4 L71 40" stroke="rgba(160,100,0,.55)" stroke-width="1"/><rect x="42" y="40" width="36" height="6" rx="3" fill="#c98a1a"/>'
+}[e.id]||"",r="p3"===e.id?1.35:"p2"===e.id?1.1:1,l=`M0 ${s} Q15 ${s-6} 30 ${s} T60 ${s} T90 ${s} T120 ${s} V170 H0 Z`,d=[[44,132,0],[66,140,1.1],[80,124,2.2],[54,118,1.7]].map(([e,t,a])=>`<circle class="potBub" cx="${e}" cy="${t}" r="${(2+a%2).toFixed(1)}" fill="rgba(255,255,255,.7)" style="animation-delay:${a}s"/>`).join(""),c=[[16,40,0],[104,56,.8],[96,14,1.5],[24,128,2]].map(([e,t,a])=>`<path class="potSpk" d="M${e} ${t-6} L${e+1.8} ${t-1.8} L${e+6} ${t} L${e+1.8} ${t+1.8} L${e} ${t+6} L${e-1.8} ${t+1.8} L${e-6} ${t} L${e-1.8} ${t-1.8} Z" fill="#fff" style="animation-delay:${a}s"/>`).join(""),u=`<g transform="translate(60 114) scale(${r})" opacity=".92"><circle cx="-5.5" cy="-5.5" r="6" fill="hsl(${a} 90% 88%)"/><circle cx="5.5" cy="-5.5" r="6" fill="hsl(${a} 90% 88%)"/><circle cx="-5.5" cy="5.5" r="6" fill="hsl(${a} 90% 88%)"/><circle cx="5.5" cy="5.5" r="6" fill="hsl(${a} 90% 88%)"/><path d="M0 4 Q2 12 8 16" stroke="hsl(${a} 90% 88%)" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>`
+;return`<svg viewBox="0 0 120 160" role="img" aria-label="${escapeHtml(e.name)}" xmlns="http://www.w3.org/2000/svg">\n    <defs>\n      <linearGradient id="${t}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${a} 88% 64%)"/><stop offset="1" stop-color="hsl(${a} 80% 30%)"/></linearGradient>\n      <radialGradient id="${t}g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="hsl(${a} 95% 60%)" stop-opacity=".5"/><stop offset="1" stop-color="hsl(${a} 95% 60%)" stop-opacity="0"/></radialGradient>\n      <clipPath id="${t}c"><path d="${i}"/></clipPath>\n    </defs>\n    <circle cx="60" cy="100" r="58" fill="url(#${t}g)"/>\n    <g clip-path="url(#${t}c)"><rect x="0" y="${s}" width="120" height="80" fill="url(#${t}l)"/><path d="${l}" fill="hsl(${a} 90% 75%)" opacity=".28"/>${d}</g>\n    <path d="${i}" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.6)" stroke-width="2.4" stroke-linejoin="round"/>\n    <path d="M32 104 C32 90 38 82 46 77" stroke="rgba(255,255,255,.6)" stroke-width="4" stroke-linecap="round" fill="none"/>\n    ${u}${o}${c}\n  </svg>`
+}const potionIcon=e=>`<span class="luckIco">${potionSvg(e)}</span>`,fmtMult=e=>String(e).replace(".",",");function luckActive(e){const t=e&&e.luck,a=t&&potionDef(t.id);return a&&t.left>0?{def:a,
+left:t.left}:null}const boosterWord=e=>"booster"+(e>1?"s":"");function addLuck(e,t,a){const n=potionDef(t),i=luckActive(e);if(i&&i.def.id!==t&&!a)return{ok:!1,
 msg:`Une autre potion est déjà active (${i.def.name}, ${i.left} ${boosterWord(i.left)} restant${i.left>1?"s":""}). Termine-la d'abord.`};const s=i?i.def.id:t;return e.luck={id:s,
 left:Math.min(30,(i?i.left:0)+n.charges)},{ok:!0}}async function buyPotion(e){if(!viewerName||isCreatorAccount)return notViewer();const t=potionDef(e);if(!t)return{ok:!1,msg:"Potion introuvable."}
 ;const a="watch:"+viewerKey,n=await getRec(a);if((n.points||0)<t.price)return{ok:!1,msg:`Il te manque ${fmtN(t.price-(n.points||0))} Ryos.`};const i=addLuck(n,e);return i.ok?(n.points-=t.price,
@@ -1698,12 +1899,12 @@ e.querySelectorAll("[data-shopbuy]").forEach(e=>{e.disabled||armButton(e,"Confir
 t.ok||shopMsgSet("shopMsg",t.msg,!1)})});const r=document.getElementById("shopPriceSave");r&&(r.onclick=async()=>{await loadSettings(),
 creatorSettings.shopPrices=Object.fromEntries(RARITY_KEYS.map(e=>[e,Math.max(1,parseInt(document.getElementById("shopPrice-"+e).value,10)||SHOP_DEFAULT_PRICES[e])])),await saveSettings(),drawShop(),
 shopMsgSet("shopPriceMsg","Prix enregistrés.",!0)})}function drawShopPotions(e,t){const a=!isCreatorAccount,n=a?luckActive(watchMine):null
-;e.innerHTML=`\n    <div class="hint" style="text-align:left;margin:0 0 10px;">Une potion améliore tes chances de tirer des cartes Épiques, Légendaires et Ultimes sur tes prochains boosters. Elle se déclenche toute seule à l'ouverture, un seul type de potion à la fois (acheter la même potion ajoute des boosters).</div>\n    ${n?`<div class="luckBox"><b>${escapeHtml(n.def.name)}</b> active : encore ${n.left} ${boosterWord(n.left)}</div>`:""}\n    ${POTIONS.map(e=>{
-const i=!!n&&n.def.id!==e.id,s=t>=e.price
-;return`<div class="patCard potCard" style="--ph:${e.hue};">\n        <div class="patInfo"><div class="patTitle">${escapeHtml(e.name)}</div><div class="patDesc">${escapeHtml(e.desc)}</div></div>\n        <div class="patBuy"><div class="mkPrice">${fmtN(e.price)} Ryos</div>\n          ${a?`<button class="btn primary" data-potion="${e.id}" ${i||!s?"disabled":""}>${i?"Une autre potion est active":s?"Acheter":`Il te manque ${fmtN(e.price-t)}`}</button>`:""}</div>\n      </div>`
-}).join("")}\n    <div class="hint" id="potMsg" style="min-height:18px;text-align:left;"></div>`,e.querySelectorAll("[data-potion]").forEach(e=>{e.disabled||armButton(e,"Confirmer l'achat",async()=>{
-e.disabled=!0,e.textContent="Achat...";const t=await buyPotion(e.dataset.potion);shopNote=t.ok?`${t.def.name} bue : tes ${t.left} prochains boosters en profitent.`:"",drawShop(),
-t.ok||shopMsgSet("potMsg",t.msg,!1)})})}function drawShopPatreon(e,t){
+;e.innerHTML=`\n    <div class="hint" style="text-align:left;margin:0 0 10px;">Une potion améliore tes chances de tirer des cartes Épiques, Légendaires et Ultimes sur tes prochains boosters. Elle se déclenche toute seule à l'ouverture, un seul type de potion à la fois (acheter la même potion ajoute des boosters).</div>\n    ${n?`<div class="luckBox">${potionIcon(n.def)}<span><b>${escapeHtml(n.def.name)}</b> active : encore ${n.left} ${boosterWord(n.left)}</span></div>`:""}\n    <div class="potGrid">${POTIONS.map(e=>{
+const i=!!n&&n.def.id!==e.id,s=t>=e.price,o=!!n&&n.def.id===e.id
+;return`<div class="potTile t-${e.id} ${i?"blocked":""}" style="--ph:${e.hue};" data-pot-tile="${e.id}" title="${escapeHtml(e.desc)}">\n        ${o?`<span class="potOn">Active · ${n.left}</span>`:""}\n        <div class="potArt">${potionSvg(e)}</div>\n        <div class="nm">${escapeHtml(e.name)}</div>\n        <div class="rr">${e.charges} boosters</div>\n        <div class="potFx">${["epique","legendaire","ultime"].map(t=>`<div class="potFxRow" style="--rc:${REC_COLORS[t]}"><span class="dot"></span>${RARITIES[t].label}<b>x${fmtMult(e.m[t])}</b></div>`).join("")}</div>\n        <div class="potBuy"><div class="mkPrice">${fmtN(e.price)} Ryos</div>\n          ${a?`<button class="btn primary" data-potion="${e.id}" ${i||!s?"disabled":""}>${i?"Une autre potion est active":s?"Acheter":`Il te manque ${fmtN(e.price-t)}`}</button>`:""}</div>\n      </div>`
+}).join("")}</div>\n    <div class="hint" id="potMsg" style="min-height:18px;text-align:left;"></div>`,e.querySelectorAll("[data-potion]").forEach(e=>{
+e.disabled||armButton(e,"Confirmer l'achat",async()=>{e.disabled=!0,e.textContent="Achat...";const t=await buyPotion(e.dataset.potion)
+;shopNote=t.ok?`${t.def.name} bue : tes ${t.left} prochains boosters en profitent.`:"",drawShop(),t.ok||shopMsgSet("potMsg",t.msg,!1)})})}function drawShopPatreon(e,t){
 const a=!isCreatorAccount,n=patreonPrice(),i=patreonLeft().length,s=a&&watchMine&&watchMine.patreon||[],o=i?t>=n?"Acheter":`Il te manque ${fmtN(n-t)}`:"Épuisé",r=(e,t,a,n)=>`\n    <div class="codeItem ${n?"fresh":""}"><div class="patCode">${escapeHtml(e)}</div><div class="codeMeta">${t}</div>\n      <div class="codeBtns"><button class="addbtn" data-copy="${escapeHtml(e)}">Copier</button>${a||""}</div></div>`
 ;let l="";if(isCreatorAccount){const e=patreon.items.filter(e=>patreon.sold[e.id]).sort((e,t)=>(patreon.sold[t.id].at||0)-(patreon.sold[e.id].at||0)),t=patreonLeft().concat(e).map(e=>{
 const t=patreon.sold[e.id]
@@ -1763,10 +1964,10 @@ async function drawBoostersTrade(e){if(!viewerName||isCreatorAccount)return e.in
 ;const i=tradeAll.filter(e=>e.toKey===a&&"open"===e.status&&!tradeExpired(e)).sort((e,t)=>(t.createdAt||0)-(e.createdAt||0)),s=tradeAll.filter(e=>e.fromKey===a).sort((e,t)=>(t.createdAt||0)-(e.createdAt||0)).slice(0,10),o=e=>{
 const t=cardsCatalog.cards.find(t=>t.id===e.cardId);return t?cardTileHtml(t,{holo:e.holo}):""
 },r=(e,t)=>`<div class="tradePair"><div class="mkItem">${o(e.give)}</div><div class="tradeArrow">contre</div><div class="mkItem">${o(e.want)}${t?`<div class="mkSeller">${t}</div>`:""}</div></div>`
-;e.innerHTML=`\n    ${tradeNote?`<div class="noticeBox" id="tradeNoteBox">${escapeHtml(tradeNote)}</div>`:""}\n    <div class="hint" id="tradeMsg" style="min-height:18px;text-align:left;"></div>\n    <div class="sectionLabel" style="margin-top:0;">Échanges reçus (${i.length})</div>\n    ${i.length?i.map(e=>{
+;e.innerHTML=`\n    ${tradeNote?`<div class="noticeBox" id="tradeNoteBox">${escapeHtml(tradeNote)}</div>`:""}\n    <div class="hint" id="tradeMsg" style="min-height:18px;text-align:left;"></div>\n    <div class="sectionLabel" style="margin-top:0;">Échanges reçus (${i.length})</div>\n    ${i.length?'<div class="tradeScroll" id="tradeIn">'+i.map(e=>{
 const t=recCount(watchMine,e.want.cardId,e.want.holo)<2
 ;return`<div class="tradeRow" data-id="${e.id}"><div class="tradeWho">${escapeHtml(e.from)} te propose</div>${r(e,"ta carte")}\n        <div class="codeBtns"><button class="btn primary" data-accept="${e.id}" style="flex:none;" ${t?"disabled":""}>${t?"Il te faut un doublon":"Accepter"}</button><button class="btn ghost" data-refuse="${e.id}" style="flex:none;">Refuser</button></div></div>`
-}).join(""):'<div class="hint" style="text-align:left;">Aucun échange en attente.</div>'}\n    <div class="sectionLabel">Mes propositions</div>\n    ${s.length?s.map(e=>`<div class="tradeRow" data-id="${e.id}"><div class="tradeWho">Pour ${escapeHtml(e.to)}<br><span class="tradeSt ${e.status}">${TRADE_STATUS[e.status]||e.status}</span></div>${r(e,`chez ${escapeHtml(e.to)}`)}\n      ${"open"===e.status?`<div class="codeBtns"><button class="btn ghost" data-cancel-trade="${e.id}" style="flex:none;">Annuler</button></div>`:""}</div>`).join(""):'<div class="hint" style="text-align:left;">Tu n\'as encore rien proposé.</div>'}\n    <div class="sectionLabel">Nouvel échange</div>\n    <div id="tradeNew"></div>`
+}).join("")+"</div>":'<div class="hint" style="text-align:left;">Aucun échange en attente.</div>'}\n    <div class="sectionLabel">Mes propositions</div>\n    ${s.length?'<div class="tradeScroll" id="tradeOut">'+s.map(e=>`<div class="tradeRow" data-id="${e.id}"><div class="tradeWho">Pour ${escapeHtml(e.to)}<br><span class="tradeSt ${e.status}">${TRADE_STATUS[e.status]||e.status}</span></div>${r(e,`chez ${escapeHtml(e.to)}`)}\n      ${"open"===e.status?`<div class="codeBtns"><button class="btn ghost" data-cancel-trade="${e.id}" style="flex:none;">Annuler</button></div>`:""}</div>`).join("")+"</div>":'<div class="hint" style="text-align:left;">Tu n\'as encore rien proposé.</div>'}\n    <div class="sectionLabel">Nouvel échange</div>\n    <div id="tradeNew"></div>`
 ;const l=(e,t)=>{const a=document.getElementById("tradeMsg");a&&(a.style.color=t?"var(--rate-green)":"var(--rate-red)",a.textContent=e)
 },d=()=>drawBoostersTrade(document.getElementById("boostersBody"));e.querySelectorAll(".mkItem .tcg").forEach(e=>{e.onclick=e=>e.stopPropagation()}),e.querySelectorAll("[data-accept]").forEach(e=>{
 e.onclick=async()=>{e.disabled=!0,e.textContent="Échange...";const t=await acceptTrade(e.dataset.accept),a=t.ok&&cardsCatalog.cards.find(e=>e.id===t.trade.give.cardId)
